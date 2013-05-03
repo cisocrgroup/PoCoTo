@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.jdesktop.jxlayer
+OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Localizing-Bundle: org/jdesktop/jxlayer/Bundle.properties
+

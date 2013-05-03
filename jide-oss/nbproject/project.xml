@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>com.jidesoft</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages>
+                <package>com.jidesoft.comparator</package>
+                <package>com.jidesoft.converter</package>
+                <package>com.jidesoft.dialog</package>
+                <package>com.jidesoft.grouper</package>
+                <package>com.jidesoft.grouper.date</package>
+                <package>com.jidesoft.hints</package>
+                <package>com.jidesoft.icons</package>
+                <package>com.jidesoft.list</package>
+                <package>com.jidesoft.plaf</package>
+                <package>com.jidesoft.plaf.aqua</package>
+                <package>com.jidesoft.plaf.basic</package>
+                <package>com.jidesoft.plaf.eclipse</package>
+                <package>com.jidesoft.plaf.metal</package>
+                <package>com.jidesoft.plaf.office2003</package>
+                <package>com.jidesoft.plaf.office2007</package>
+                <package>com.jidesoft.plaf.vsnet</package>
+                <package>com.jidesoft.plaf.windows</package>
+                <package>com.jidesoft.plaf.xerto</package>
+                <package>com.jidesoft.popup</package>
+                <package>com.jidesoft.range</package>
+                <package>com.jidesoft.spinner</package>
+                <package>com.jidesoft.swing</package>
+                <package>com.jidesoft.swing.event</package>
+                <package>com.jidesoft.tree</package>
+                <package>com.jidesoft.utils</package>
+                <package>com.jidesoft.validation</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/jide-oss-2.9.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jide-oss-2.9.0.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>

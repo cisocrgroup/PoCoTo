@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: info.clearthought.layout
+OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Localizing-Bundle: info/clearthought/layout/Bundle.properties
+

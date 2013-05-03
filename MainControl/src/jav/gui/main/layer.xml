@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <!--folder name="WarmUp">
+        <file name="jav.gui.main-AutoUpdater.instance"/>
+    </folder-->
+    <folder name="Actions">
+        <folder name="Edit">
+            <file name="org-openide-actions-CutAction.instance_hidden"/>
+            <file name="org-openide-actions-CopyAction.instance_hidden"/>
+            <file name="org-openide-actions-PasteAction.instance_hidden"/>
+            <file name="org-openide-actions-DeleteAction.instance_hidden"/>
+            <file name="org-openide-actions-FindAction.instance_hidden"/>
+            <file name="org-openide-actions-ReplaceAction.instance_hidden"/>
+
+            <file name="jav-gui-main-FilterAction.instance">
+                <attr name="delegate" newvalue="jav.gui.main.FilterAction"/>
+                <attr name="displayName" bundlevalue="jav.gui.main.Bundle#CTL_FilterAction"/>
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.alwaysEnabled"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+                <attr name="position" intvalue="0"/>
+            </file>
+        </folder>
+        <folder name="Window">
+            <file name="jav-gui-concordance-neu-DesignvorlageTopComponent.instance_hidden"/>
+            <file name="jav-gui-mainWindow-MainAction.instance_hidden"/>
+            <file name="org-netbeans-core-actions-GlobalPropertiesAction.instance_hidden"/>
+        </folder>
+        <folder name="File">
+
+            <file name="org-netbeans-modules-print-action-PageSetupAction.instance_hidden"/>
+            <file name="org-netbeans-modules-print-action-PrintAction.instance_hidden"/>
+
+            <file name="org-openide-actions-SaveAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.context"/>
+                <attr name="delegate" newvalue="org.openide.actions.SaveAction"/>
+                <attr name="selectionType" stringvalue="EXACTLY_ONE"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#Save"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+                <attr name="type" stringvalue="org.openide.cookies.SaveCookie"/>
+            </file>
+            <!--file name="jav-gui-actions-MySaveAs.instance">
+                <attr name="delegate" newvalue="jav.gui.actions.MySaveAs"/>
+                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#SaveAs"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+                <attr name="iconBase" stringvalue="org/openide/resources/actions/save.png"/>
+            </file-->
+            <file name="jav-gui-actions-ExportAsPlainText.instance">
+                <attr name="delegate" newvalue="jav.gui.actions.ExportAsPlainText"/>
+                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#exportplaintext"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+            <file name="jav-gui-actions-ExportAsPageSeparatedPlainText.instance">
+                <attr name="delegate" newvalue="jav.gui.actions.ExportAsPageSeparatedPlainText"/>
+                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#exportpageseparatedplaintext"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+            <file name="jav-gui-actions-ExportAsDocXML.instance">
+                <attr name="delegate" newvalue="jav.gui.actions.ExportAsDocXML"/>
+                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#exportdocxml"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+
+        </folder>
+        <folder name="Tools">
+            <file name="jav-gui-actions-OCRErrorKonkordance.instance">
+                <attr name="delegate" newvalue="jav.gui.actions.OCRErrorKonkordance"/>
+                <attr name="displayName" bundlevalue="jav.gui.main.Bundle#CTL_OCRErrorKonkordance"/>
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.alwaysEnabled"/>
+                <attr name="noIconInMenu" boolvalue="false"/>
+                <attr name="position" intvalue="0"/>
+            </file>
+        </folder>
+        <folder name="View">
+            <file name="org-netbeans-core-actions-HTMLViewAction.instance_hidden"/>
+
+        </folder>
+    </folder>
+    <folder name="Menu">
+        <folder name="View">
+            <file name="org-netbeans-core-actions-LogAction.shadow_hidden"/>
+        </folder>
+        <folder name="Window">
+            <file name="CloneDocumentAction.shadow_hidden"/>
+            <file name="CloseAllButThisAction.shadow_hidden"/>
+            <file name="CloseAllDocumentsAction.shadow_hidden"/>
+            <file name="DocumentsAction.shadow_hidden"/>
+            <!--<file name="MainAction.shadow_hidden"/>-->
+            <!--<file name="Output_hidden"/>-->
+            <file name="ProgressListAction.shadow_hidden"/>
+            <file name="SwitchToRecentDocumentAction.shadow_hidden"/>
+            <file name="org-netbeans-core-actions-GlobalPropertiesAction.instance_hidden"/>
+            <file name="jav-gui-mainWindow-MainAction.instance_hidden"/>
+            <file name="org-netbeans-core-windows-actions-GlobalPropertiesAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-favorites-View.instance_hidden"/>
+        </folder>
+        <folder name="GoTo_hidden"/>
+        <folder name="File">
+            <file name="org-netbeans-modules-print-action-PageSetupAction.shadow_hidden"/>
+            <file name="org-netbeans-modules-print-action-PrintAction.shadow_hidden"/>
+
+            <file name="org-openide-actions-SaveAllAction.shadow_hidden"/>
+            <file name="org-openide-actions-SaveAsAction.shadow_hidden"/>
+            <file name="org-openide-actions-SaveAction.shadow_hidden"/>
+
+            <file name="SaveAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/org-openide-actions-SaveAction.instance"/>
+                <attr name="position" intvalue="1000"/>
+            </file>
+            <file name="jav-gui-actions-MySaveAs.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-MySaveAs.instance"/>
+                <attr name="position" intvalue="1100"/>
+            </file>
+        </folder>
+        <folder name="Edit">
+            <file name="org-openide-actions-CutAction.shadow_hidden"/>
+            <file name="org-openide-actions-CopyAction.shadow_hidden"/>
+            <file name="org-openide-actions-PasteAction.shadow_hidden"/>
+            <file name="org-openide-actions-DeleteAction.shadow_hidden"/>
+            <file name="org-openide-actions-FindAction.shadow_hidden"/>
+            <file name="org-openide-actions-ReplaceAction.shadow_hidden"/>
+
+<!--            <file name="jav-gui-main-FilterAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Edit/jav-gui-main-FilterAction.instance"/>
+                <attr name="position" intvalue="100"/>
+            </file>-->
+        </folder>
+        <folder name="Tools">
+            <!--file name="org-netbeans-modules-autoupdate-ui-actions-PluginManagerAction.shadow"/-->
+            <file name="org-openide-actions-ToolsAction.shadow_hidden"/>
+            <file name="jav-gui-main-OCRErrorKonkordance-separatorAfter.instance">
+                <attr name="instanceClass" stringvalue="javax.swing.JSeparator"/>
+                <attr name="position" intvalue="50"/>
+            </file>
+            <file name="jav-gui-actions-OCRErrorKonkordance.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/jav-gui-actions-OCRErrorKonkordance.instance"/>
+                <attr name="position" intvalue="0"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="QuickSearch">
+        <folder name="Actions_hidden"/>
+        <folder name="GoToOption_hidden"/>
+        <folder name="Help_hidden"/>
+        <folder name="Recent_hidden"/>
+        <folder name="Types">
+            <attr name="command" stringvalue="Prefix"/>
+            <attr name="position" intvalue="0"/>
+            <file name="jav-gui-main-MyTypePrefixSearchProvider.instance">
+                <attr name="displayName" bundlevalue="jav.gui.main.Bundle#QuickSearch/Token/jav-gui-main-MyTypePrefixSearchProvider.instance"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Services">
+        <folder name="AutoupdateType">
+            <!--file name="jav_gui_main_update_center.instance">
+                <attr name="displayName" bundlevalue="jav.gui.main.Bundle#Services/AutoupdateType/jav_gui_main_update_center.instance"/>
+                <attr name="enabled" boolvalue="true"/>
+                <attr name="instanceCreate" methodvalue="org.netbeans.modules.autoupdate.updateprovider.AutoupdateCatalogFactory.createUpdateProvider"/>
+                <attr name="instanceOf" stringvalue="org.netbeans.spi.autoupdate.UpdateProvider"/>
+                <attr name="url" bundlevalue="jav.gui.main.Bundle#jav_gui_main_update_center"/>
+            </file-->
+            <file name="jav_gui_main_update_center_1.instance">
+                <attr name="displayName" bundlevalue="jav.gui.main.Bundle#Services/AutoupdateType/jav_gui_main_update_center_1.instance"/>
+                <attr name="enabled" boolvalue="true"/>
+                <attr name="instanceCreate" methodvalue="org.netbeans.modules.autoupdate.updateprovider.AutoupdateCatalogFactory.createUpdateProvider"/>
+                <attr name="instanceOf" stringvalue="org.netbeans.spi.autoupdate.UpdateProvider"/>
+                <attr name="url" bundlevalue="jav.gui.main.Bundle#jav_gui_main_update_center_1"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Toolbars">
+        <folder name="File">
+            <file name="org-openide-actions-SaveAllAction.shadow_hidden"/>
+            <file name="SaveAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/org-openide-actions-SaveAction.instance"/>
+                <attr name="position" intvalue="100"/>
+            </file>
+        </folder>
+        <folder name="QuickSearch">
+            <file name="org-netbeans-modules-quicksearch-QuickSearchAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Edit/org-netbeans-modules-quicksearch-QuickSearchAction.instance"/>
+                <attr name="position" intvalue="900"/>
+            </file>
+        </folder>
+    </folder>
+</filesystem>

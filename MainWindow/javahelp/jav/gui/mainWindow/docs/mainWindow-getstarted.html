@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+<title>How to get started</title>
+<link rel="stylesheet" href="nbdocs:/org/netbeans/modules/usersguide/ide.css" type="text/css"/>
+<style type="text/css">
+    body {
+        margin-left: 10%;
+        margin-right: 10%;
+
+    }
+    
+    h1 {
+        border-bottom: 1px solid black;
+    }
+    
+    h2 {
+        border-bottom: 1px solid black;
+    }
+    
+    h3 {
+        border-bottom: 1px solid black;
+    }
+    
+    
+    span.mono {
+        font-family: monospace;
+    }
+    span.kw {
+        font-style: italic;
+    }
+
+    .code {
+        display:block;
+        white-space: pre;
+        font-family: monospace;
+        font-size : 100%;
+        color: #000;
+        background : #fff url(http://www.estudiowas.com.ar/images/preback.jpg) no-repeat left top;
+        overflow : auto;
+        text-align:left;
+        border : 1px solid #5581C0;
+        padding : 0px 20px 0 30px;
+        margin:1em 0 1em 0;
+        line-height:17px;
+        font-weight:normal!important;
+    }
+</style>
+</head>
+<body>
+    <h1>How to get started</h1>
+    <p>
+        OCRC is a system for post-correction of OCR generated text. This guide will help you to create a new project
+        for the correction of an ocr-ed document and explain to you the basic functionality of the system
+    </p>
+    <h3>Contents</h3>
+    <ul>
+        <li><a href="#input">Data for input</a></li>
+        <li><a href="#create">The <i>New Project</i> Wizard, and how to save and open existing projects</a></li>
+        <li><a href="#basic">Basic features for the correction of erroneous words</a></li>
+        <li><a href="#batch">Batch processing for repeated and systematic errors</a></li>
+    </ul>
+
+    <h3 id="input">Data for input</h3>
+    <p>
+        The <i>OCRC</i> system works on the output of the ABBYY Finereader OCR engine (subsequently called <i>FR Engine</i>). The <i>FR Engine</i>
+        allows to save OCR results in an XML format providing details about the recognition process, and, in particular, image coordinates
+        for every character it recognized. <i>OCRC</i> enabels you to directly compare your OCR results to the source images, so it needs
+        this kind of input, together with the source images.
+    </p>
+    <p>
+        Before you start to create a new project in the <i>OCRC</i> system, be sure to have your data available in the following form:
+    </p>
+    <ul>
+        <li>
+            Abbyy FR XML output files with coordinate information on character level. Each recognized page of your document should
+            be represented by one xml file. All files must be collected in a directory, e.g. <span class="mono">/my_book/xml/</span>. The filenames'
+            alphabetical order must reflect the page order. Usually your xml file collection should look like this:
+            <div class="code">
+            /my_book/xml/page_001.xml
+            /my_book/xml/page_002.xml
+            /my_book/xml/page_003.xml
+            ...
+            /my_book/xml/page_042.xml
+            </div>
+        </li>
+        <li>
+            In a second folder (say, <span class="mono">/my_book/tif/</span>) all source images must be available. The images must be in tiff format and
+            must have the same name as their respective xml files, except for the file extensions. So the image folder should look similar to:
+            <div class="code">
+            /my_book/tif/page_001.tif
+            /my_book/tif/page_002.tif
+            /my_book/tif/page_003.tif
+            ...
+            /my_book/tif/page_042.tif
+            </div>
+        </li>
+    </ul>
+    <p>
+        Note that, while the names and locations of both folders are up to you, the file extensions <span class="mono">.xml</span> and <span class="mono">.tif</span> are mandatory.
+    </p>
+
+    <h3 id="create">The <i>New Project</i> Wizard, and how to save and open existing projects</h3>
+    <h4>Create a new project</h4>
+    <p>
+        Once you have prepared your data in the form explained above, you will find it very easy to create a new project for post-correction.
+        Choose <span class="mono">File > New Project</span> in the menu, and a wizard will ask you to specify both the xml and the tif folder. After the wizard has finished,
+        the system will perform a pre-processing on youzr document, which can, according to its size and your settings, take several minutes.
+        After the pre-processing is finished, the first page of your document will appear on the screen, and you're ready to start with the
+        correction process.
+    </p>
+    <h4>Save/ Open existing projects</h4>
+    <p>
+        Projects that were created using the above procedure can be dumped to hard disk and opened again at any time using the standard commands
+        <span class="mono">Open Project</span>, <span class="mono">Save</span> and <span class="mono">Save as</span> in the <span class="mono">File</span> menu.
+
+    </p>
+
+
+    <h3 id="textview">The <span class="kw">Text View</span></h3>
+    <p>The tool offers two basic modes for correcting errors. The <span class="kw">text view</span> presents your document in its standard reading order - page by page, the contents of the document can be viewed and corrected. Each word of the OCR result is presented together with the respective snippet of the original image - this makes the direct comparison and verification much faster and more reliable. Besides, another pane displays the complete image of the current page, highlighting the currently selected word with a box. This helps to keep your orientation and also to decipher regions where the snippets are hard to read.</p>
+    <p><b>Spot suspicious words:</b> Similar to what you know from e.g. word processing programs, words which are considered to be erroneous are underlined in red color. To explicitly remove the 'suspicious' status of a word, right-click this word and choose the option <span class="mono">Mark as correct</span>.</p>
+    <p><b>Correct words:</b> Right-click words to edit them using the keyboard or by selecting one of the suggested correction candidates. Words that were manually changed are underlined in green color.</p>
+    <p><b>Delete words</b>: You can easily remove a word by selecting it and pressing the <span class="mono">Del</span>-button of your keyboard.</p>
+    <p><b>Split a word in two</b>: Often the OCR engine fails to recognize word borders correctly. In this case simply add a space character in your correction to indicate the word border.</p>
+    <p>The <span class="kw">Text View</span> offers more features. To find out how to merge words or how to start <span class="kw">Batch Views</span> from the <span class="kw">Text View</span>, read Section ???</p>
+    
+    
+    <h3 id="batchview">The <span class="kw">Batch View</span></h3>
+    <p>While the <span class="kw">Text View</span> displays your document in </p>
+    
+
+    <h3 id="basic">Basic features for the correction of erroneous words</h3>
+    <p>Once you have created a project from abbyy output, you are ready to start and correct errors. 
+    This section explains the basic edit functions for tokens, that is, to change words manually, 
+    to select a suitable correction candidate offered by the system, or to delete, split or merge 
+    tokens. The next section will introduce the batch processing features for faster correction.</p>
+        
+    <h4>Editing word strings manually</h4>
+
+
+    <h4>Deleting, merging or splitting tokens</h4>
+    
+    
+    <h3 id="batch">Batch processing for repeated and systematic errors</h3>
+
+    
+    </body>
+</html>
+<!--
+Tip: to create a link which will open in an external web browser, try:
+<object classid="java:org.netbeans.modules.javahelp.BrowserDisplayer">
+    <param name="content" value="http://www.netbeans.org/">
+    <param name="text" value="<html><u>http://www.netbeans.org/</u></html>">
+    <param name="textFontSize" value="medium">
+    <param name="textColor" value="blue">
+</object>
+To create a link to a help set from another module, you need to know the code name base and path, e.g.:
+<a href="nbdocs://org.netbeans.modules.usersguide/org/netbeans/modules/usersguide/configure/configure_options.html">Using the Options Window</a>
+(This link will behave sanely if that module is disabled or missing.)
+-->

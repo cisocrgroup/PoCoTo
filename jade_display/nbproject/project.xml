@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>jpl.mipl</code-name-base>
+            <suite-component/>
+            <module-dependencies>
+                <dependency>
+                    <code-name-base>javax.media.jai</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.0</specification-version>
+                    </run-dependency>
+                </dependency>
+            </module-dependencies>
+            <public-packages>
+                <package>jpl.mipl.jade</package>
+                <package>jpl.mipl.jade.util</package>
+                <package>jpl.mipl.util</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/jade_display_2_1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jade_display_2_1.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>

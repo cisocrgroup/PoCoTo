@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Actions">
+        <folder name="Window">
+            <file name="jav-gui-error-profiler-PatternViewAction.instance">
+                <attr name="component" methodvalue="jav.gui.error.profiler.PatternTopComponent.findInstance"/>
+                <attr name="displayName" bundlevalue="jav.gui.error.profiler.Bundle#CTL_PatternViewAction"/>
+                <attr name="instanceCreate" methodvalue="org.openide.windows.TopComponent.openAction"/>
+                <attr name="position" intvalue="0"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Menu">
+        <folder name="Window">
+            <file name="PatternViewAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/Window/jav-gui-error-profiler-PatternViewAction.instance"/>
+                <attr name="position" intvalue="0"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="Windows2">
+        <folder name="Components">
+            <file name="PatternTopComponent.settings" url="PatternTopComponentSettings.xml"/>
+        </folder>
+        <folder name="Modes">
+            <file name="PatternMode.wsmode" url="PatternMode.wsmode"/>
+            <folder name="PatternMode">
+                <file name="PatternTopComponent.wstcref" url="PatternTopComponentWstcref.xml"/>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>

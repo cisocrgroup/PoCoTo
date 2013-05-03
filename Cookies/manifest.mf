@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: jav.gui.cookies
+OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Localizing-Bundle: jav/gui/cookies/Bundle.properties
+

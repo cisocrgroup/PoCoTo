@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: jav.concordance
+OpenIDE-Module-Implementation-Version: 02052013
+OpenIDE-Module-Localizing-Bundle: jav/concordance/Bundle.properties
+

@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: cis.profiler.client
+OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Localizing-Bundle: cis/profiler/client/Bundle.properties
+

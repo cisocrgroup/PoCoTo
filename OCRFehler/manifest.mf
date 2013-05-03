@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: jav.gui.error
+OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Layer: jav/gui/error/layer.xml
+OpenIDE-Module-Localizing-Bundle: jav/gui/error/Bundle.properties

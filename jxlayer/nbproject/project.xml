@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>org.jdesktop.jxlayer</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages>
+                <package>com.jhlabs.composite</package>
+                <package>com.jhlabs.image</package>
+                <package>com.jhlabs.math</package>
+                <package>com.jhlabs.vecmath</package>
+                <package>org.jdesktop.jxlayer</package>
+                <package>org.jdesktop.jxlayer.plaf</package>
+                <package>org.jdesktop.jxlayer.plaf.effect</package>
+                <package>org.jdesktop.jxlayer.plaf.ext</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/jxlayer.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jxlayer.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/filters.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/filters.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>

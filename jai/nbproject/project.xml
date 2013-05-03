@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>javax.media.jai</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages>
+                <package>com.sun.media.jai.codec</package>
+                <package>com.sun.media.jai.codecimpl</package>
+                <package>com.sun.media.jai.codecimpl.fpx</package>
+                <package>com.sun.media.jai.codecimpl.util</package>
+                <package>com.sun.media.jai.iterator</package>
+                <package>com.sun.media.jai.mlib</package>
+                <package>com.sun.media.jai.opimage</package>
+                <package>com.sun.media.jai.remote</package>
+                <package>com.sun.media.jai.rmi</package>
+                <package>com.sun.media.jai.tilecodec</package>
+                <package>com.sun.media.jai.util</package>
+                <package>com.sun.media.jai.widget</package>
+                <package>com.sun.medialib.mlib</package>
+                <package>javax.media.jai</package>
+                <package>javax.media.jai.iterator</package>
+                <package>javax.media.jai.operator</package>
+                <package>javax.media.jai.registry</package>
+                <package>javax.media.jai.remote</package>
+                <package>javax.media.jai.tilecodec</package>
+                <package>javax.media.jai.util</package>
+                <package>javax.media.jai.widget</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/mlibwrapper_jai.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/mlibwrapper_jai.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jai_codec.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jai_codec.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jai_core.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jai_core.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>

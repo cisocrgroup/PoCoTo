@@ -1,0 +1,21 @@
+Verwendete Software
+
+Netbeans / Netbeans Platform	http://www.netbeans.org	Lizenzen treffen nur zu wenn man den Quellcode der IDE selber verändert, alles andere fällt unter keine Lizenz
+JadeDisplay                 	http://www.openchannelsoftware.com/projects/JadeDisplay	http://www.openchannelsoftware.com/project/print_license.php?group_id=294&license_id=61
+Java Advanced Imaging		http://www.java.net/projects/jai	java research licence JRL
+JideOSS				http://www.jidesoft.com/products/oss.htm	http://www.jidesoft.com/purchase/SLA.htm oder GPL mit Classpath Exception, könnte also problematisch sein, die classpath exception sollte uns aber reichen um das Copyleft zu umgehen
+JXLayer				http://www.java.net/projects/jxlayer http://www.pbjar.org/blogs/jxlayer/jxlayer40/	BSD License
+				Lizenz: http://www.opensource.org/licenses/bsd-license.php
+
+SwingX				http://swingx.java.net/	lgpl lesser gnu license sollte auch kein problem sein da die weitervererbung wegfällt
+RiverLayout			http://www.datadosen.se/riverlayout/	ebenfalls lgpl
+RiverLayout is released under the LGPL licence. You may therefore freely use it in both non-commerical and commercial applications and you don't need to open up your source code. Improvements made to RiverLayout should however be returned to the project for the benefit of everyone.
+
+TableLayout			http://java.net/projects/tablelayout/sources
+				Lizenz: http://www.gnu.org/licenses/lgpl.html
+
+Log4j				http://logging.apache.org/log4j/
+				Lizenz: http://www.apache.org/licenses/				
+Apache Commons	apache License
+Tagsoup	apache license
+h2sql	mozilla public license oder eclipse public license sollte ebenfalls kein Problem sein

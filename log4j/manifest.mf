@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: jav.logging.log4j
+OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Localizing-Bundle: jav/logging/log4j/Bundle.properties
+

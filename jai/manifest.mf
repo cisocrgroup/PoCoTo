@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: javax.media.jai
+OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Localizing-Bundle: javax/media/jai/Bundle.properties
+
