@@ -46,7 +46,7 @@ import javax.swing.JPanel;
  */
 public class DummyTokenVisualization extends JPanel {
 
-    private int tokenIndex;
+    private int tokenID;
     private TokenTextLabel tokenTextLabel;
     private DisplayJAI djai;
     private boolean hasImage;
@@ -54,7 +54,7 @@ public class DummyTokenVisualization extends JPanel {
     public DummyTokenVisualization( Token t, String s, int fontSize) {
         super();
         this.hasImage = false;
-        this.tokenIndex = t.getIndexInDocument();
+        this.tokenID = t.getID();
         init( s, fontSize);
         
     }
@@ -62,7 +62,7 @@ public class DummyTokenVisualization extends JPanel {
     public DummyTokenVisualization( Token t, String s, int fontSize, BufferedImage b) {
         super();
         this.hasImage = true;
-        this.tokenIndex = t.getIndexInDocument();
+        this.tokenID = t.getID();
         init( s, fontSize, b);
     }
     
@@ -177,6 +177,6 @@ public class DummyTokenVisualization extends JPanel {
     }
 
     public int getTokenIndex() {
-        return this.tokenIndex;
+        return this.tokenID;
     }
 }

@@ -318,7 +318,7 @@ public final class PatternTopComponent extends AbstractMyTopComponent implements
         Iterator<Pattern> i = patterns.iterator();
         while (i.hasNext()) {
             Pattern p = i.next();
-//            System.out.println("Pattern "+p.getLeft()+"_"+p.getRight()+" "+p.getOccurencesN()+" "+p.getOccurences().size());
+            System.out.println("Pattern "+p.getLeft()+"_"+p.getRight()+" "+p.getOccurencesN()+" "+p.getOccurences().size());
             if (p.getOccurencesN() >= 1) {
                 PatternPanel pp = new PatternPanel( p, plm );
                 jPanel1.add(pp);

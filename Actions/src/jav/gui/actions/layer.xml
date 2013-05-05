@@ -101,17 +101,16 @@
                 <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-MRUFilesAction.instance"/>
                 <attr name="position" intvalue="700"/>
             </file>
-            <folder name="newproj">
-                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#newproj"/>
+<!--            <folder name="newproj">-->
                 <file name="jav-gui-wizard-newProject-NewProjectWizardAction.shadow">
                     <attr name="originalFile" stringvalue="Actions/File/jav-gui-wizard-newProject-NewProjectWizardAction.instance"/>
                     <attr name="position" intvalue="0"/>
                 </file>
-                <file name="jav-gui-wizard-importDocument-ImportDocumentWizardAction.shadow">
+<!--                <file name="jav-gui-wizard-importDocument-ImportDocumentWizardAction.shadow">
                     <attr name="originalFile" stringvalue="Actions/File/jav-gui-wizard-importDocument-ImportDocumentWizardAction.instance"/>
                     <attr name="position" intvalue="0"/>
-                </file>
-            </folder>
+                </file>-->
+<!--            </folder>-->
             <folder name="Export">
                 <attr name="position" intvalue="1150"/>
                 <file name="jav-gui-actions-ExportAsDocXML.shadow">

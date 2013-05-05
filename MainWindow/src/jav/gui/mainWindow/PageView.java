@@ -1,7 +1,6 @@
 package jav.gui.mainWindow;
 
 import jav.correctionBackend.MyIterator;
-import jav.correctionBackend.Page;
 import jav.correctionBackend.Token;
 import jav.correctionBackend.TokenImageInfoBox;
 import jav.gui.events.MessageCenter;

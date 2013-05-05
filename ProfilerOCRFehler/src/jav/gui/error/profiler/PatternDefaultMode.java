@@ -189,7 +189,7 @@ public class PatternDefaultMode implements PatternMode {
                             po.setWSuggestion(po.getWSuggestion().substring(0, 1).toUpperCase() + po.getWSuggestion().substring(1));
                         }
                         ke.setCandidateString(po.getWSuggestion());
-                        tokens.put(tok.getIndexInDocument(), ke);
+                        tokens.put(tok.getID(), ke);
                     }
                 } catch (Exception e) {
                 }

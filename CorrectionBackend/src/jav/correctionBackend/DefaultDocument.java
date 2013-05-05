@@ -136,29 +136,31 @@ public class DefaultDocument extends Document {
     }
 
     @Override
-    public ArrayList<Integer> deleteToken(int iDFrom, int iDAfterTo) throws SQLException {
+    public ArrayList<Integer> deleteToken(int iDFrom, int iDTo) throws SQLException {
 
         Connection conn = null;
         PreparedStatement setIndex = null;
         PreparedStatement moveIndex = null;
         PreparedStatement undo_redo = null;
+        
+        Token from = this.getTokenByID(iDFrom);
+        Token to = this.getTokenByID(iDTo);
 
-        int indexFrom = this.getTokenByID(iDFrom).getIndexInDocument();
-        int indexAfterTo = this.getTokenByID(iDAfterTo).getIndexInDocument();
+        int indexFrom = from.getIndexInDocument();
+        int indexTo = to.getIndexInDocument();
 
         try {
             ArrayList<Integer> retval = new ArrayList<>();
-            if (indexAfterTo < indexFrom) {
+            if (indexTo < indexFrom) {
                 return null;
 //                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN invalid range");
             }
 
-            if (indexFrom == indexAfterTo) {
+            if (indexFrom == indexTo) {
                 return null;
             }
 
-            int thisPageIndex = this.getTokenByIndex(indexFrom).getPageIndex();
-            if (thisPageIndex != this.getTokenByIndex(indexAfterTo - 1).getPageIndex()) {
+            if ( from.getPageIndex() != to.getPageIndex()) {
                 return null;
 //                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN: cannot erase across page borders");
             }
@@ -172,7 +174,7 @@ public class DefaultDocument extends Document {
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
 
             int i;
-            for (i = indexFrom; i < indexAfterTo; i++) {
+            for (i = indexFrom; i <= indexTo; i++) {
                 Token temp = this.getTokenByIndex(i);
                 retval.add(temp.getID());
 

@@ -92,7 +92,7 @@ public abstract class Document {
         Connection conn = null;
         try {
             conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO CANDIDATE VALUES( ?,?,?,?,?,? )");
+            PreparedStatement prep = conn.prepareStatement("INSERT INTO candidate VALUES( ?,?,?,?,?,? )");
             prep.setInt(1, c.getTokenID());
             prep.setInt(2, c.getRank());
             prep.setString(3, c.getSuggestion());
@@ -102,6 +102,8 @@ public abstract class Document {
 
             prep.addBatch();
             prep.executeBatch();
+            prep.close();
+            conn.close();
         } catch (SQLException ex) {
         }
     }
@@ -110,7 +112,7 @@ public abstract class Document {
         Connection conn = null;
         try {
             conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO PATTERN VALUES( null, ?, ?, ?, ? )");
+            PreparedStatement prep = conn.prepareStatement("INSERT INTO pattern VALUES( null, ?, ?, ?, ? )");
             prep.setString(1, p.getLeft());
             prep.setString(2, p.getRight());
             prep.setInt(3, p.getOccurencesN());
@@ -128,7 +130,7 @@ public abstract class Document {
         Connection conn = null;
         try {
             conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO PATTERNOCCURRENCE VALUES( ?, ?, ?, ?, ?, ? )");
+            PreparedStatement prep = conn.prepareStatement("INSERT INTO patternoccurrence VALUES( ?, ?, ?, ?, ?, ? )");
             prep.setInt(1, po.getPatternID());
             prep.setInt(2, po.getPart());
             prep.setString(3, po.getWOCR_LC());
@@ -143,8 +145,21 @@ public abstract class Document {
         } catch (SQLException ex) {
         }
     }
+    
+    public void clearPatterns() {
+        Connection conn = null;
+        try {
+            conn = jcp.getConnection();
+            Statement s = conn.createStatement();
+            s.executeUpdate("TRUNCATE TABLE pattern");
+            s.executeUpdate("TRUNCATE TABLE patternoccurrence");
+            s.close();
+            conn.close();
+        } catch (SQLException ex) {
+        }        
+    }
 
-    public void truncateCandidates() {
+    public void clearCandidates() {
         Connection conn = null;
         try {
             conn = jcp.getConnection();
@@ -1516,7 +1531,7 @@ public abstract class Document {
         if (next == null) {
             return null;
         }
-
+        
         boolean skipSpace = false;
         // decide if immediate neighbour should be skipped, 
         // e.g. if it contains just whitespace
@@ -1524,6 +1539,7 @@ public abstract class Document {
             end = this.getNextToken(next.getID());
             if (end == null) {
                 try {
+                    // delete whitespace at end of document (token after whitespace == null)
                     this.deleteToken(next.getID());
                 } catch (SQLException ex) {
                 }
@@ -1535,7 +1551,7 @@ public abstract class Document {
         return this.mergeRightward(iD, (skipSpace ? 2 : 1));
     }
 
-    public abstract ArrayList<Integer> mergeRightward(int iD, int numTok) throws SQLException;
+    public abstract ArrayList<Integer> mergeRightward(int iD, int numToMerge) throws SQLException;
 
     public void setSuspicious(int tokenID, String val) {
         try {
@@ -1779,7 +1795,7 @@ public abstract class Document {
     }
 
     public HashMap<String, OCRErrorInfo> computeErrorFreqList() {
-        HashMap<String, OCRErrorInfo> freqList = new HashMap<String, OCRErrorInfo>();
+        HashMap<String, OCRErrorInfo> freqList = new HashMap<>();
         Iterator<Token> it = this.tokenIterator();
         while (it.hasNext()) {
             Token tok = it.next();
@@ -1967,9 +1983,9 @@ class CandidateIterator implements MyIterator<Candidate> {
         try {
             conn = c;
             s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM CANDIDATE WHERE tokenID =" + tokenID + "ORDER BY rank ASC");
+            rs = s.executeQuery("SELECT * FROM candidate WHERE tokenID=" + tokenID + " ORDER BY rank ASC");
         } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }
 
@@ -2167,7 +2183,7 @@ class PatternOccurrenceIterator implements MyIterator<PatternOccurrence> {
         try {
             conn = c;
             s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM PATTERNOCCURRENCE WHERE patternID =" + patternID + " ORDER BY freq ASC");
+            rs = s.executeQuery("SELECT * FROM PATTERNOCCURRENCE WHERE patternID=" + patternID + " ORDER BY freq ASC");
         } catch (SQLException ex) {
             Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
         }

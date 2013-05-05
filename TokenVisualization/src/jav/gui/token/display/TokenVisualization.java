@@ -218,13 +218,13 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
 
         this.isEditing = true;
         
-        LinkedHashSet<ComboBoxEntry> cands = new LinkedHashSet<ComboBoxEntry>();
+        LinkedHashSet<ComboBoxEntry> cands = new LinkedHashSet<>();
         
         temptoken = MainController.findInstance().getDocument().getTokenByID( tokenID );
 
         cands.add(new ComboBoxEntry(this.getTokenTextLabelText(), ComboBoxEntryType.NORMAL));
         
-        Iterator<Candidate> iterator = MainController.findInstance().getDocument().candidateIterator(temptoken.getIndexInDocument());
+        Iterator<Candidate> iterator = MainController.findInstance().getDocument().candidateIterator( tokenID );
         int maxcands = 5;
         while (iterator.hasNext() && maxcands > 1) {
             maxcands--;
@@ -375,7 +375,7 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         } else if (cbe.getType() == ComboBoxEntryType.SETCORRECTED) {
             abortTokenEditing();
             if( !temptoken.isCorrected()) {
-                MainController.findInstance().setCorrected( temptoken.getIndexInDocument(), true );
+                MainController.findInstance().setCorrected( tokenID, true );
             }
             instance.revalidate();
             MainController.findInstance().addToLog(MainController.findInstance().getLastFocusedTCName() + " # set as corrected # " + temptoken.getWOCR());
@@ -384,8 +384,7 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         } else if (cbe.getType() == ComboBoxEntryType.DELETE) {
 
             abortTokenEditing();
-            int position = temptoken.getIndexInDocument();
-            MainController.findInstance().deleteToken(position);
+            MainController.findInstance().deleteToken( tokenID );
             
         } else if(cbe.getType() == ComboBoxEntryType.FOCUS_IN_MAIN) {
             abortTokenEditing();

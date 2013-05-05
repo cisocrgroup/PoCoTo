@@ -42,14 +42,14 @@ public class NewProjectWizardDescriptor extends WizardDescriptor {
    private NewProjectWizardPanel0 panel0 = new NewProjectWizardPanel0();
    private NewProjectWizardPanel1 panel1 = new NewProjectWizardPanel1();
    private NewProjectWizardPanel2 panel2 = new NewProjectWizardPanel2();
-   private NewProjectWizardPanel3 panel3 = new NewProjectWizardPanel3();
+//   private NewProjectWizardPanel3 panel3 = new NewProjectWizardPanel3();
 
    public NewProjectWizardDescriptor() {
       List<Panel<WizardDescriptor>> panels = new ArrayList<Panel<WizardDescriptor>>();
       panels.add(panel0);
       panels.add(panel1);
       panels.add(panel2);
-      panels.add(panel3);
+//      panels.add(panel3);
       this.setPanelsAndSettings(new ArrayIterator<WizardDescriptor>(panels), this);
 
       // {0} will be replaced by WizardDesriptor.Panel.getComponent().getName()
@@ -59,6 +59,6 @@ public class NewProjectWizardDescriptor extends WizardDescriptor {
       putProperty("WizardPanel_autoWizardStyle",  Boolean.TRUE);
       putProperty("WizardPanel_contentDisplayed", Boolean.TRUE);
       putProperty("WizardPanel_contentNumbered",  Boolean.TRUE);
-      putProperty("WizardPanel_contentData", new String[]{panel0.getName(), panel1.getName(), panel2.getName(), panel3.getName()});
+      putProperty("WizardPanel_contentData", new String[]{panel0.getName(), panel1.getName(), panel2.getName()}); //, panel3.getName()});
    }
 }

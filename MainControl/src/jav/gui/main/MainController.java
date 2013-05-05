@@ -334,6 +334,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             content.add(csrcookie);
             content.add(docloadcookie);
             this.refreshID();
+            this.checkPrint();
             MessageCenter.getInstance().fireDocumentChangedEvent(new DocumentChangedEvent(this, d));
         } else {
             content.add(csrcookie);
@@ -693,6 +694,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         Iterator<Pattern> iterp = globalDocument.patternIterator();
         while (iterp.hasNext()) {
             Pattern p = iterp.next();
+            System.out.println(p.getPatternID() + " " + p.getLeft() + " " + p.getRight());
             Iterator<PatternOccurrence> iterpo = globalDocument.patternOccurrenceIterator(p.getPatternID());
             while (iterpo.hasNext()) {
                 p.addOccurence(iterpo.next(), false);
@@ -839,9 +841,9 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             Token t = tokenit.next();
             TokenImageInfoBox b = t.getTokenImageInfoBox();
             if (b != null) {
-                System.out.println("Token: " + t.getID() + " " + t.getIndexInDocument() + " " + t.getWDisplay() + " " + t.isCorrected() + " " + t.isNormal() + " " + b.getCoordinateLeft() + " " + b.getCoordinateRight());
+                System.out.println("Token: " + t.getID() + " " + t.getIndexInDocument() + " " + t.getWDisplay() + " " + t.isCorrected() + " " + t.isNormal() + " " + t.isSuspicious() + " " + b.getCoordinateLeft() + " " + b.getCoordinateRight());
             } else {
-                System.out.println("Token: " + t.getID() + " " + t.getIndexInDocument() + " " + t.getWDisplay() + " " + t.isCorrected() + " " + t.isNormal());
+                System.out.println("Token: " + t.getID() + " " + t.getIndexInDocument() + " " + t.getWDisplay() + " " + t.isCorrected() + " " + t.isNormal() + " " + t.isSuspicious());
             }
         }
     }
@@ -1096,6 +1098,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             doc_out.flush();
                             doc_out.close();
 
+                            globalDocument.clearCandidates();
                             new OCRXMLImporter().importCandidates(globalDocument, tempFile.getCanonicalPath());
 
                             tempFile = File.createTempFile("profile", ".xml");
@@ -1120,6 +1123,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             prof_out.flush();
                             prof_out.close();
 
+                            globalDocument.clearPatterns();
                             new OCRXMLImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
 
                             retval = 0;

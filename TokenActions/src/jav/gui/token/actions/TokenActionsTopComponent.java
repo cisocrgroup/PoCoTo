@@ -103,7 +103,7 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                MainController.findInstance().mergeRightward( MainController.findInstance().getDocument().getTokenByID(multiToken.get(0)).getIndexInDocument(), multiToken.size() - 1 );
+                MainController.findInstance().mergeRightward( multiToken.get(0), multiToken.size() - 1 );
             }
         });
         jButton3.addActionListener(new ActionListener() {
@@ -111,11 +111,17 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
             @Override
             public void actionPerformed(ActionEvent ae) {
                 int begin = multiToken.get(0);
-                if( MainController.findInstance().getDocument().getTokenByID(multiToken.get(0)-1).getWDisplay().equals(" ") && MainController.findInstance().getDocument().getTokenByID(multiToken.get(multiToken.size()-1)+1).getWDisplay().equals(" ")) {
-                    multiToken.add(MainController.findInstance().getDocument().getTokenByID(multiToken.get(multiToken.size()-1) +1).getIndexInDocument());
+                Token prev = MainController.findInstance().getDocument().getPreviousToken(multiToken.get(0));
+                Token next = MainController.findInstance().getDocument().getPreviousToken(multiToken.get(multiToken.size()-1));
+
+                if( prev.getWDisplay().equals(" ") && next.getWDisplay().equals(" ") && prev.getPageIndex() == next.getPageIndex()) {
+                    multiToken.add(next.getID());
                 }
-                int afterend = multiToken.get(multiToken.size() - 1) + 1;
-                MainController.findInstance().deleteToken(begin, afterend);
+                
+//                if( MainController.findInstance().getDocument().getTokenByID(multiToken.get(0)-1).getWDisplay().equals(" ") && MainController.findInstance().getDocument().getTokenByID(multiToken.get(multiToken.size()-1)+1).getWDisplay().equals(" ")) {
+//                    multiToken.add(MainController.findInstance().getDocument().getTokenByID(multiToken.get(multiToken.size()-1) +1).getIndexInDocument());
+//                }
+                MainController.findInstance().deleteToken(begin, multiToken.get(multiToken.size()-1));
             }
         });
         jButton1.setEnabled(false);

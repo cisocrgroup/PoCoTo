@@ -46,7 +46,6 @@ public final class NewProjectVisualPanel3 extends JPanel implements ItemListener
     /** Creates new form NewProjectVisualPanel1 */
     public NewProjectVisualPanel3(NewProjectWizardPanel3 panel) {
         initComponents();
-        jTextArea1.setLineWrap(true);
         changeSupport.addChangeListener(panel);
         
         ProfilerWebServiceStub.GetSimpleConfigurationsResponse gcr;
@@ -58,7 +57,6 @@ public final class NewProjectVisualPanel3 extends JPanel implements ItemListener
             jComboBox1.addItemListener(this);
 
         } catch (RemoteException ex) {
-            jTextArea1.setText(ex.getMessage());
         }
     }
     
@@ -94,18 +92,10 @@ public final class NewProjectVisualPanel3 extends JPanel implements ItemListener
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
         jLabel1 = new javax.swing.JLabel();
         jComboBox1 = new javax.swing.JComboBox();
 
         setPreferredSize(new java.awt.Dimension(422, 296));
-
-        jTextArea1.setColumns(20);
-        jTextArea1.setEditable(false);
-        jTextArea1.setRows(5);
-        jTextArea1.setText(org.openide.util.NbBundle.getMessage(NewProjectVisualPanel3.class, "NewProjectVisualPanel3.jTextArea1.text")); // NOI18N
-        jScrollPane1.setViewportView(jTextArea1);
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(NewProjectVisualPanel3.class, "NewProjectVisualPanel3.jLabel1.text")); // NOI18N
 
@@ -117,12 +107,9 @@ public final class NewProjectVisualPanel3 extends JPanel implements ItemListener
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(26, 26, 26)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jComboBox1, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 322, Short.MAX_VALUE))
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jComboBox1, 0, 242, Short.MAX_VALUE)
                 .addGap(74, 74, 74))
         );
         layout.setVerticalGroup(
@@ -132,15 +119,11 @@ public final class NewProjectVisualPanel3 extends JPanel implements ItemListener
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(64, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox jComboBox1;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTextArea jTextArea1;
     // End of variables declaration//GEN-END:variables
 }

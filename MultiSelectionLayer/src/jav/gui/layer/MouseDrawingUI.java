@@ -1,18 +1,5 @@
 package jav.gui.layer;
 
-import jav.gui.events.special.multiselection.MultiSelectionEvent;
-import jav.gui.events.special.multiselection.MultiSelectionEventType;
-import jav.gui.main.AbstractEditorViewTopComponent;
-import jav.gui.token.display.TokenVisualization;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import javax.swing.JComponent;
-import org.jdesktop.jxlayer.JXLayer;
-import org.jdesktop.jxlayer.plaf.AbstractLayerUI;
-
 /**
  * Copyright (c) 2008-2009, Piet Blok
  * All rights reserved.
@@ -45,6 +32,19 @@ import org.jdesktop.jxlayer.plaf.AbstractLayerUI;
  * 
  * modifications to class made Sept. 2011 thorsten
  */
+import jav.gui.events.special.multiselection.MultiSelectionEvent;
+import jav.gui.events.special.multiselection.MultiSelectionEventType;
+import jav.gui.main.AbstractEditorViewTopComponent;
+import jav.gui.token.display.TokenVisualization;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import javax.swing.JComponent;
+import org.jdesktop.jxlayer.JXLayer;
+import org.jdesktop.jxlayer.plaf.AbstractLayerUI;
+
 public class MouseDrawingUI<V extends JComponent> extends AbstractLayerUI<V> {
 
     private Rectangle selection;

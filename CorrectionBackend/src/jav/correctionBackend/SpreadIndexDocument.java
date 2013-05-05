@@ -195,30 +195,30 @@ public class SpreadIndexDocument extends Document {
     }
 
     @Override
-    public ArrayList<Integer> deleteToken(int iDFrom, int iDAfterTo) throws SQLException {
+    public ArrayList<Integer> deleteToken(int iDFrom, int iDTo) throws SQLException {
         Connection conn = null;
         PreparedStatement setIndex = null;
         PreparedStatement undo_redo = null;
 
         Token from = this.getTokenByID(iDFrom);
-        Token to = this.getTokenByID(iDAfterTo);
+        Token to = this.getTokenByID(iDTo);
 
         int indexFrom = from.getIndexInDocument();
-        int indexAfterTo = to.getIndexInDocument();
+        int indexTo = to.getIndexInDocument();
 
         try {
             ArrayList<Integer> retval = new ArrayList<>();
-            if (indexAfterTo < indexFrom) {
+            if (indexTo < indexFrom) {
                 return null;
 //                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN invalid range");
             }
 
-            if (indexFrom == indexAfterTo) {
+            if (indexFrom == indexTo) {
                 return null;
             }
 
             int thisPageIndex = from.getPageIndex();
-            if (thisPageIndex != this.getPreviousToken(iDAfterTo).getPageIndex()) {
+            if (thisPageIndex != to.getPageIndex()) {
                 return null;
 //                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN: cannot erase across page borders");
             }
@@ -232,7 +232,7 @@ public class SpreadIndexDocument extends Document {
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
 
             Token temp = from;
-            while (temp.getID() != iDAfterTo) {
+            while (temp.getIndexInDocument() <= indexTo) {
                 retval.add(temp.getID());
 
                 setIndex.setInt(1, temp.getID());
@@ -471,8 +471,12 @@ public class SpreadIndexDocument extends Document {
             int normals = tokensToAdd - spaces;
 
             int indicesNeeded = (normals * 3) + spaces;
+            
+            
             if (freeIndexPlaces < indicesNeeded) {
+               System.out.println("indexplaces: " + freeIndexPlaces + " normals: " + normals + " spaces: " + spaces + " needed: " + indicesNeeded);
                 this.spreadIndex(tokenID, indicesNeeded);
+                atIndex = this.getTokenByID(tokenID);
             }
 
             if (atIndex.getTokenImageInfoBox() != null) {
@@ -621,7 +625,6 @@ public class SpreadIndexDocument extends Document {
                         setIndex.setInt(1, myIndex);
                         setIndex.setInt(2, tokenID);
                         setIndex.addBatch();
-
 
                         if (tok.getID() == tokenID) {
                             myIndex += indexToAdd;

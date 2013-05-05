@@ -43,7 +43,7 @@ public class TokenVisualizationMultiRegistry {
     }
     
     public void add( Token t, AbstractTokenVisualization tv) {
-        int i = t.getIndexInDocument();
+        int i = t.getID();
         if( registry.containsKey(i)) {
             if(!registry.get(i).contains(tv)) {
                 registry.get(i).add(tv);
@@ -55,28 +55,28 @@ public class TokenVisualizationMultiRegistry {
         }
     }
     
-    public void add( int indexindoc, AbstractTokenVisualization tv) {
-        if( registry.containsKey(indexindoc)) {
-            if(!registry.get(indexindoc).contains(tv)) {
-                registry.get(indexindoc).add(tv);
+    public void add( int tokenID, AbstractTokenVisualization tv) {
+        if( registry.containsKey(tokenID)) {
+            if(!registry.get(tokenID).contains(tv)) {
+                registry.get(tokenID).add(tv);
             }
         } else {
             ArrayList<AbstractTokenVisualization> val = new ArrayList<>();
             val.add(tv);
-            registry.put(indexindoc, val);
+            registry.put(tokenID, val);
         }
     }
     
     public boolean contains( Token t) {
-        return registry.containsKey(t.getIndexInDocument());
+        return registry.containsKey(t.getID());
     }
     
-    public boolean contains( int indexInDoc ) {
-        return registry.containsKey( indexInDoc );
+    public boolean contains( int tokenID ) {
+        return registry.containsKey( tokenID );
     }
     
     public void remove( Token t, AbstractTokenVisualization tv) {
-        int i = t.getIndexInDocument();
+        int i = t.getID();
         if( registry.containsKey(i)) {
             if( registry.get(i).contains(tv)) {
                 registry.get(i).remove(tv);
@@ -88,30 +88,30 @@ public class TokenVisualizationMultiRegistry {
     }
     
     public void remove( Token t) {
-        registry.remove(t.getIndexInDocument());
+        registry.remove(t.getID());
     }
     
-    public void remove( int indexindoc, AbstractTokenVisualization tv) {
-        if( registry.containsKey(indexindoc)) {
-            if( registry.get(indexindoc).contains(tv)) {
-                registry.get(indexindoc).remove(tv);
-                if( registry.get(indexindoc).isEmpty()) {
-                    registry.remove(indexindoc);
+    public void remove( int tokenID, AbstractTokenVisualization tv) {
+        if( registry.containsKey(tokenID)) {
+            if( registry.get(tokenID).contains(tv)) {
+                registry.get(tokenID).remove(tv);
+                if( registry.get(tokenID).isEmpty()) {
+                    registry.remove(tokenID);
                 }
             }
         }
     }
     
-    public void remove( int indexindoc) {
-        registry.remove(indexindoc);
+    public void remove( int tokenID) {
+        registry.remove(tokenID);
     }
     
     public ArrayList<AbstractTokenVisualization> getVisualizations( Token t) {
-        return registry.get(t.getIndexInDocument());
+        return registry.get(t.getID());
     }
     
-    public ArrayList<AbstractTokenVisualization> getVisualizations( int indexindoc) {
-        return registry.get(indexindoc);
+    public ArrayList<AbstractTokenVisualization> getVisualizations( int tokenID) {
+        return registry.get(tokenID);
     }
     
     public void clear() {

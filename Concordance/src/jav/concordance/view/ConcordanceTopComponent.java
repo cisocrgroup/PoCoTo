@@ -117,7 +117,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
             } else {
                 temp.setCandidateString("");
             }
-            tokens.put(tok.getIndexInDocument(), temp);
+            tokens.put(tok.getID(), temp);
         }
 
         instance = this;
@@ -307,7 +307,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
                         if (!cce.isCorrected() && !cce.isDisabled() && cce.isSelected()) {
 
                             if(!tvRegistry.contains(tok)) {
-//                            if (tok.getIndexInDocument() < actualPage * tokensPerPage || tok.getIndexInDocument() > actualPage * tokensPerPage + tokensInPage) {
+//                            if (tok.getID() < actualPage * tokensPerPage || tok.getID() > actualPage * tokensPerPage + tokensInPage) {
                                 removeSelected(1);
                             }
 

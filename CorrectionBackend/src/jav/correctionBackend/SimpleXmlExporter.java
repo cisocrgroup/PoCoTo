@@ -38,26 +38,22 @@ import java.util.logging.Logger;
  * @author anna
  */
 public class SimpleXmlExporter {
-    
-    private boolean exportCandidates_;
-    
+        
     public SimpleXmlExporter() {
-        exportCandidates_ = false;
+        
     }
     
-    public void export(Document doc, String outfile) {
+    public void export(Document doc, String outfile, boolean exportCandidates) {
         try {
                 Writer w = new OutputStreamWriter(new FileOutputStream(outfile), "UTF8");
-                BufferedWriter out = new BufferedWriter(w);
-                
-                export(doc, out);
-            
+                BufferedWriter out = new BufferedWriter(w);                
+                export(doc, out, exportCandidates);
         } catch (IOException ex) {
                 Logger.getLogger(OCRXMLExporter.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public void export(Document doc, BufferedWriter out) throws IOException {
+    public void export(Document doc, BufferedWriter out, boolean exportCandidates) throws IOException {
         out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         out.write("<document>\n");
         Iterator<Page> pageIt = doc.pageIterator();
@@ -69,7 +65,7 @@ public class SimpleXmlExporter {
                 Token token = tokenIt.next();
                 SpecialSequenceType sst = token.getSpecialSeq();
                 if (!sst.equals(SpecialSequenceType.SPACE) && !sst.equals(SpecialSequenceType.NEWLINE)) {
-                    out.write(" <token id=\"" + token.getIndexInDocument() + "\" wOCR=\"" + token.getWCOR() + "\"/>\n");
+                    out.write(" <token id=\"" + token.getID() + "\" wOCR=\"" + token.getWCOR() + "\"/>\n");
                 }
             }
         }

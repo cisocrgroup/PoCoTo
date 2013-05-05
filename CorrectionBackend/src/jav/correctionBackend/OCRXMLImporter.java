@@ -129,7 +129,7 @@ class CandidateImporter extends DefaultHandler {
 
         if (d != null) {
             this.doc = d;
-            this.doc.truncateCandidates();
+            this.doc.clearCandidates();
             XMLReader xr;
             try {
                 xr = XMLReaderFactory.createXMLReader();
@@ -169,6 +169,7 @@ class CandidateImporter extends DefaultHandler {
             if (matcher.matches()) {
                 rank++;
                 tempcand = new Candidate(tokenID, rank, matcher.group(1), matcher.group(2), Double.parseDouble(matcher.group(3)), Integer.parseInt(matcher.group(4)));
+                System.out.println("Adding candidate: " + tokenID + " " + rank + " " + matcher.group(1) + " " + matcher.group(2));
                 doc.addCandidate(tempcand);
                 if (rank == 1) {
                     doc.setTopCandDLev(tokenID, Integer.parseInt(matcher.group(4)));
