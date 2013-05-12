@@ -58,22 +58,22 @@ import se.datadosen.component.RiverLayout;
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class PageView extends JPanel {
-    
+
     private TokenVisualizationMode tvMode = new TokenVisualizationDefaultMode();
     private ImageProcessor ip = null;
     private MainTopComponent parent;
     private int lineheight;
     private RiverLayout rl;
-    
+
     public PageView(MainTopComponent p, MyIterator<Token> it, int fontSize) {
         super();
-        
+
         this.parent = p;
         this.setBorder(new EmptyBorder(10, 10, 10, 10));
         rl = new RiverLayout(0, 25);
         this.setLayout(rl);
         this.setBackground(Color.white);
-        
+
         if (!it.hasNext()) {
             JLabel bla = new JLabel(java.util.ResourceBundle.getBundle("jav/gui/mainWindow/Bundle").getString("no_token"));
             this.add(bla);
@@ -105,15 +105,15 @@ public class PageView extends JPanel {
             }
         }
     }
-    
+
     public PageView(MainTopComponent p, MyIterator<Token> it, String imageFile, int fontSize, double imgScale) {
         super();
-        
+
         this.parent = p;
-        
+
         ip = new ImageProcessor();
         ip.setImageInput(imageFile);
-        
+
         this.setBorder(new EmptyBorder(10, 10, 10, 10));
         rl = new RiverLayout(0, 25);
         this.setLayout(rl);
@@ -140,7 +140,7 @@ public class PageView extends JPanel {
                     int bottom = tiib.getCoordinateBottom();
                     int width = right - left;
                     int height = bottom - top;
-                    
+
                     BufferedImage bi = ip.getTokenImage(left, top, width, height, imgScale);
                     tv = new ImageTokenVisualization(bi, tok, fontSize);
                     lineheight = ((ImageTokenVisualization) tv).getImageHeight();
@@ -151,7 +151,7 @@ public class PageView extends JPanel {
                         tv = new OnlyTextTokenVisualization(tok, fontSize);
                     }
                 }
-                
+
                 tv.setMode(tvMode, tok);
                 tv.setAlignmentY(Component.BOTTOM_ALIGNMENT);
 
@@ -174,7 +174,7 @@ public class PageView extends JPanel {
             }
         }
     }
-    
+
     public void zoomFont(int i) {
         for (Component ca : this.getComponents()) {
             if (ca instanceof TokenVisualization) {
@@ -183,7 +183,7 @@ public class PageView extends JPanel {
             }
         }
     }
-    
+
     public void zoomImg(double scale) {
         for (Component ca : this.getComponents()) {
             if (ca instanceof ImageTokenVisualization) {
@@ -203,7 +203,7 @@ public class PageView extends JPanel {
             }
         }
     }
-    
+
     public void toggleImages(boolean on) {
         for (Component ca : this.getComponents()) {
             if (ca instanceof ImageTokenVisualization) {
@@ -217,7 +217,7 @@ public class PageView extends JPanel {
                         int bottom = tiib.getCoordinateBottom();
                         int width = right - left;
                         int height = bottom - top;
-                        
+
                         BufferedImage bi = ip.getTokenImage(left, top, width, height, parent.getScale());
                         tv.setImage(bi);
                     }
@@ -231,11 +231,11 @@ public class PageView extends JPanel {
             }
         }
     }
-    
+
     public void update(TokenStatusType t, int affectedID, ArrayList<Integer> affectedTokens) {
-        
+
         if (t.equals(TokenStatusType.MERGED_RIGHT)) {
-            
+
             TokenVisualization affectedTv;
             if ((affectedTv = (TokenVisualization) parent.getTokenVisualizationRegistry().getTokenVisualization(affectedID)) != null) {
                 Token tok = MainController.findInstance().getDocument().getTokenByID(affectedTokens.get(0));
@@ -261,18 +261,18 @@ public class PageView extends JPanel {
                 parent.getTokenVisualizationRegistry().removefromRegistry(affectedID);
                 parent.getTokenVisualizationRegistry().addtoRegistry(tok.getID(), affectedTv);
             }
-            
+
             for (int i = 1; i < affectedTokens.size(); i++) {
                 TokenVisualization todelete;
                 if ((todelete = (TokenVisualization) parent.getTokenVisualizationRegistry().getTokenVisualization(affectedTokens.get(i))) != null) {
                     parent.getTokenVisualizationRegistry().removefromRegistry(affectedTokens.get(i));
                     this.remove(todelete);
                 }
-            }            
+            }
             MessageCenter.getInstance().fireTokenSelectionEvent(new TokenSelectionEvent(affectedTv, affectedTokens.get(0), TokenSelectionType.NORMAL));
-            
+
         } else if (t.equals(TokenStatusType.SPLIT)) {
-            
+
             TokenVisualization affectedTv = (TokenVisualization) parent.getTokenVisualizationRegistry().getTokenVisualization(affectedID);
             if (affectedTv != null) {
                 affectedTv.setSelected(false);
@@ -280,7 +280,7 @@ public class PageView extends JPanel {
                 Token tok = MainController.findInstance().getDocument().getTokenByID(affectedTokens.get(0));
                 affectedTv.setTokenID(tok.getID());
                 if (affectedTv.hasImage() && parent.getShowImages()) {
-                    
+
                     TokenImageInfoBox tiib = tok.getTokenImageInfoBox();
                     if (tiib != null) {
                         int left = tiib.getCoordinateLeft();
@@ -297,14 +297,14 @@ public class PageView extends JPanel {
                 }
                 parent.getTokenVisualizationRegistry().removefromRegistry(affectedID);
                 parent.getTokenVisualizationRegistry().addtoRegistry(tok.getID(), affectedTv);
-                
-                int index = this.getIndexInContainer(affectedID);
+
+                int index = this.getIndexInContainer(tok.getID());
 
                 // create the additional tokenvis
                 for (int i = 1; i < affectedTokens.size(); i++) {
                     tok = MainController.findInstance().getDocument().getTokenByID(affectedTokens.get(i));
                     TokenImageInfoBox tiib = tok.getTokenImageInfoBox();
-                    
+
                     TokenVisualization tokv;
                     if (tiib != null) {
                         int left = tiib.getCoordinateLeft();
@@ -313,7 +313,7 @@ public class PageView extends JPanel {
                         int bottom = tiib.getCoordinateBottom();
                         int width = right - left;
                         int height = bottom - top;
-                        
+
                         BufferedImage bi = ip.getTokenImage(left, top, width, height, parent.getScale());
                         tokv = new ImageTokenVisualization(bi, tok, parent.getFontSize());
                         if (!parent.getShowImages()) {
@@ -327,16 +327,16 @@ public class PageView extends JPanel {
                     } else {
                         tokv = new OnlyTextTokenVisualization(tok, parent.getFontSize());
                     }
-                    
+
                     tokv.setMode(tvMode);
                     this.add(tokv, index + i);
                     parent.getTokenVisualizationRegistry().addtoRegistry(tok, tokv);
-                    if( i == affectedTokens.size()-1) {
+                    if (i == affectedTokens.size() - 1) {
                         tokv.setSelected(true);
                         tokv.grabFocus();
                         this.getVisualizationMode().setSelectedTokenVisualization(tokv);
                         MessageCenter.getInstance().fireTokenSelectionEvent(new TokenSelectionEvent(tokv, tokv.getTokenID(), TokenSelectionType.NORMAL));
-                        
+
                         // TODO das nächste Token selektieren
                     }
                 }
@@ -418,69 +418,69 @@ public class PageView extends JPanel {
 //            }
         } else if (t.equals(TokenStatusType.DELETE)) {
 
-            for( int i = 0; i < affectedTokens.size(); i++) {
+            for (int i = 0; i < affectedTokens.size(); i++) {
                 TokenVisualization todelete;
                 if ((todelete = (TokenVisualization) parent.getTokenVisualizationRegistry().getTokenVisualization(affectedTokens.get(i))) != null) {
                     parent.getTokenVisualizationRegistry().removefromRegistry(affectedTokens.get(i));
                     this.remove(todelete);
-                }               
+                }
             }
-            
+
         } else if (t.equals(TokenStatusType.INSERT)) {
-            
+
             int index;
-            if( affectedID == -1) {
+            if (affectedID == -1) {
                 index = 0;
             } else {
-                index = this.getIndexInContainer(affectedID)+1;
+                index = this.getIndexInContainer(affectedID) + 1;
             }
-            
-            TokenVisualization test = (TokenVisualization) parent.getTokenVisualizationRegistry().getTokenVisualization( affectedID );
-            
+
+            TokenVisualization test = (TokenVisualization) parent.getTokenVisualizationRegistry().getTokenVisualization(affectedID);
+
             for (int i = 0; i < affectedTokens.size(); i++) {
-                Token tok = MainController.findInstance().getDocument().getTokenByID( affectedTokens.get(i));
-                                TokenImageInfoBox tiib = tok.getTokenImageInfoBox();
+                Token tok = MainController.findInstance().getDocument().getTokenByID(affectedTokens.get(i));
+                TokenImageInfoBox tiib = tok.getTokenImageInfoBox();
 
-                                TokenVisualization tokv;
-                                if (tiib != null) {
-                                    int left = tiib.getCoordinateLeft();
-                                    int right = tiib.getCoordinateRight();
-                                    int top = tiib.getCoordinateTop();
-                                    int bottom = tiib.getCoordinateBottom();
-                                    int width = right - left;
-                                    int height = bottom - top;
+                TokenVisualization tokv;
+                if (tiib != null) {
+                    int left = tiib.getCoordinateLeft();
+                    int right = tiib.getCoordinateRight();
+                    int top = tiib.getCoordinateTop();
+                    int bottom = tiib.getCoordinateBottom();
+                    int width = right - left;
+                    int height = bottom - top;
 
-                                    BufferedImage bi = ip.getTokenImage(left, top, width, height, parent.getScale());
-                                    tokv = new ImageTokenVisualization(bi, tok, parent.getFontSize());
-                                    if (!parent.getShowImages()) {
-                                        ((ImageTokenVisualization) tokv).clearImage();
-                                    }
-                                } else if (!tok.getImageFilename().equals("") && tok.isNormal()) {
-                                    if( test == null) {
-                                        tokv = new PseudoImageTokenVisualization(tok, parent.getFontSize(), 10);
-                                    } else {
-                                        tokv = new PseudoImageTokenVisualization(tok, parent.getFontSize(), ((ImageTokenVisualization) test).getImageHeight());
-                                    }
-                                    if (!parent.getShowImages()) {
-                                        ((PseudoImageTokenVisualization) tokv).toggleImage(false);
-                                    }
-                                } else {
-                                    tokv = new OnlyTextTokenVisualization(tok, parent.getFontSize());
-                                }
+                    BufferedImage bi = ip.getTokenImage(left, top, width, height, parent.getScale());
+                    tokv = new ImageTokenVisualization(bi, tok, parent.getFontSize());
+                    if (!parent.getShowImages()) {
+                        ((ImageTokenVisualization) tokv).clearImage();
+                    }
+                } else if (!tok.getImageFilename().equals("") && tok.isNormal()) {
+                    if (test == null) {
+                        tokv = new PseudoImageTokenVisualization(tok, parent.getFontSize(), 10);
+                    } else {
+                        tokv = new PseudoImageTokenVisualization(tok, parent.getFontSize(), ((ImageTokenVisualization) test).getImageHeight());
+                    }
+                    if (!parent.getShowImages()) {
+                        ((PseudoImageTokenVisualization) tokv).toggleImage(false);
+                    }
+                } else {
+                    tokv = new OnlyTextTokenVisualization(tok, parent.getFontSize());
+                }
 
-                                tokv.setMode(tvMode);
+                tokv.setMode(tvMode);
 
-                                if (tok.getWDisplay().equals("\n") && test != null) {
-                                    this.getLayoutConstraints().remove(test);
-                                    this.getLayoutConstraints().put(tokv, "br");
-                                }
+                if (tok.getWDisplay().equals("\n") && test != null) {
+                    this.getLayoutConstraints().remove(test);
+                    this.getLayoutConstraints().put(tokv, "br");
+                }
 
-                                this.add(tokv, (index + i));                                
+                this.add(tokv, (index + i));
             }
-            
-            
+
+
             System.out.println("INSERT POID: " + affectedID);
-            for( int i = 0; i < affectedTokens.size(); i++ ) {
+            for (int i = 0; i < affectedTokens.size(); i++) {
                 System.out.println("INSERT: " + affectedTokens.get(i));
             }
 
@@ -541,7 +541,7 @@ public class PageView extends JPanel {
 //            }
         }
     }
-    
+
     public int getIndexInContainer(int tokenID) {
         int count = 0;
         for (Component c : this.getComponents()) {
@@ -555,7 +555,7 @@ public class PageView extends JPanel {
         }
         return 0;
     }
-    
+
     public void checkPrint() {
         for (Component c : this.getComponents()) {
             if (c instanceof TokenVisualization) {
@@ -564,15 +564,15 @@ public class PageView extends JPanel {
             }
         }
     }
-    
+
     public TokenVisualizationMode getVisualizationMode() {
         return this.tvMode;
     }
-    
+
     public HashMap getLayoutConstraints() {
         return rl.getConstraints();
     }
-    
+
     private void updateTokenRegistry() {
         parent.getTokenVisualizationRegistry().clear();
         for (Component c : this.getComponents()) {
@@ -582,7 +582,7 @@ public class PageView extends JPanel {
             }
         }
     }
-    
+
     private void updateTokenVisualizationIndices(int startindex, int discr) {
         for (Component c : this.getComponents()) {
             if (c instanceof TokenVisualization) {
