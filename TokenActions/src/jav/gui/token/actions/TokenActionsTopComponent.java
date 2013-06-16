@@ -95,7 +95,7 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                MessageCenter.getInstance().fireConcordanceEvent(new ConcordanceEvent(this, ConcordanceType.CLONE, result, MainController.findInstance().getDocument().getTokenByIndex(currentTokenID).getWDisplay()));
+                MessageCenter.getInstance().fireConcordanceEvent(new ConcordanceEvent(this, ConcordanceType.CLONE, result, MainController.findInstance().getDocument().getTokenByID(currentTokenID).getWDisplay()));
             }
         });
 

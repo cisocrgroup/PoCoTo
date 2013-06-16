@@ -100,4 +100,12 @@ public class ConcordanceEntry {
     public boolean isCorrected() {
         return this.isCorrected;
     }
+    
+    public boolean isSelectable() {
+        if( !this.isCorrected &! this.isDisabled &! this.isSelected ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

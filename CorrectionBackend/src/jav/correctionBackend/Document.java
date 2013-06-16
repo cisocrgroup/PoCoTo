@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import org.h2.jdbcx.JdbcConnectionPool;
+import org.openide.awt.UndoRedo;
 
 /**
  * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
@@ -56,6 +57,7 @@ public abstract class Document {
     String propertiespath = "";
     int undo_redo_id = 0;
     int undo_redo_part = 0;
+    UndoRedo.Manager manager = null;
 
     /**
      *
@@ -65,7 +67,15 @@ public abstract class Document {
     public Document(JdbcConnectionPool j) {
         this.jcp = j;
     }
-
+    
+    public UndoRedo.Manager getUndoRedoManager() {
+        return manager;
+    }
+    
+    public void setUndoRedoManager( UndoRedo.Manager man ) {
+        this.manager = man;
+    }
+    
     /**
      * returns the baseImagePath
      */
@@ -258,7 +268,7 @@ public abstract class Document {
         PreparedStatement wcor = null;
         PreparedStatement setcor = null;
         PreparedStatement undo_redo = null;
-
+        
         try {
             Iterator<Integer> iter = art.keySet().iterator();
             conn = jcp.getConnection();
@@ -272,11 +282,10 @@ public abstract class Document {
                 int tokenID = iter.next();
                 Token t = this.getTokenByID(tokenID);
                 String corr = art.get(tokenID);
-
                 wcor.setString(1, corr);
                 wcor.setInt(2, tokenID);
                 wcor.addBatch();
-
+                
                 setcor.setBoolean(1, true);
                 setcor.setInt(2, tokenID);
                 setcor.addBatch();
@@ -285,14 +294,14 @@ public abstract class Document {
                     undo_redo.setInt(1, undo_redo_id);
                     undo_redo.setInt(2, undo_redo_part);
                     undo_redo.setString(3, "undo");
-                    undo_redo.setString(4, MyEditType.CORRECTED.toString());
+                    undo_redo.setString(4, MyEditType.MULTICORRECTED.toString());
                     undo_redo.setString(5, "UPDATE token SET isCorrected=false WHERE tokenID=" + tokenID);
                     undo_redo.addBatch();
 
                     undo_redo.setInt(1, undo_redo_id);
                     undo_redo.setInt(2, undo_redo_part);
                     undo_redo.setString(3, "redo");
-                    undo_redo.setString(4, MyEditType.CORRECTED.toString());
+                    undo_redo.setString(4, MyEditType.MULTICORRECTED.toString());
                     undo_redo.setString(5, "UPDATE token SET isCorrected=true WHERE tokenID=" + tokenID);
                     undo_redo.addBatch();
                     undo_redo_part++;
@@ -301,19 +310,18 @@ public abstract class Document {
                 undo_redo.setInt(1, undo_redo_id);
                 undo_redo.setInt(2, undo_redo_part);
                 undo_redo.setString(3, "undo");
-                undo_redo.setString(4, MyEditType.CORRECTED.toString());
+                undo_redo.setString(4, MyEditType.MULTICORRECTED.toString());
                 undo_redo.setString(5, "UPDATE token SET wCorr='" + t.getWDisplay() + "' WHERE tokenID=" + tokenID);
                 undo_redo.addBatch();
 
                 undo_redo.setInt(1, undo_redo_id);
                 undo_redo.setInt(2, undo_redo_part);
                 undo_redo.setString(3, "redo");
-                undo_redo.setString(4, MyEditType.CORRECTED.toString());
+                undo_redo.setString(4, MyEditType.MULTICORRECTED.toString());
                 undo_redo.setString(5, "UPDATE token SET wCorr='" + corr + "' WHERE tokenID=" + tokenID);
                 undo_redo.addBatch();
 
                 undo_redo_part++;
-
             }
 
             undo_redo.executeBatch();
@@ -324,6 +332,7 @@ public abstract class Document {
             conn.commit();
             return true;
         } catch (SQLException ex) {
+            ex.printStackTrace();
             if (conn != null) {
                 conn.rollback();
             }
@@ -395,6 +404,7 @@ public abstract class Document {
             s.execute("TRUNCATE TABLE undoredo");
             s.close();
             conn.close();
+            manager.discardAllEdits();
             undo_redo_id = 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -443,7 +453,7 @@ public abstract class Document {
             Statement t = conn.createStatement();
             ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='undo' ORDER BY part");
 
-            if (rs.next()) {
+            if (rs.next()) {                
                 if (rs.getString(4).equals(MyEditType.SETCORRECTED.toString())) {
 
                     SetCorrectedUndoRedoInformation retval = null;
@@ -464,7 +474,7 @@ public abstract class Document {
                 } else if (rs.getString(4).equals(MyEditType.CORRECTED.toString())) {
 
                     CorrectedUndoRedoInformation retval = null;
-                    java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr=(.*?) WHERE tokenID=([0-9]+)");
+                    java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr='(.*?)' WHERE tokenID=([0-9]+)");
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
                     t.execute(rs.getString(5));
 
@@ -553,8 +563,8 @@ public abstract class Document {
 
                     MultiCorrectedUndoRedoInformation retval = null;
                     CorrectedUndoRedoInformation temp;
-                    java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr=(.*?) WHERE indexInDocument=([0-9]+)");
-                    java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE indexInDocument=([0-9]+)");
+                    java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr='(.*?)' WHERE tokenID=([0-9]+)");
+                    java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
                     t.execute(rs.getString(5));
 
                     Matcher m = indexp.matcher(rs.getString(5));
@@ -576,6 +586,7 @@ public abstract class Document {
 
                     while (rs.next()) {
                         m = indexp.matcher(rs.getString(5));
+                        t.execute(rs.getString(5));
                         if (m.matches()) {
                             rs.next();
                             t.execute(rs.getString(5));
@@ -720,7 +731,7 @@ public abstract class Document {
                 } else if (rs.getString(4).equals(MyEditType.CORRECTED.toString())) {
 
                     CorrectedUndoRedoInformation retval = null;
-                    java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr=(.*?) WHERE tokenID=([0-9]+)");
+                    java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr='(.*?)' WHERE tokenID=([0-9]+)");
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
                     t.execute(rs.getString(5));
 
@@ -810,8 +821,8 @@ public abstract class Document {
 
                     MultiCorrectedUndoRedoInformation retval = null;
                     CorrectedUndoRedoInformation temp;
-                    java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr=(.*?) WHERE indexInDocument=([0-9]+)");
-                    java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE indexInDocument=([0-9]+)");
+                    java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr='(.*?)' WHERE tokenID=([0-9]+)");
+                    java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
                     t.execute(rs.getString(5));
 
                     Matcher m = indexp.matcher(rs.getString(5));
@@ -1482,33 +1493,25 @@ public abstract class Document {
         int index = thisT.getIndexInDocument();
         Token next = this.getNextTokenByIndex(index);
 
-        System.out.println("delete next=" + next.getIndexInDocument() + " this=" + thisT.getIndexInDocument());
-
         if (index == page.getStartIndex()) {
             if (next.getWDisplay().equals(" ")) {
-                Token end = this.getNextTokenByIndex(next.getIndexInDocument());
-                return this.deleteToken(tokenID, end.getID());
-            } else {
                 return this.deleteToken(tokenID, next.getID());
+            } else {
+                return this.deleteToken(tokenID, tokenID);
             }
         } else if (index == page.getEndIndex() - 1) {
-            return this.deleteToken(tokenID, next.getID());
+            return this.deleteToken(tokenID, tokenID);
         } else {
             Token prev = this.getPreviousTokenByIndex(index);
-
-            System.out.println("delete prev=" + prev.getIndexInDocument());
-
             if (prev.getWDisplay().equals(" ") && next.getWDisplay().equals(" ")) {
-                Token end = this.getNextTokenByIndex(next.getIndexInDocument());
-                System.out.println("delete true end=" + end.getIndexInDocument());
-                return this.deleteToken(tokenID, end.getID());
-            } else {
                 return this.deleteToken(tokenID, next.getID());
+            } else {
+                return this.deleteToken(tokenID, tokenID);
             }
         }
     }
 
-    public abstract ArrayList<Integer> deleteToken(int iDFrom, int iDAfterTo) throws SQLException;
+    public abstract ArrayList<Integer> deleteToken(int iDFrom, int iDTo) throws SQLException;
 
     public abstract ArrayList<Integer> splitToken(int iD, String editString) throws SQLException;
 

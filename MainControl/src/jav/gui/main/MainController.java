@@ -103,7 +103,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private static final Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
     private InstanceContent content;
     private Lookup lookup;
-    private UndoRedo.Manager manager;
     private static MainController instance;
     private CorrectionSystem cs = null;
     private Saver saver;
@@ -117,15 +116,15 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private Logger logger;
     private FileAppender appender;
     private boolean docOpened = false;
-    private Document globalDocument;
+    private Document globalDocument = null;
     private Properties docproperties;
     private String profiler_user_id = null;
     private ProfilerIDCookie profileridcookie = null;
     private boolean done;
     private ProfilerWebServiceStub stub = null;
     private File tempFile;
-    private SwingWorker<Boolean, Object> worker;
-
+    private UndoRedo.Manager manager = null;
+    
     static {
         instance = new MainController();
     }
@@ -136,12 +135,18 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public MainController() {
 
+        try {
+            System.loadLibrary("mlib_jai");
+        } catch( UnsatisfiedLinkError e ) {
+            e.printStackTrace();
+        }
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
-        manager = new UndoRedo.Manager();
-        manager.setLimit(-1);
         saver = new Saver();
         saveAs = new SaveAsWrap();
+        manager = new UndoRedo.Manager();
+        manager.setLimit(-1);
+        
 //        timestamper = new Timestamper();
 
         try {
@@ -199,7 +204,11 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public UndoRedo getUndoRedo() {
-        return manager;
+        if( globalDocument != null) {
+            return globalDocument.getUndoRedoManager();
+        } else {
+            return manager;
+        }
     }
 
     public Saver getSaver() {
@@ -221,13 +230,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void createDocumentNoAnalysis(final String inputDirPath, final FileType t, String encoding, String propertiespath, String projectpath, String projectname) {
-        if (this.docOpened) {
-            this.shutDown();
-        }
-
         ProgressRunnable<Document> r = new DocumentCreator(inputDirPath, t, encoding, propertiespath, projectpath, projectname);
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
         globalDocument = d;
+        globalDocument.setUndoRedoManager(manager);
 
         if (d != null) {
             content.add(saveAs);
@@ -235,17 +241,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             content.add(docloadcookie);
             this.refreshID();
             MessageCenter.getInstance().fireDocumentChangedEvent(new DocumentChangedEvent(this, d));
-            this.checkPrint();
         } else {
             content.add(csrcookie);
         }
     }
 
     public void createDocumentNoAnalysis(final String inputDirPath, final String imgDirPath, final FileType t, String encoding, String propertiespath, String projectpath, String projectname) {
-        if (this.docOpened) {
-            this.shutDown();
-        }
-
         ProgressRunnable<Document> r = new DocumentCreator(inputDirPath, imgDirPath, t, encoding, propertiespath, projectpath, projectname);
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
 
@@ -254,22 +255,18 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
         if (d != null) {
             globalDocument = d;
+            globalDocument.setUndoRedoManager(manager);
             content.add(saveAs);
             content.add(csrcookie);
             content.add(docloadcookie);
             this.refreshID();
             MessageCenter.getInstance().fireDocumentChangedEvent(new DocumentChangedEvent(this, d));
-            this.checkPrint();
         } else {
             content.add(csrcookie);
         }
     }
 
     public void createDocumentAnalysis(String xmlDirName, String imgDirName, FileType inputType, String encoding, String propertiespath, String projectpath, String projectname, String configuration) {
-        if (this.docOpened) {
-            this.shutDown();
-        }
-
         ProgressRunnable<Document> r = new DocumentCreator(xmlDirName, imgDirName, inputType, encoding, propertiespath, projectpath, projectname);
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
 
@@ -278,6 +275,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
         if (d != null) {
             globalDocument = d;
+            globalDocument.setUndoRedoManager(manager);
             content.add(saveAs);
             content.add(csrcookie);
             content.add(docloadcookie);
@@ -290,15 +288,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void createDocumentAnalysis(String xmlDirName, FileType inputType, String encoding, String propertiespath, String projectpath, String projectname, String configuration) {
-        if (this.docOpened) {
-            this.shutDown();
-        }
-
         ProgressRunnable<Document> r = new DocumentCreator(xmlDirName, inputType, encoding, propertiespath, projectpath, projectname);
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
-        globalDocument = d;
 
         if (d != null) {
+            globalDocument = d;
+            globalDocument.setUndoRedoManager(manager);
             content.add(saveAs);
             content.add(csrcookie);
             content.add(docloadcookie);
@@ -311,40 +306,31 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void loadDocument(final String doc) {
-        if (this.docOpened) {
-            this.shutDown();
-        }
-
         ProgressRunnable<Document> r = new DocumentLoader(doc);
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
 
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
-
+        
         this.refreshID();
 
         if (d != null) {
-            globalDocument = d;
-
             // TODO implement error handling because undoredo only has content at this point if tool crashed without proper shutdown
+            globalDocument = d;
+            globalDocument.setUndoRedoManager(manager);            
             globalDocument.truncateUndoRedo();
-
-
             content.add(saveAs);
             content.add(csrcookie);
             content.add(docloadcookie);
             this.refreshID();
-            this.checkPrint();
-            MessageCenter.getInstance().fireDocumentChangedEvent(new DocumentChangedEvent(this, d));
+            MessageCenter.getInstance().fireDocumentChangedEvent(new DocumentChangedEvent(this, globalDocument));
         } else {
             content.add(csrcookie);
         }
     }
 
+    @Deprecated
     public void importOCRCXMLasNewProject(String ocrcxmlp, String imgdirp, String propp, String projp, String projname, String profilename) {
-        if (this.docOpened) {
-            this.shutDown();
-        }
         ProgressRunnable<Document> r = new OCRCXMLasNewProjectImporter(ocrcxmlp, imgdirp, propp, projp, projname, profilename);
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
 
@@ -353,6 +339,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
         if (d != null) {
             globalDocument = d;
+            globalDocument.setUndoRedoManager(manager);
             content.add(saveAs);
             content.add(csrcookie);
             content.add(docloadcookie);
@@ -363,6 +350,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         }
     }
 
+    @Deprecated
     public void simpleProfileDocument(String configuration) {
         try {
             ProgressRunnable<Integer> r = new DocumentSimpleProfiler(configuration);
@@ -408,7 +396,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         try {
             final int undo_redo = globalDocument.getUndoRedoIndex();
             globalDocument.correctTokenByString(tokenID, cand);
-            manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.CORRECTED, undo_redo)));
+            if( globalDocument.getUndoRedoManager() == null) {
+                System.out.println("NULL MANAGER");
+            }
+            globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.CORRECTED, undo_redo)));
             MessageCenter.getInstance().fireTokenStatusEvent(new CorrectedEvent(this, tokenID, TokenStatusType.CORRECTED, cand, true));
         } catch (SQLException ex) {
             Exceptions.printStackTrace(ex);
@@ -425,12 +416,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             if (globalDocument.correctTokensByString(art)) {
                 Iterator<Integer> iter = art.keySet().iterator();
                 while (iter.hasNext()) {
-                    int tokenIndex = iter.next();
-                    MessageCenter.getInstance().fireTokenStatusEvent(new CorrectedEvent(this, tokenIndex, TokenStatusType.CORRECTED, art.get(tokenIndex), true));
+                    int tokenId = iter.next();
+                    MessageCenter.getInstance().fireTokenStatusEvent(new CorrectedEvent(this, tokenId, TokenStatusType.CORRECTED, art.get(tokenId), true));
                 }
-                manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.MULTICORRECTED, undo_redo)));
+                globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.MULTICORRECTED, undo_redo)));
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
         }
     }
@@ -447,10 +438,9 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             ArrayList<Integer> retval = globalDocument.mergeRightward(tokenID, numTok);
             if (retval.size() > 0) {
                 MessageCenter.getInstance().fireTokenStatusEvent(new MergeEvent(this, tokenID, TokenStatusType.MERGED_RIGHT, retval));
-                manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.MERGE, undo_redo)));
+                globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.MERGE, undo_redo)));
             }
             MainController.changeCursorWaitStatus(false);
-            this.checkPrint();
         } catch (SQLException ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -463,10 +453,9 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             ArrayList<Integer> retval = globalDocument.mergeRightward(tokenID);
             if (retval.size() > 0) {
                 MessageCenter.getInstance().fireTokenStatusEvent(new MergeEvent(this, tokenID, TokenStatusType.MERGED_RIGHT, retval));
-                manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.MERGE, undo_redo)));
+                globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.MERGE, undo_redo)));
             }
             MainController.changeCursorWaitStatus(false);
-            this.checkPrint();
         } catch (SQLException ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -484,7 +473,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         try {
             int undo_redo = globalDocument.getUndoRedoIndex();
             if (globalDocument.setCorrected(index, b)) {
-                manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.SETCORRECTED, undo_redo)));
+                globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.SETCORRECTED, undo_redo)));
                 MessageCenter.getInstance().fireTokenStatusEvent(new SetCorrectedEvent(this, index, TokenStatusType.SETCORRECTED, b));
             }
         } catch (SQLException ex) {
@@ -499,7 +488,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 for (Integer indexInDocument : art) {
                     MessageCenter.getInstance().fireTokenStatusEvent(new SetCorrectedEvent(this, indexInDocument, TokenStatusType.SETCORRECTED, b));
                 }
-                manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.MULTISETCORRECTED, undo_redo)));
+                globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.MULTISETCORRECTED, undo_redo)));
             }
         } catch (SQLException ex) {
             Exceptions.printStackTrace(ex);
@@ -514,11 +503,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             int undo_redo = globalDocument.getUndoRedoIndex();
             ArrayList<Integer> retval = this.globalDocument.deleteToken(index);
             if (retval.size() > 0) {
-                manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.DELETE, undo_redo)));
+                globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.DELETE, undo_redo)));
                 MessageCenter.getInstance().fireTokenStatusEvent(new DeleteEvent(this, index, TokenStatusType.DELETE, retval));
             }
             MainController.changeCursorWaitStatus(false);
-            this.checkPrint();
         } catch (SQLException ex) {
             Exceptions.printStackTrace(ex);
         }        
@@ -532,11 +520,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             int undo_redo = globalDocument.getUndoRedoIndex();
             ArrayList<Integer> retval = this.globalDocument.deleteToken(begin, afterend);
             if (retval.size() > 0) {
-                manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.DELETE, undo_redo)));
+                globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.DELETE, undo_redo)));
                 MessageCenter.getInstance().fireTokenStatusEvent(new DeleteEvent(this, begin, TokenStatusType.DELETE, retval));
             }
             MainController.changeCursorWaitStatus(false);
-            this.checkPrint();
         } catch (SQLException ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -575,7 +562,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public void discardEdits() {
         globalDocument.truncateUndoRedo();
-        manager.discardAllEdits();
     }
 
     @Override
@@ -778,11 +764,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             MessageCenter.getInstance().fireTokenStatusEvent(new InsertEvent(this, duri.getTokenID(), TokenStatusType.INSERT, duri.getAffectedTokens()));
         }
 
-        if (!manager.canUndo()) {
+        if (!globalDocument.getUndoRedoManager().canUndo()) {
             content.remove(saver);
         }
         MainController.changeCursorWaitStatus(false);
-        this.checkPrint();
     }
 
     public void redo(MyEditType edittype, int editid) {
@@ -826,7 +811,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             MessageCenter.getInstance().fireTokenStatusEvent(new DeleteEvent(this, duri.getTokenID(), TokenStatusType.DELETE, duri.getAffectedTokens()));
         }
         MainController.changeCursorWaitStatus(false);
-        this.checkPrint();
     }
 
     public void checkPrint() {
@@ -855,10 +839,9 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             ArrayList<Integer> retval = globalDocument.splitToken(tokenIndex, editString);
             if (retval.size() > 0) {
                 MessageCenter.getInstance().fireTokenStatusEvent(new SplitEvent(this, tokenIndex, TokenStatusType.SPLIT, retval));
-                manager.undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.SPLIT, undo_redo)));
+                globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.SPLIT, undo_redo)));
             }
             MainController.changeCursorWaitStatus(false);
-            this.checkPrint();
         } catch (SQLException ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -897,9 +880,11 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         @Override
         public Document run(ProgressHandle ph) {
             Document document = null;
-            ph.progress("erasing UndoRedo");
-            ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("doc_create"));
-            manager.discardAllEdits();
+            if( globalDocument != null) {
+                ph.progress("erasing UndoRedo");
+                ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("doc_create"));
+                globalDocument.getUndoRedoManager().discardAllEdits();
+            }
             ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"));
             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"));
 
@@ -988,9 +973,11 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 return document;
             }
 
-            ph.progress("erasing UndoRedo");
-            ph.setDisplayName("erasing UndoRedo");
-            manager.discardAllEdits();
+            if( globalDocument != null) {
+                ph.progress("erasing UndoRedo");
+                ph.setDisplayName("erasing UndoRedo");
+                globalDocument.getUndoRedoManager().discardAllEdits();
+            }
             ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"));
             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"));
 
@@ -1000,7 +987,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             if (document != null) {
 
                 docOpened = true;
-
                 document.setBaseImagePath(docproperties.getProperty("imgbasepath", ""));
                 boolean hasimg = document.checkImageFiles();
                 if (!hasimg) {
@@ -1409,7 +1395,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             Document document = null;
             ph.progress("erasing UndoRedo");
             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("doc_create"));
-            manager.discardAllEdits();
+            globalDocument.getUndoRedoManager().discardAllEdits();
             ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"));
             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"));
 

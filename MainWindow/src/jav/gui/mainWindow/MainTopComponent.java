@@ -113,7 +113,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
     private int multivertical;
     private LockableUI lockableUI;
     private MouseDrawingUI mouseDrawingUI;
-
+    
     public MainTopComponent() {
 
         MessageCenter.getInstance().addDocumentChangedEventListener(this);
@@ -204,7 +204,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
 
     @Override
     public void componentOpened() {
-        MainController.findInstance().setLastFocusedTopComponent(this);
+//        MainController.findInstance().setLastFocusedTopComponent(this);
     }
 
     @Override
@@ -328,7 +328,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
             if (docOpened) {
                 docOpened = false;
                 MainController.findInstance().removeFromLookup(globalActions);
-                content.remove(instance);
+                content.remove(this);
             }
 
             ProgressUtils.showProgressDialogAndRun(r, p, false);
@@ -336,9 +336,12 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
             if (!this.isActive) {
                 this.requestActive();
             }
-            MainController.findInstance().setLastFocusedTopComponent(instance);
-            //            MainController.findInstance().addToLookup(globalActions);
-            content.add(instance);
+            
+            content.add(this);
+            MainController.findInstance().setLastFocusedTopComponent(this);
+            MainController.findInstance().addToLookup(globalActions);
+            
+//            MainController.findInstance().removeFromLookup(globalActions);
             MessageCenter.getInstance().firePageChangedEvent(new PageChangedEvent(instance, currentPageIndex));
         } catch (Exception | Error ex) {
 //            IOProvider.getDefault().getIO("Fehler", false).getOut().println(ex.getLocalizedMessage());

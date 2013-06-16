@@ -4,12 +4,10 @@ import info.clearthought.layout.TableLayout;
 import jav.concordance.control.ConcordanceEntry;
 import jav.correctionBackend.Token;
 import jav.correctionBackend.TokenImageInfoBox;
-import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.events.MessageCenter;
 import jav.gui.events.tokenNavigation.TokenNavigationEvent;
 import jav.gui.events.tokenNavigation.TokenNavigationType;
 import jav.gui.events.tokenStatus.TokenStatusType;
-import jav.gui.main.AbstractTokenVisualization;
 import jav.gui.main.MainController;
 import jav.gui.token.behaviour.TokenVisualizationConcordanceMode;
 import jav.gui.token.behaviour.TokenVisualizationMode;
@@ -30,6 +28,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Iterator;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -43,34 +42,35 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class ConcordancePage extends JPanel {
@@ -87,9 +87,12 @@ public class ConcordancePage extends JPanel {
     private double p = TableLayout.PREFERRED;
     ConcordanceTopComponent parent;
     private TokenVisualizationMode tvMode;
+    long begintime = System.currentTimeMillis();
 
     ConcordancePage(final ConcordanceTopComponent par, int start, int len) {
         super();
+        
+//        System.out.println("Page construction " + begintime);
 
         tvMode = new TokenVisualizationConcordanceMode();
 
@@ -111,7 +114,6 @@ public class ConcordancePage extends JPanel {
 
         tl = new TableLayout();
         tl.setVGap(10);
-////        tl.setHGap(20);
 
         double[] size = {p, p, p};
         tl.setColumn(size);
@@ -119,37 +121,31 @@ public class ConcordancePage extends JPanel {
         this.setBackground(Color.white);
 
         itemListener = new ItemListener() {
-
             @Override
             public void itemStateChanged(ItemEvent e) {
 
                 Component component = (Component) e.getSource();
-                int row = tl.getConstraints(component.getParent()).row1;
+                TokenVisualization tv = (TokenVisualization) component.getParent().getComponent(1);
+                int tokenId = tv.getTokenID();
 
                 if (e.getStateChange() == ItemEvent.SELECTED) {
-                    parent.addSelected(1);
-                    
-                    for (JPanel p : parent.getConcordanceRegistry().get(row)) {
+                    for (JPanel p : parent.getConcordanceGraphicsRegistry().get(tokenId)) {
                         if (p.getName().equals("rightc")) {
                             p.setBorder(activeRight);
                         } else if (p.getName().equals("word")) {
                             p.setBorder(activeCenter);
-                            TokenVisualization tv = (TokenVisualization) p.getComponents()[1];
-                            parent.setSelected(tv.getTokenID(), true);
+                            parent.setSelected(tokenId, true);
                         } else if (p.getName().equals("leftc")) {
                             p.setBorder(activeLeft);
                         }
                     }
                 } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-
-                    parent.removeSelected(1);
-                    for (JPanel p : parent.getConcordanceRegistry().get(row)) {
+                    for (JPanel p : parent.getConcordanceGraphicsRegistry().get(tokenId)) {
                         if (p.getName().equals("rightc")) {
                             p.setBorder(inactiveRight);
                         } else if (p.getName().equals("word")) {
                             p.setBorder(inactiveCenter);
-                            TokenVisualization tv = (TokenVisualization) p.getComponents()[1];
-                            parent.setSelected(tv.getTokenID(), false);
+                            parent.setSelected(tokenId, false);
                         } else if (p.getName().equals("leftc")) {
                             p.setBorder(inactiveLeft);
                         }
@@ -162,17 +158,56 @@ public class ConcordancePage extends JPanel {
         int counter = 0;
         Object[] data = parent.getEntryRegistry().keySet().toArray();
         while (counter < len) {
-            Integer tok = (Integer) data[start];
+            Integer tok = (Integer) data[start + counter];
             ConcordanceEntry cce = parent.getEntryRegistry().get(tok);
-            if (!cce.isDisabled()) {
-                this.addRow(tok, cce.getCandidateString(), cce.isSelected(), cce.isCorrected(), cce.isDisabled());
-            }
-            start++;
+            this.addRow(tok, cce.getCandidateString(), cce.isSelected(), cce.isCorrected(), cce.isDisabled());
             counter++;
+//            System.out.println("Row add " + (System.currentTimeMillis()-begintime));
+        }
+//        System.out.println("Done " + (System.currentTimeMillis()-begintime));
+    }
+
+    private void createLeftContext(int tokenId, JPanel container, boolean corrected) {
+        for (int i = 1; i <= parent.getLeftContextSize(); i++) {
+            Token tt = MainController.findInstance().getDocument().getPreviousToken(tokenId);
+            if (tt != null) {
+                tokenId = tt.getID();
+                TokenVisualization tv = this.createTokenVisualization(tt);
+                if (corrected) {
+                    tv.setBackground(new Color(229, 236, 255));
+                } else {
+                    tv.setBackground(Color.white);
+                }
+                tv.setMode(tvMode);
+                parent.getTVRegistry().add(tt, tv);
+                container.add(tv);
+            } else {
+                break;
+            }
         }
     }
 
-    private void addRow(int tokenIndex, String cand, boolean selected, boolean corrected, boolean disabled) {
+    private void createRightContext(int tokenId, JPanel container, boolean corrected) {
+        for (int i = 1; i <= parent.getRightContextSize(); i++) {
+            Token ttt = MainController.findInstance().getDocument().getNextToken(tokenId);
+            if (ttt != null) {
+                tokenId = ttt.getID();
+                TokenVisualization tokv = this.createTokenVisualization(ttt);
+                if (corrected) {
+                    tokv.setBackground(new Color(229, 236, 255));
+                } else {
+                    tokv.setBackground(Color.white);
+                }
+                tokv.setMode(tvMode, ttt);
+                parent.getTVRegistry().add(ttt, tokv);
+                container.add(tokv);
+            } else {
+                break;
+            }
+        }
+    }
+
+    private void addRow(int tokenID, String cand, boolean selected, boolean corrected, boolean disabled) {
 
         tl.insertRow(tl.getNumRow(), p);
 
@@ -228,20 +263,7 @@ public class ConcordancePage extends JPanel {
         }
 
         if (!disabled) {
-            for (int i = 1; i <= parent.getLeftContextSize(); i++) {
-                if (tokenIndex - i >= 0) {
-                    Token tt = MainController.findInstance().getDocument().getTokenByIndex(tokenIndex - i);
-                    TokenVisualization tv = this.createTokenVisualization(tt);
-                    if (corrected) {
-                        tv.setBackground(new Color(229, 236, 255));
-                    } else {
-                        tv.setBackground(Color.white);
-                    }
-                    tv.setMode(tvMode);
-                    parent.getTVRegistry().add(tt, tv);
-                    leftC.add(tv);
-                }
-            }
+            this.createLeftContext(tokenID, leftC, corrected);
         }
 
         if (selected) {
@@ -254,7 +276,7 @@ public class ConcordancePage extends JPanel {
 
         word.add(Box.createHorizontalStrut(35)); //new JLabel("    "));
 
-        Token tt = MainController.findInstance().getDocument().getTokenByID(tokenIndex);
+        Token tt = MainController.findInstance().getDocument().getTokenByID(tokenID);
         TokenVisualization tv = this.createTokenVisualization(tt);
 
         if (corrected) {
@@ -265,9 +287,9 @@ public class ConcordancePage extends JPanel {
 
         if (!disabled) {
             tv.setMode(tvMode, tt);
-            parent.getTVRegistry().add(tokenIndex, tv);
+            parent.getTVRegistry().add(tokenID, tv);
         } else {
-            tv.isolate();
+            tv.deactivate();
         }
         tv.setAlignmentY(CENTER_ALIGNMENT);
         word.add(tv);
@@ -297,21 +319,7 @@ public class ConcordancePage extends JPanel {
         this.add(word, "1, " + (tl.getNumRow() - 1));
 
         if (!disabled) {
-            for (int i = 1; i <= parent.getRightContextSize(); i++) {
-                if (tokenIndex + i < MainController.findInstance().getDocument().getNumberOfTokens()) {
-                    Token ttt = MainController.findInstance().getDocument().getTokenByIndex(tokenIndex + i);
-                    TokenVisualization tokv = this.createTokenVisualization(ttt);
-                    if (corrected) {
-                        tokv.setBackground(new Color(229, 236, 255));
-                    } else {
-                        tokv.setBackground(Color.white);
-                    }
-                    tokv.setMode(tvMode, ttt);
-                    parent.getTVRegistry().add(ttt, tokv);
-
-                    rightC.add(tokv);
-                }
-            }
+            this.createRightContext(tokenID, rightC, corrected);
         }
 
         if (selected) {
@@ -320,7 +328,7 @@ public class ConcordancePage extends JPanel {
             rightC.setBorder(inactiveRight);
         }
         this.add(rightC, "2, " + (tl.getNumRow() - 1) + ", f, f");
-        parent.getConcordanceRegistry().add(tl.getNumRow() - 1, leftC, word, rightC);
+        parent.getConcordanceGraphicsRegistry().add(tt.getID(), leftC, word, rightC);
     }
 
     public void selectAll() {
@@ -353,6 +361,8 @@ public class ConcordancePage extends JPanel {
     }
 
     private TokenVisualization createTokenVisualization(Token t) {
+
+//        System.out.println("create tv " + (System.currentTimeMillis()-begintime));
 
         TokenVisualization tv;
         TokenImageInfoBox tiib = t.getTokenImageInfoBox();
@@ -485,53 +495,96 @@ public class ConcordancePage extends JPanel {
                         JButton wordcandb = (JButton) wordContainer.getComponent(3);
                         //JLabel wordcandl = (JLabel) wordContainer.getComponent(3);
                         wordcandb.setText(s);
+                        if (s.equals("")) {
+                            wordcandb.setEnabled(false);
+                        } else {
+                            wordcandb.setEnabled(true);
+                        }
                     }
                 }
             }
         }
     }
 
-    public void grayOut(TokenVisualization tv) {
-        ArrayList<JPanel> line = parent.getConcordanceRegistry().get(tl.getConstraints(tv.getParent()).row1);
-        JPanel leftC = line.get(0);
-        JPanel word = line.get(1);
-        JPanel rightC = line.get(2);
-        JCheckBox b = (JCheckBox) word.getComponent(2);
-        JButton jb = (JButton) word.getComponent(3);
-        jb.setEnabled(false);
+    public void grayOut(TokenVisualization tv, boolean grayout) {
+        ArrayList<JPanel> line = parent.getConcordanceGraphicsRegistry().get(tv.getTokenID());
+        if (grayout) {
+            JPanel leftC = line.get(0);
+            JPanel word = line.get(1);
+            JPanel rightC = line.get(2);
+            JCheckBox b = (JCheckBox) word.getComponent(2);
+            JButton jb = (JButton) word.getComponent(3);
+            jb.setEnabled(false);
 
-        leftC.setBorder(inactiveRight);
-        word.setBorder(inactiveCenter);
-        rightC.setBorder(inactiveLeft);
+            leftC.setBorder(inactiveRight);
+            word.setBorder(inactiveCenter);
+            rightC.setBorder(inactiveLeft);
 
-        b.setSelected(false);
-        b.setEnabled(false);
-        for (Component ca : leftC.getComponents()) {
-            if (ca instanceof TokenVisualization) {
-                ca.setBackground(new Color(229, 236, 255));
+            if( b.isSelected()) {
+                b.setSelected(false);
+                b.setEnabled(false);
             }
-        }
-        for (Component ca : rightC.getComponents()) {
-            if (ca instanceof TokenVisualization) {
-                ca.setBackground(new Color(229, 236, 255));
+            
+            for (Component ca : leftC.getComponents()) {
+                if (ca instanceof TokenVisualization) {
+                    ca.setBackground(new Color(229, 236, 255));
+                }
             }
+            for (Component ca : rightC.getComponents()) {
+                if (ca instanceof TokenVisualization) {
+                    ca.setBackground(new Color(229, 236, 255));
+                }
+            }
+            leftC.setBackground(new Color(229, 236, 255));
+            word.setBackground(new Color(229, 236, 255));
+            rightC.setBackground(new Color(229, 236, 255));
+            tv.setBackground(new Color(229, 236, 255));
+            b.setBackground(new Color(229, 236, 255));
+        } else {
+            JPanel leftC = line.get(0);
+            JPanel word = line.get(1);
+            JPanel rightC = line.get(2);
+            JCheckBox b = (JCheckBox) word.getComponent(2);
+            JButton jb = (JButton) word.getComponent(3);
+            jb.setEnabled(true);
+
+            leftC.setBorder(activeRight);
+            word.setBorder(activeCenter);
+            rightC.setBorder(activeLeft);
+
+            if( b.isSelected()) {
+                b.setSelected(false);
+                b.setEnabled(true);
+            }
+            
+            for (Component ca : leftC.getComponents()) {
+                if (ca instanceof TokenVisualization) {
+                    ca.setBackground(Color.white);
+                }
+            }
+            for (Component ca : rightC.getComponents()) {
+                if (ca instanceof TokenVisualization) {
+                    ca.setBackground(Color.white);
+                }
+            }
+            leftC.setBackground(Color.white);
+            word.setBackground(Color.white);
+            rightC.setBackground(Color.white);
+            tv.setBackground(Color.white);
+            b.setBackground(Color.white);
+
         }
-        leftC.setBackground(new Color(229, 236, 255));
-        word.setBackground(new Color(229, 236, 255));
-        rightC.setBackground(new Color(229, 236, 255));
-        tv.setBackground(new Color(229, 236, 255));
-        b.setBackground(new Color(229, 236, 255));
     }
 
-    private void disableEntry(final TokenVisualization tv, int index, ArrayList<JPanel> rowpa) {
-        parent.getConcordanceRegistry().remove(tl.getConstraints(tv.getParent()).row1);
-        parent.getEntryRegistry().get(index).setDisabled(true);
+    private void disableEntry(final TokenVisualization tv, int id, ArrayList<JPanel> rowpa) {
+        parent.getConcordanceGraphicsRegistry().remove(id);
+        parent.getEntryRegistry().get(id).setDisabled(true);
 
         for (Component ca : rowpa.get(0).getComponents()) {
             if (ca instanceof TokenVisualization) {
                 TokenVisualization tokv = (TokenVisualization) ca;
                 tokv.setBackground(Color.lightGray);
-                tokv.isolate();
+                tokv.deactivate();
             }
         }
 
@@ -539,7 +592,7 @@ public class ConcordancePage extends JPanel {
             if (ca instanceof TokenVisualization) {
                 TokenVisualization tokv = (TokenVisualization) ca;
                 tokv.setBackground(Color.lightGray);
-                tokv.isolate();
+                tokv.deactivate();
             }
         }
 
@@ -547,7 +600,7 @@ public class ConcordancePage extends JPanel {
             if (ca instanceof TokenVisualization) {
                 TokenVisualization tokv = (TokenVisualization) ca;
                 tokv.setBackground(Color.lightGray);
-                tokv.isolate();
+                tokv.deactivate();
             }
         }
 
@@ -560,7 +613,6 @@ public class ConcordancePage extends JPanel {
         fb.setEnabled(false);
 
         MouseListener listener = new MouseListener() {
-
             @Override
             public void mouseClicked(MouseEvent me) {
             }
@@ -575,7 +627,6 @@ public class ConcordancePage extends JPanel {
                     JPopupMenu menu = new JPopupMenu();
                     JMenuItem jumpItem = new JMenuItem(java.util.ResourceBundle.getBundle("jav/gui/token/display/Bundle").getString("jumpto"));
                     jumpItem.addActionListener(new ActionListener() {
-
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             MessageCenter.getInstance().fireTokenNavigationEvent(new TokenNavigationEvent(tv, tv.getTokenID(), TokenNavigationType.FOCUS_IN_MAIN));
@@ -617,6 +668,93 @@ public class ConcordancePage extends JPanel {
         this.updateTokenRegistry();
     }
 
+    private void enableEntry(final TokenVisualization tv, int index, ArrayList<JPanel> rowpa) {
+        parent.getConcordanceGraphicsRegistry().remove(index);
+        parent.getEntryRegistry().get(index).setDisabled(false);
+
+        for (Component ca : rowpa.get(0).getComponents()) {
+            if (ca instanceof TokenVisualization) {
+                TokenVisualization tokv = (TokenVisualization) ca;
+                tokv.setBackground(Color.white);
+                tokv.activate();
+            }
+        }
+
+        for (Component ca : rowpa.get(1).getComponents()) {
+            if (ca instanceof TokenVisualization) {
+                TokenVisualization tokv = (TokenVisualization) ca;
+                tokv.setBackground(Color.white);
+                tokv.activate();
+            }
+        }
+
+        for (Component ca : rowpa.get(2).getComponents()) {
+            if (ca instanceof TokenVisualization) {
+                TokenVisualization tokv = (TokenVisualization) ca;
+                tokv.setBackground(Color.white);
+                tokv.activate();
+            }
+        }
+
+        parent.removeDisabled();
+        JCheckBox b = (JCheckBox) rowpa.get(1).getComponent(2);
+        b.setEnabled(true);
+        b.setSelected(false);
+
+        FastCorrectionButton fb = (FastCorrectionButton) rowpa.get(1).getComponent(3);
+        fb.setEnabled(true);
+
+        MouseListener listener = new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent me) {
+            }
+
+            @Override
+            public void mousePressed(MouseEvent me) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent me) {
+                if (me.getButton() == MouseEvent.BUTTON3) {
+                    JPopupMenu menu = new JPopupMenu();
+                    JMenuItem jumpItem = new JMenuItem(java.util.ResourceBundle.getBundle("jav/gui/token/display/Bundle").getString("jumpto"));
+                    jumpItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            MessageCenter.getInstance().fireTokenNavigationEvent(new TokenNavigationEvent(tv, tv.getTokenID(), TokenNavigationType.FOCUS_IN_MAIN));
+                        }
+                    });
+                    menu.add(jumpItem);
+                    menu.show(tv, 50, 50);
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent me) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent me) {
+            }
+        };
+
+        rowpa.get(0).removeMouseListener(listener);
+        rowpa.get(1).removeMouseListener(listener);
+        rowpa.get(2).removeMouseListener(listener);
+
+
+        rowpa.get(0).setBorder(activeRight);
+        rowpa.get(1).setBorder(activeCenter);
+        rowpa.get(2).setBorder(activeLeft);
+
+        rowpa.get(0).setBackground(Color.white);
+        rowpa.get(1).setBackground(Color.white);
+        rowpa.get(2).setBackground(Color.white);
+
+        b.setBackground(Color.white);
+        this.updateTokenRegistry();
+    }
+
     private void updateTokenRegistry() {
         parent.getTVRegistry().clear();
         for (Component ca : this.getComponents()) {
@@ -632,163 +770,161 @@ public class ConcordancePage extends JPanel {
         }
     }
 
-    public void updateTokenVisualizationIndices(int startindex, int discr) {
-        for (Component ca : this.getComponents()) {
-            if (ca instanceof JPanel) {
-                JPanel container = (JPanel) ca;
-                for (Component cb : container.getComponents()) {
-                    if (cb instanceof TokenVisualization) {
-                        TokenVisualization tv = (TokenVisualization) cb;
-                        if (tv.getTokenID() > startindex) {
-//                            IOProvider.getDefault().getIO("Nachrichten", false).getOut().println(System.currentTimeMillis() + " cv tv update " + tv.getTokenTextLabelText() + " # " + tv.getTokenIndex() + " # " + discr + " # " + (tv.getTokenIndex() + discr));
-                            tv.setTokenID(tv.getTokenID() + discr);
-                        }
-                    } else if (cb instanceof FastCorrectionButton) {
-                        FastCorrectionButton fcb = (FastCorrectionButton) cb;
-                        if (fcb.getTokenIndex() > startindex) {
-                            fcb.setTokenIndex(fcb.getTokenIndex() + discr);
-                        }
-                    }
+    public void update(TokenStatusType t, int affectedID, ArrayList<Integer> affectedTokens) {
+        Iterator<Integer> tokid_it = affectedTokens.iterator();
+        while (tokid_it.hasNext()) {
+            int tokid = tokid_it.next();
+
+            System.out.println(t.toString() + " " + affectedID);
+            for( int i = 0; i<affectedTokens.size();i++) {
+                System.out.println("AFFECTED " + affectedTokens.get(i));
+            }
+            
+            if (parent.getEntryRegistry().containsKey(tokid)) {
+                Token to = MainController.findInstance().getDocument().getTokenByID(tokid);
+                if (to.isCorrected()) {
                 }
             }
         }
+
+
+
+
+
     }
-
-    /*
-     * tv is the tokenvisualization that triggered the event
-     */
-    public void update(TokenStatusType tst, TokenVisualization tv, int tokenIndex, int numAffected, boolean updateIndices) {
-
-        ArrayList<JPanel> rowpa = parent.getConcordanceRegistry().get(tl.getConstraints(tv.getParent()).row1);
-        if (rowpa != null) {
-            TokenVisualization mid = (TokenVisualization) rowpa.get(1).getComponent(1);
-
-            if (tst == TokenStatusType.MERGED_RIGHT || tst == TokenStatusType.DELETE) {
-
-                if (tv.getParent().getName().equals("leftc")) {
-                    for (AbstractTokenVisualization atv : parent.getTVRegistry().getVisualizations(tokenIndex + numAffected)) {
-                        TokenVisualization test = (TokenVisualization) atv;
-                        if (tl.getConstraints(tv.getParent()).row1 == tl.getConstraints(test.getParent()).row1) {
-                            /*
-                             * if the deleted area affects the concordance
-                             * entry, it has to be disabled because by being
-                             * tampered with, it looses its specific features
-                             * that made it belong to the concordance group
-                             */
-                            if (!test.getParent().getName().equals("leftc")) {
-                                tv.update( MainController.findInstance().getDocument().getTokenByID(tv.getTokenID()).getWDisplay());
-                                disableEntry(tv, mid.getTokenID(), rowpa);
-                                rowpa.get(1).removeAll();
-                                rowpa.get(2).removeAll();
-                                parent.getEntryRegistry().remove(mid.getTokenID());
-
-                                if( updateIndices ) {
-                                    this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
-                                }
-                                
-                                this.updateTokenRegistry();
-                                //if the merging is inside the left context of the entry, update the context   
-                            } else {
-                                rowpa.get(0).removeAll();
-                                this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
-                                tokenIndex = mid.getTokenID();
-                                for (int i = 1; i <= parent.getLeftContextSize(); i++) {
-                                    if (tokenIndex - i >= 0) {
-                                        Token t = MainController.findInstance().getDocument().getTokenByIndex(tokenIndex - i);
-                                        TokenVisualization temp = this.createTokenVisualization(t);
-                                        temp.setBackground(Color.white);
-                                        temp.setMode(tvMode, t);
-                                        rowpa.get(0).add(temp);
-                                    }
-                                }
-                                rowpa.get(0).revalidate();
-                                this.updateTokenRegistry();
-                            }
-
-                            break;
-                        }
-                    }
-                } else if (tv.getParent().getName().equals("word")) {
-                    disableEntry(tv, tokenIndex, rowpa);
-                    tv.getParent().remove(tv);
-                    parent.getEntryRegistry().remove(mid.getTokenID());
-                    
-                    if( updateIndices ) {
-                        this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
-                    }
-                    
-                    this.updateTokenRegistry();
-
-                } else if (tv.getParent().getName().equals("rightc")) {
-                    rowpa.get(2).removeAll();
-                    this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
-                    tokenIndex = mid.getTokenID();
-                    for (int i = 1; i <= parent.getRightContextSize(); i++) {
-                        if (tokenIndex + i < MainController.findInstance().getDocument().getNumberOfTokens()) {
-                            Token t = MainController.findInstance().getDocument().getTokenByIndex(tokenIndex + i);
-                            TokenVisualization temp = this.createTokenVisualization(t);
-                            temp.setBackground(Color.white);
-                            temp.setMode(tvMode, t);
-                            rowpa.get(2).add(temp);
-                        }
-                    }
-                    rowpa.get(2).revalidate();
-                    this.updateTokenRegistry();
-                } else {
-                    new CustomErrorDialog().showDialog("ClassicConcordancePage::update undefined panel name");
-                }
-            } else if (tst == TokenStatusType.SPLIT) {
-
-                if (tv.getParent().getName().equals("leftc")) {
-                    rowpa.get(0).removeAll();
-                    this.updateTokenVisualizationIndices(tokenIndex, numAffected);
-                    tokenIndex = mid.getTokenID();
-                    for (int i = 1; i <= parent.getLeftContextSize(); i++) {
-                        if (tokenIndex - i >= 0) {
-                            TokenVisualization temp = this.createTokenVisualization(MainController.findInstance().getDocument().getTokenByIndex(tokenIndex - i));
-                            temp.setBackground(Color.white);
-                            temp.setMode(tvMode);
-                            rowpa.get(0).add(temp);
-                        }
-                    }
-                    rowpa.get(0).revalidate();
-                    this.updateTokenRegistry();
-                } else if (tv.getParent().getName().equals("word")) {
-
-                    tv.update( MainController.findInstance().getDocument().getTokenByID(tv.getTokenID()).getWDisplay());
-                    disableEntry(tv, tv.getTokenID(), rowpa);
-                    parent.getEntryRegistry().remove(tokenIndex);
-                    
-                    if( updateIndices ) {
-                        this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
-                    }
-                    
-                    this.updateTokenRegistry();
-
-                } else if (tv.getParent().getName().equals("rightc")) {
-
-                    rowpa.get(2).removeAll();
-                    
-                    if( updateIndices ) {
-                        this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
-                    }
-                    
-                    tokenIndex = mid.getTokenID();
-                    for (int i = 1; i <= parent.getRightContextSize(); i++) {
-                        if (tokenIndex + i < MainController.findInstance().getDocument().getNumberOfTokens()) {
-                            Token t = MainController.findInstance().getDocument().getTokenByIndex(tokenIndex + i);
-                            TokenVisualization temp = this.createTokenVisualization(t);
-                            temp.setBackground(Color.white);
-                            temp.setMode(tvMode);
-                            rowpa.get(2).add(temp);
-                        }
-                    }
-                    rowpa.get(2).revalidate();
-                    this.updateTokenRegistry();
-                } else {
-                    new CustomErrorDialog().showDialog("ClassicConcordancePage::update undefined panel name");
-                }
-            }
-        }
-    }
+//    @Deprecated
+//    public void update(TokenStatusType tst, TokenVisualization tv, int tokenIndex, int numAffected, boolean updateIndices) {
+//
+//        ArrayList<JPanel> rowpa = parent.getConcordanceGraphicsRegistry().get(tl.getConstraints(tv.getParent()).row1);
+//        if (rowpa != null) {
+//            TokenVisualization mid = (TokenVisualization) rowpa.get(1).getComponent(1);
+//
+//            if (tst == TokenStatusType.MERGED_RIGHT || tst == TokenStatusType.DELETE) {
+//
+//                if (tv.getParent().getName().equals("leftc")) {
+//                    for (AbstractTokenVisualization atv : parent.getTVRegistry().getVisualizations(tokenIndex + numAffected)) {
+//                        TokenVisualization test = (TokenVisualization) atv;
+//                        if (tl.getConstraints(tv.getParent()).row1 == tl.getConstraints(test.getParent()).row1) {
+//                            /*
+//                             * if the deleted area affects the concordance
+//                             * entry, it has to be disabled because by being
+//                             * tampered with, it looses its specific features
+//                             * that made it belong to the concordance group
+//                             */
+//                            if (!test.getParent().getName().equals("leftc")) {
+//                                tv.update(MainController.findInstance().getDocument().getTokenByID(tv.getTokenID()).getWDisplay());
+//                                disableEntry(tv, mid.getTokenID(), rowpa);
+//                                rowpa.get(1).removeAll();
+//                                rowpa.get(2).removeAll();
+//                                parent.getEntryRegistry().remove(mid.getTokenID());
+//
+//                                if (updateIndices) {
+//                                    this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
+//                                }
+//
+//                                this.updateTokenRegistry();
+//                                //if the merging is inside the left context of the entry, update the context   
+//                            } else {
+//                                rowpa.get(0).removeAll();
+//                                this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
+//                                tokenIndex = mid.getTokenID();
+//                                for (int i = 1; i <= parent.getLeftContextSize(); i++) {
+//                                    if (tokenIndex - i >= 0) {
+//                                        Token t = MainController.findInstance().getDocument().getTokenByIndex(tokenIndex - i);
+//                                        TokenVisualization temp = this.createTokenVisualization(t);
+//                                        temp.setBackground(Color.white);
+//                                        temp.setMode(tvMode, t);
+//                                        rowpa.get(0).add(temp);
+//                                    }
+//                                }
+//                                rowpa.get(0).revalidate();
+//                                this.updateTokenRegistry();
+//                            }
+//
+//                            break;
+//                        }
+//                    }
+//                } else if (tv.getParent().getName().equals("word")) {
+//                    disableEntry(tv, tokenIndex, rowpa);
+//                    tv.getParent().remove(tv);
+//                    parent.getEntryRegistry().remove(mid.getTokenID());
+//
+//                    if (updateIndices) {
+//                        this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
+//                    }
+//
+//                    this.updateTokenRegistry();
+//
+//                } else if (tv.getParent().getName().equals("rightc")) {
+//                    rowpa.get(2).removeAll();
+//                    this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
+//                    tokenIndex = mid.getTokenID();
+//                    for (int i = 1; i <= parent.getRightContextSize(); i++) {
+//                        if (tokenIndex + i < MainController.findInstance().getDocument().getNumberOfTokens()) {
+//                            Token t = MainController.findInstance().getDocument().getTokenByIndex(tokenIndex + i);
+//                            TokenVisualization temp = this.createTokenVisualization(t);
+//                            temp.setBackground(Color.white);
+//                            temp.setMode(tvMode, t);
+//                            rowpa.get(2).add(temp);
+//                        }
+//                    }
+//                    rowpa.get(2).revalidate();
+//                    this.updateTokenRegistry();
+//                } else {
+//                    new CustomErrorDialog().showDialog("ClassicConcordancePage::update undefined panel name");
+//                }
+//            } else if (tst == TokenStatusType.SPLIT) {
+//
+//                if (tv.getParent().getName().equals("leftc")) {
+//                    rowpa.get(0).removeAll();
+//                    this.updateTokenVisualizationIndices(tokenIndex, numAffected);
+//                    tokenIndex = mid.getTokenID();
+//                    for (int i = 1; i <= parent.getLeftContextSize(); i++) {
+//                        if (tokenIndex - i >= 0) {
+//                            TokenVisualization temp = this.createTokenVisualization(MainController.findInstance().getDocument().getTokenByIndex(tokenIndex - i));
+//                            temp.setBackground(Color.white);
+//                            temp.setMode(tvMode);
+//                            rowpa.get(0).add(temp);
+//                        }
+//                    }
+//                    rowpa.get(0).revalidate();
+//                    this.updateTokenRegistry();
+//                } else if (tv.getParent().getName().equals("word")) {
+//
+//                    tv.update(MainController.findInstance().getDocument().getTokenByID(tv.getTokenID()).getWDisplay());
+//                    disableEntry(tv, tv.getTokenID(), rowpa);
+//                    parent.getEntryRegistry().remove(tokenIndex);
+//
+//                    if (updateIndices) {
+//                        this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
+//                    }
+//
+//                    this.updateTokenRegistry();
+//
+//                } else if (tv.getParent().getName().equals("rightc")) {
+//
+//                    rowpa.get(2).removeAll();
+//
+//                    if (updateIndices) {
+//                        this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
+//                    }
+//
+//                    tokenIndex = mid.getTokenID();
+//                    for (int i = 1; i <= parent.getRightContextSize(); i++) {
+//                        if (tokenIndex + i < MainController.findInstance().getDocument().getNumberOfTokens()) {
+//                            Token t = MainController.findInstance().getDocument().getTokenByIndex(tokenIndex + i);
+//                            TokenVisualization temp = this.createTokenVisualization(t);
+//                            temp.setBackground(Color.white);
+//                            temp.setMode(tvMode);
+//                            rowpa.get(2).add(temp);
+//                        }
+//                    }
+//                    rowpa.get(2).revalidate();
+//                    this.updateTokenRegistry();
+//                } else {
+//                    new CustomErrorDialog().showDialog("ClassicConcordancePage::update undefined panel name");
+//                }
+//            }
+//        }
+//    }
 }

@@ -10,6 +10,7 @@ import jav.gui.events.concordance.ConcordanceEventSlot;
 import jav.gui.events.concordance.ConcordanceType;
 import jav.gui.main.MainController;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import javax.swing.SwingWorker;
@@ -84,9 +85,7 @@ public class ConcordanceController implements ConcordanceEventSlot {
                         boolean retval = get();
                         if (retval) {
                             CloneConcordanceTopComponent comp = new CloneConcordanceTopComponent();
-//                            AbstractConcordanceViewTopComponent comp = new AbstractConcordanceViewTopComponent();
                             comp.init(e.getArray(), e.getName());
-//                            CloneConcordanceView comp = new CloneConcordanceView(e.getArray(), MainController.findInstance().getDocument(), e.getName());
                             comp.open();
                             comp.requestActive();
                             p.finish();
@@ -95,7 +94,6 @@ public class ConcordanceController implements ConcordanceEventSlot {
                             new CustomErrorDialog().showDialog("KonkordanzController::dispatchEvent(ConcordanceEvent)");
                         }
                     } catch ( ExecutionException | InterruptedException | CancellationException ex) {
-//                        Exceptions.printStackTrace(ex);
                     }
                 }
             };
@@ -110,7 +108,7 @@ public class ConcordanceController implements ConcordanceEventSlot {
                 protected ArrayList<Token> doInBackground() {
 
                     ArrayList<Token> retval = e.getArray();
-//                    Collections.sort(retval, comparator);
+                    Collections.sort(retval, comparator);
                     
                     p.start();
                     p.progress("Create Concordance");
@@ -126,10 +124,6 @@ public class ConcordanceController implements ConcordanceEventSlot {
                         if (retval != null ) {
                             ConcordanceTopComponent comp = new ConcordanceTopComponent();
                             comp.init(e.getArray(), e.getName());
-//                            AbstractConcordanceViewTopComponent comp = new AbstractConcordanceViewTopComponent();
-//                            comp.init(e.getArray(), e.getName());
-//                            DiverseConcordanceView comp = new DiverseConcordanceView(retval, MainController.findInstance().getDocument(), e.getName());
-//                            NewConcordanceView comp = new NewConcordanceView(retval, MainController.findInstance().getDocument(), e.getName());
                             comp.open();
                             comp.requestActive();
                             p.finish();
@@ -138,7 +132,6 @@ public class ConcordanceController implements ConcordanceEventSlot {
                             new CustomErrorDialog().showDialog("KonkordanzController::dispatchEvent(ConcordanceEvent)");
                         }
                     } catch (ExecutionException | InterruptedException | CancellationException ex) {
-//                        Exceptions.printStackTrace(ex);
                     }
                 }
             };

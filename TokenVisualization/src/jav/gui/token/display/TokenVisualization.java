@@ -159,7 +159,7 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         this.revalidate();
     }
     
-    public void isolate() {
+    public void deactivate() {
         if (tvm != null) {
             this.removeMouseListener(tvm.getMouseListener());
             this.removeKeyListener(keyListener);
@@ -167,6 +167,14 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         }
     }
 
+    public void activate() {
+        if (tvm != null) {
+            this.addMouseListener(tvm.getMouseListener());
+            this.addKeyListener(keyListener);
+            this.setBackground(Color.white);
+        }
+    }
+    
     public void setSelected(boolean b) {
         this.isSelected = b;
         this.grabFocus();

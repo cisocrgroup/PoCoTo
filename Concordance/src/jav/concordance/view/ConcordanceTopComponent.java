@@ -1,7 +1,7 @@
 package jav.concordance.view;
 
 import jav.concordance.control.ConcordanceEntry;
-import jav.concordance.control.ConcordanceRegistry;
+import jav.concordance.control.ConcordanceGraphicsRegistry;
 import jav.correctionBackend.Token;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.events.MessageCenter;
@@ -12,6 +12,12 @@ import jav.gui.events.tokenDeselection.TokenDeselectionEvent;
 import jav.gui.events.tokenMultiDeselection.TokenMultiDeselectionEvent;
 import jav.gui.events.tokenSelection.TokenSelectionEvent;
 import jav.gui.events.tokenSelection.TokenSelectionType;
+import jav.gui.events.tokenStatus.CorrectedEvent;
+import jav.gui.events.tokenStatus.DeleteEvent;
+import jav.gui.events.tokenStatus.InsertEvent;
+import jav.gui.events.tokenStatus.MergeEvent;
+import jav.gui.events.tokenStatus.SetCorrectedEvent;
+import jav.gui.events.tokenStatus.SplitEvent;
 import jav.gui.events.tokenStatus.TokenStatusEvent;
 import jav.gui.events.tokenStatus.TokenStatusType;
 import jav.gui.main.AbstractEditorViewTopComponent;
@@ -45,34 +51,35 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
@@ -99,33 +106,28 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
     private ConcordanceTopComponent instance;
     private ConcordanceGlobalActions globalActions;
     private TokenVisualizationMultiRegistry tvRegistry;
-    private ConcordanceRegistry concRegistry;
+    private ConcordanceGraphicsRegistry concGRegistry;
     LinkedHashMap<Integer, ConcordanceEntry> tokens;
 
     public void init(ArrayList<Token> t, String n) {
-
         this.name = n;
 
         tvRegistry = new TokenVisualizationMultiRegistry();
-        concRegistry = new ConcordanceRegistry();
-        
+        concGRegistry = new ConcordanceGraphicsRegistry();
         tokens = new LinkedHashMap<>();
         for (Token tok : t) {
             ConcordanceEntry temp = new ConcordanceEntry(tok);
-            if ( !tok.getTopSuggestion().equals("") ) {
+            if (!tok.getTopSuggestion().equals("")) {
                 temp.setCandidateString(tok.getTopSuggestion());
             } else {
                 temp.setCandidateString("");
             }
             tokens.put(tok.getID(), temp);
         }
-
         instance = this;
         globalActions = new ConcordanceGlobalActions(this);
-
         this.setFocusable(true);
-//        this.setDoubleBuffered(true);
-        
+
         MessageCenter.getInstance().addDocumentChangedEventListener(this);
         MessageCenter.getInstance().addTokenDeselectionEventListener(this);
         MessageCenter.getInstance().addTokenSelectionEventListener(this);
@@ -147,10 +149,9 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
 
         jButton1.setEnabled(false);
         jButton1.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent e) {
-                NotifyDescriptor d = new NotifyDescriptor.Confirmation(java.util.ResourceBundle.getBundle("jav/gui/concordance/Bundle").getString("WENN SIE FORTFAHREN WERDEN MEHRERE TOKEN KORRIGIERT!"), java.util.ResourceBundle.getBundle("jav/gui/concordance/Bundle").getString("ACHTUNG"), NotifyDescriptor.OK_CANCEL_OPTION, NotifyDescriptor.WARNING_MESSAGE);
+                NotifyDescriptor d = new NotifyDescriptor.Confirmation(java.util.ResourceBundle.getBundle("jav/concordance/Bundle").getString("WENN SIE FORTFAHREN WERDEN MEHRERE TOKEN KORRIGIERT!"), java.util.ResourceBundle.getBundle("jav/concordance/Bundle").getString("ACHTUNG"), NotifyDescriptor.OK_CANCEL_OPTION, NotifyDescriptor.WARNING_MESSAGE);
                 Object retval = DialogDisplayer.getDefault().notify(d);
                 if (retval.equals(NotifyDescriptor.OK_OPTION)) {
                     correct();
@@ -220,14 +221,14 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         toolb.setRollover(true);
         toolb.setFloatable(false);
 
-        jToggleButton1.setText(java.util.ResourceBundle.getBundle("jav/gui/concordance/Bundle").getString("pageSelect"));
+        jToggleButton1.setText(java.util.ResourceBundle.getBundle("jav/concordance/Bundle").getString("pageSelect"));
         jToggleButton1.setFocusable(false);
         jToggleButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jToggleButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         toolb.add(jToggleButton1);
         toolb.add(jSeparator1);
 
-        jToggleButton2.setText(java.util.ResourceBundle.getBundle("jav/gui/concordance/Bundle").getString("allSelect"));
+        jToggleButton2.setText(java.util.ResourceBundle.getBundle("jav/concordance/Bundle").getString("allSelect"));
         jToggleButton2.setFocusable(false);
         jToggleButton2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jToggleButton2.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -236,7 +237,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
 
         toolb.add(jSeparator3);
 
-        jButton1.setText(java.util.ResourceBundle.getBundle("jav/gui/concordance/Bundle").getString("correct"));
+        jButton1.setText(java.util.ResourceBundle.getBundle("jav/concordance/Bundle").getString("correct"));
         jButton1.setFocusable(false);
         jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -246,7 +247,6 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
          * select / deselect current Page
          */
         jToggleButton1.addItemListener(new ItemListener() {
-
             @Override
             public void itemStateChanged(ItemEvent ie) {
                 if (ie.getStateChange() == ItemEvent.SELECTED) {
@@ -279,7 +279,6 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
          * select / deselect everything
          */
         jToggleButton2.addItemListener(new ItemListener() {
-
             @Override
             public void itemStateChanged(ItemEvent ie) {
                 if (ie.getStateChange() == ItemEvent.SELECTED) {
@@ -287,31 +286,24 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
                     jToggleButton1.setSelected(true);
                     Iterator<Integer> i = tokens.keySet().iterator();
                     while (i.hasNext()) {
-                        Integer tok = i.next();
-                        ConcordanceEntry cce = tokens.get(tok);
-                        if (!cce.isCorrected() && !cce.isDisabled() && !cce.isSelected()) {
-                            if (tok < actualPage * tokensPerPage || tok > actualPage * tokensPerPage + tokensInPage) {
-                                addSelected(1);
+                        Integer tokid = i.next();
+                        ConcordanceEntry cce = tokens.get(tokid);
+                        if (cce.isSelectable()) {
+                            if (!tvRegistry.contains(tokid)) {
+//                            if (count < actualPage * tokensPerPage || count >= actualPage * tokensPerPage + tokensInPage) {
+                                setSelected(tokid, true);
                             }
-                            cce.setSelected(true);
                         }
                     }
                     cp.selectAll();
                 } else {
-
                     jToggleButton1.setSelected(false);
                     Iterator<Integer> i = tokens.keySet().iterator();
                     while (i.hasNext()) {
-                        Integer tok = i.next();
-                        ConcordanceEntry cce = tokens.get(tok);
-                        if (!cce.isCorrected() && !cce.isDisabled() && cce.isSelected()) {
-
-                            if(!tvRegistry.contains(tok)) {
-//                            if (tok.getID() < actualPage * tokensPerPage || tok.getID() > actualPage * tokensPerPage + tokensInPage) {
-                                removeSelected(1);
-                            }
-
-                            cce.setSelected(false);
+                        Integer tokid = i.next();
+                        ConcordanceEntry cce = tokens.get(tokid);
+                        if (cce.isSelected() & !tvRegistry.contains(tokid)) {
+                            setSelected(tokid, false);
                         }
                     }
                     cp.deselectAll();
@@ -320,8 +312,6 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         });
 
         jButton1.setEnabled(false);
-
-
         return toolb;
     }
 
@@ -391,7 +381,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         content.remove(this);
         cp.zoomFont(i);
         this.fontSize = i;
-        MainController.findInstance().getDocumentProperties().setProperty("concFontSize", ""+this.fontSize);
+        MainController.findInstance().getDocumentProperties().setProperty("concFontSize", "" + this.fontSize);
         content.add(this);
         this.revalidate();
     }
@@ -426,7 +416,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         content.remove(this);
         cp.zoomImg(scale);
         this.imgScale = scale;
-        MainController.findInstance().getDocumentProperties().setProperty("concImageScale", ""+this.imgScale);
+        MainController.findInstance().getDocumentProperties().setProperty("concImageScale", "" + this.imgScale);
         content.add(this);
         this.revalidate();
     }
@@ -448,7 +438,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
 
     @Override
     public int getPageN() {
-        return this.actualPage+1;
+        return this.actualPage + 1;
     }
 
     @Override
@@ -464,14 +454,12 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
     public void gotoPage(final int p) {
 
         SwingWorker<Boolean, Object> worker = new SwingWorker<Boolean, Object>() {
-
             @Override
             protected Boolean doInBackground() {
-
                 boolean retval = false;
                 try {
                     tvRegistry = new TokenVisualizationMultiRegistry();
-                    concRegistry = new ConcordanceRegistry();
+                    concGRegistry = new ConcordanceGraphicsRegistry();
 
                     if (p * tokensPerPage + tokensPerPage >= tokens.size()) {
                         tokensInPage = tokensPerPage - ((p * tokensPerPage + tokensPerPage) - tokens.size());
@@ -494,9 +482,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
                 try {
                     boolean retval = get();
                     if (retval) {
-//                        cp.setDoubleBuffered(true);
                         jScrollPane1.setViewportView(cp);
-
                         actualPage = p;
                         int display = actualPage + 1;
                         setName(name + " " + display + "/" + getMaxPages());
@@ -507,15 +493,13 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
                         new CustomErrorDialog().showDialog("CloneConcordanceView::GotoPage");
                     }
                 } catch (ExecutionException ex) {
-//                    Exceptions.printStackTrace(ex);
                 } catch (InterruptedException ex) {
-//                    Exceptions.printStackTrace(ex);
                 } catch (CancellationException ex) {
                 }
             }
         };
         MainController.findInstance().removeFromLookup(globalActions);
-        this.concRegistry.clear();        
+        this.concGRegistry.clear();
         content.remove(instance);
         this.tvRegistry.clear();
         worker.execute();
@@ -533,28 +517,33 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    public void addSelected(int i) {
-        this.numSelected += i;
-        numSelectedLabel.setText("Entries Selected: " + numSelected);
-        if (this.numSelected > 0) {
-            jButton1.setEnabled(true);
+    /**
+     *
+     * @param tokenId
+     * @param b
+     */
+    public void setSelected(int tokenId, boolean b) {
+        if (b && tokens.get(tokenId).isSelectable()) {
+            this.numSelected++;
+            numSelectedLabel.setText("Entries Selected: " + numSelected);
+            if (this.numSelected > 0 & !tokens.get(tokenId).getCandidateString().equals("")) {
+                jButton1.setEnabled(true);
+            }
+            tokens.get(tokenId).setSelected(b);
+        } else if (!b && tokens.get(tokenId).isSelected()) {
+            this.numSelected--;
+            numSelectedLabel.setText("Entries Selected: " + numSelected);
+            if (this.numSelected == 0) {
+                jToggleButton1.setSelected(false);
+                jToggleButton2.setSelected(false);
+                jButton1.setEnabled(false);
+            } else if (this.numSelected < 0) {
+                new CustomErrorDialog().showDialog("ClassicConcordance::removeSelected < 0");
+            }
+            tokens.get(tokenId).setSelected(b);
+        } else {
+//            System.out.println( "ELSE " + b + " " + tokenId);
         }
-    }
-
-    public void removeSelected(int i) {
-        this.numSelected -= i;
-        numSelectedLabel.setText("Entries Selected: " + numSelected);
-        if (this.numSelected == 0) {
-            jToggleButton1.setSelected(false);
-            jToggleButton2.setSelected(false);
-            jButton1.setEnabled(false);
-        } else if (this.numSelected < 0) {
-            new CustomErrorDialog().showDialog("ClassicConcordance::removeSelected < 0");
-        }
-    }
-
-    public void setSelected(Integer tok, boolean b) {
-        tokens.get(tok).setSelected(b);
     }
 
     public TokenVisualizationMultiRegistry getTVRegistry() {
@@ -585,6 +574,13 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         numDisabledLabel.setText("Entries Disabled: " + disabled);
     }
 
+    public void removeDisabled() {
+        disabled--;
+        toDo++;
+        numToDoLabel.setText("Entries to process: " + toDo);
+        numDisabledLabel.setText("Entries Disabled: " + disabled);
+    }
+
     private void correct() {
         ProgressRunnable cr = new Corrector();
         ProgressUtils.showProgressDialogAndRun(cr, "Correcting", true);
@@ -595,78 +591,77 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         cp.toggleImages(b);
     }
 
-    public ConcordanceRegistry getConcordanceRegistry() {
-        return this.concRegistry;
-    }
-        
-    void updateEntriesIndices( int startindex, int discr) {
-        LinkedHashMap<Integer, ConcordanceEntry> temp = new LinkedHashMap<>();
-        Iterator i = tokens.keySet().iterator();
-        while ( i.hasNext()) {
-            int index = (Integer) i.next();
-            if( index > startindex) {
-                temp.put(index+discr, tokens.get(index));
-            }
-        }
-        tokens = temp;
+    public ConcordanceGraphicsRegistry getConcordanceGraphicsRegistry() {
+        return this.concGRegistry;
     }
 
     @Override
     public void dispatchEvent(TokenStatusEvent e) {
         TokenStatusType tst = e.getType();
 
-        ArrayList<AbstractTokenVisualization> tokvs = this.getTVRegistry().getVisualizations( e.getPOIID() );
-        if (tokvs != null) {
-            Iterator i = tokvs.iterator();
-            boolean updateIndices = true;
-            while (i.hasNext()) {
-//                IOProvider.getDefault().getIO("Nachrichten", false).getOut().println("TokenStatus " + this.name + " # " + e.getType() + " # " + e.getTokenIndex() + " # " + e. + " # " + updateIndices);
-                TokenVisualization tv = (TokenVisualization) i.next();
-                if( tst == TokenStatusType.SETCORRECTED) {
-                    
+        if (tst == TokenStatusType.SETCORRECTED) {
+            ArrayList<AbstractTokenVisualization> tokvs = this.getTVRegistry().getVisualizations(e.getPOIID());
+            if (tokvs != null) {
+                Iterator<AbstractTokenVisualization> tokv_it = tokvs.iterator();
+                while (tokv_it.hasNext()) {
+                    TokenVisualization tv = (TokenVisualization) tokv_it.next();
+                    tv.setCorrected(((SetCorrectedEvent) e).getSetTo());
+                    if (tokens.containsKey(tv.getTokenID())) {
+                        cp.grayOut(tv, ((SetCorrectedEvent) e).getSetTo());
+                    }
                 }
             }
+
+        } else if (tst == TokenStatusType.CORRECTED) {
+            ArrayList<AbstractTokenVisualization> tokvs = this.getTVRegistry().getVisualizations(e.getPOIID());
+            if (tokvs != null) {
+                CorrectedEvent cor = (CorrectedEvent) e;
+                Iterator<AbstractTokenVisualization> tokv_it = tokvs.iterator();
+                while (tokv_it.hasNext()) {
+                    TokenVisualization tv = (TokenVisualization) tokv_it.next();
+                    if (tokens.containsKey(tv.getTokenID())) {
+                        tokens.get(tv.getTokenID()).setCorrected(cor.getSetTo());
+                        if (cor.getSetTo()) {
+                            corrected++;
+                            toDo--;
+                        } else {
+                            corrected--;
+                            toDo++;
+                        }
+                        if (corrected == tokens.size()) {
+                            jButton1.setEnabled(false);
+                            jToggleButton1.setEnabled(false);
+                            jToggleButton2.setEnabled(false);
+                        } else {
+                            jButton1.setEnabled(true);
+                            jToggleButton1.setEnabled(true);
+                            jToggleButton2.setEnabled(true);                            
+                        }
+                        numToDoLabel.setText("Entries to process: " + toDo);
+                        numCorrectedLabel.setText("Entries Corrected: " + corrected);
+                        tv.update(cor.getNewText(), cor.getSetTo());
+                        cp.grayOut(tv, cor.getSetTo());
+                    } else {
+                        tv.update(cor.getNewText(), cor.getSetTo());
+                    }
+                }
+            }
+
+        } else if (tst == TokenStatusType.MERGED_RIGHT) {
+            cp.update(e.getType(), e.getPOIID(), ((MergeEvent) e).getAffectedTokenIds());
+
+        } else if (tst == TokenStatusType.SPLIT) {
+            cp.update(e.getType(), e.getPOIID(), ((SplitEvent) e).getAffectedTokenIds());
+
+        } else if (tst == TokenStatusType.DELETE) {
+            cp.update(e.getType(), e.getPOIID(), ((DeleteEvent) e).getAffectedTokenIds());
+
+        } else if (tst == TokenStatusType.INSERT) {
+            cp.update(e.getType(), e.getPOIID(), ((InsertEvent) e).getAffectedTokenIds());
+
+            // TODO throw unknown tokenstatusType exception    
+        } else {
         }
-                
-                
-                
-                
-                
-//                if (tst == TokenStatusType.CORRECTED) {
-//                    if (tv.getParent().getName().equals("word")) {
-//                        cp.grayOut(tv);
-//                    }
-//                } else if (tst == TokenStatusType.DELETE) {
-//                    cp.update(e.getType(), tv, tv.getTokenIndex(), ((DeleteEvent) e).getNumberOfTokensAffected(), updateIndices);
-//                } else if (tst == TokenStatusType.MERGED_RIGHT) {
-//                    cp.update(e.getType(), tv, tv.getTokenIndex(), ((MergeEvent) e).getNumberOfTokensAffected(), updateIndices);
-//                } else if (tst == TokenStatusType.SPLIT) {
-//                    cp.update(e.getType(), tv, tv.getTokenIndex(), ((SplitEvent) e).getNumberOfTokensAffected(), updateIndices);
-//                } else {
-////                    IOProvider.getDefault().getIO("Nachrichten", false).getOut().println("Event " + e.getType());
-//                }
-//                updateIndices = false;
-//            }
-//        } else {
-//                if (tst == TokenStatusType.DELETE) {
-//                    cp.updateTokenVisualizationIndices(e.getTokenIndex(), ((DeleteEvent) e).getNumberOfTokensAffected());
-//                } else if (tst == TokenStatusType.MERGED_RIGHT) {
-//                    cp.updateTokenVisualizationIndices(e.getTokenIndex(), ((MergeEvent) e).getNumberOfTokensAffected());
-//                } else if (tst == TokenStatusType.SPLIT) {
-//                    cp.updateTokenVisualizationIndices(e.getTokenIndex(), ((SplitEvent) e).getNumberOfTokensAffected());
-//                } else {
-////                    IOProvider.getDefault().getIO("Nachrichten", false).getOut().println("Event " + e.getType());
-//                }
-////                IOProvider.getDefault().getIO("Nachrichten", false).getOut().println("TokenStatus " + this.name + " # " + e.getType() + " # " + e.getTokenIndex() + " # " + e.getNumTokensAffected() + " #2 ");
-//        }
-//        
-//        if( tst == TokenStatusType.DELETE ) {
-//            this.updateEntriesIndices(e.getTokenIndex(), 0 - ((DeleteEvent) e).getNumberOfTokensAffected());
-//        } else if(tst == TokenStatusType.MERGED_RIGHT) {
-//            this.updateEntriesIndices(e.getTokenIndex(), 0 - ((MergeEvent) e).getNumberOfTokensAffected());
-//        } else if( tst == TokenStatusType.SPLIT) {
-//            this.updateEntriesIndices(e.getTokenIndex(), ((SplitEvent) e).getNumberOfTokensAffected());
-//        }
     }
 
     private class Builder implements ProgressRunnable {
@@ -686,9 +681,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
 
             ph.progress("Showing Concordance");
 
-//            cp.setDoubleBuffered(true);
             jScrollPane1.setViewportView(cp);
-
             jScrollPane1.getHorizontalScrollBar().setValue(cp.getPreferredSize().width / 10);
             totalentriesLabel.setText("Entries Total: " + tokens.size());
             toDo = tokens.size();
@@ -698,7 +691,6 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         }
     }
 
-    @SuppressWarnings({"SleepWhileInLoop"})
     private class Corrector implements ProgressRunnable {
 
         @Override
@@ -707,49 +699,40 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
                 ph.progress("starting correction");
 
                 Object[] o = tokens.keySet().toArray();
-                HashMap<Integer, String> tokensToCorrect = new HashMap<Integer, String>();
+                HashMap<Integer, String> tokensToCorrect = new HashMap<>();
                 int total = numSelected;
                 int corrcount = 0;
                 for (int i = 0; i < o.length; i++) {
-                    int indexInDocument = (Integer) o[i];
-                    Token tok = MainController.findInstance().getDocument().getTokenByID(indexInDocument);
-                    ConcordanceEntry cce = tokens.get(indexInDocument);
+                    int tokenId = (Integer) o[i];
+                    ConcordanceEntry cce = tokens.get(tokenId);
                     if (cce.isSelected() && !cce.isCorrected()) {
-
                         corrcount++;
-//                        int k = actualPage * tokensPerPage;
-//                        int j = actualPage * tokensPerPage + tokensInPage;
-//                        if (i < k || i > j) {
-//                            removeSelected(1);
+//                        if( !tvRegistry.contains(tokenId)) {
+//                            setSelected(tokenId, false);
 //                        }
-                        if( corrcount % 20 == 0) {
+                        if (corrcount % 20 == 0) {
                             ph.progress("correcting token " + corrcount + " of " + total);
                         }
 
-                        tokensToCorrect.put(indexInDocument, cce.getCandidateString());
-//                        IOProvider.getDefault().getIO("Nachrichten", false).getOut().println("Correct " + cce.getCandidateString());
-//                        MainController.findInstance().correctTokenByString(indexInDocument, cce.getCandidateString());
-                        MainController.findInstance().addToLog("CloneConcordanceView " + name + " # correct # " + tok.getWOCR() + " # " + cce.getCandidateString());
-                        cce.setSelected(false);
-                        cce.setCorrected(true);
-//                        cce.setFallbackText(currentType);
-                        corrected++;
-                        toDo--;
-                        if( !tvRegistry.contains(tok)) {
-                            removeSelected(1);
-                        }
-//                        Thread.sleep(10);
+                        tokensToCorrect.put(tokenId, cce.getCandidateString());
+//                        MainController.findInstance().addToLog("CloneConcordanceView " + name + " # correct # " + tok.getWOCR() + " # " + cce.getCandidateString());
+//                        cce.setCorrected(true);
+//                        corrected++;
+//                        toDo--;
+                    } else {
+                        System.out.println("corrector else " + tokenId);
                     }
                 }
+
                 MainController.findInstance().correctTokensByString(tokensToCorrect);
 
-                if (corrected == tokens.size()) {
-                    jButton1.setEnabled(false);
-                    jToggleButton1.setEnabled(false);
-                    jToggleButton2.setEnabled(false);
-                }
-                numToDoLabel.setText("Entries to process: " + toDo);
-                numCorrectedLabel.setText("Entries Corrected: " + corrected);
+//                if (corrected == tokens.size()) {
+//                    jButton1.setEnabled(false);
+//                    jToggleButton1.setEnabled(false);
+//                    jToggleButton2.setEnabled(false);
+//                }
+//                numToDoLabel.setText("Entries to process: " + toDo);
+//                numCorrectedLabel.setText("Entries Corrected: " + corrected);
                 return 1;
             } catch (Exception ex) {
                 return 0;

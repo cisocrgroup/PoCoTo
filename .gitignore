@@ -2,3 +2,4 @@ build/
 .svn/
 log.txt
 /dist/
+/MHAPP/nbproject/private/

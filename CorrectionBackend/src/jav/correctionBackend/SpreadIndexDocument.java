@@ -9,7 +9,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
 import org.apache.commons.lang3.StringUtils;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.netbeans.api.progress.ProgressHandle;
@@ -472,15 +471,10 @@ public class SpreadIndexDocument extends Document {
 
             int indicesNeeded = (normals * 3) + spaces;
             
-            System.out.println("index old:" + atIndex.getIndexInDocument());
-
             if (freeIndexPlaces < indicesNeeded) {
-                System.out.println("indexplaces: " + freeIndexPlaces + " normals: " + normals + " spaces: " + spaces + " needed: " + indicesNeeded);
                 this.spreadIndex(tokenID, indicesNeeded);
                 atIndex = this.getTokenByID(tokenID);
             }
-
-            System.out.println("index new:" + atIndex.getIndexInDocument());
 
             if (atIndex.getTokenImageInfoBox() != null) {
                 imgwidth = atIndex.getTokenImageInfoBox().getCoordinateRight() - atIndex.getTokenImageInfoBox().getCoordinateLeft();
@@ -613,8 +607,8 @@ public class SpreadIndexDocument extends Document {
 
                 try {
                     conn = jcp.getConnection();
-                    Statement s = conn.createStatement();
-                    ResultSet rs = s.executeQuery("SELECT * FROM undoredo");
+//                    Statement s = conn.createStatement();
+//                    ResultSet rs = s.executeQuery("SELECT * FROM undoredo");
 
                     conn.setAutoCommit(false);
                     setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=? WHERE tokenID=?");
@@ -642,29 +636,31 @@ public class SpreadIndexDocument extends Document {
 
                     setIndex.executeBatch();
                     conn.commit();
+                    
+                    truncateUndoRedo();
 
-                    while (rs.next()) {
-                        java.util.regex.Pattern tokidp = java.util.regex.Pattern.compile("UPDATE token SET indexInDocument=[0-9]+ WHERE tokenID=([0-9]+)");
-                        String operation_id = rs.getString(1);
-                        String part = rs.getString(2);
-                        String type = rs.getString(3);
-                        String command = rs.getString(5);
-                        
-                        System.out.println("OLD: " + operation_id + " " + part + " " + type + " " + command);
-                        
-                        Matcher m = tokidp.matcher(command);
-                        if (m.matches()) {
-                            int tokenID = Integer.parseInt(m.group(1));
-                            updateUndoRedo.setString(1, "UPDATE token SET indexInDocument=" + getTokenByID(tokenID).getIndexInDocument() + " WHERE tokenID=" + tokenID);
-                            updateUndoRedo.setString(2, operation_id);
-                            updateUndoRedo.setString(3, part);
-                            updateUndoRedo.setString(4, type);
-                            System.out.println("NEW: " + operation_id + " " + part + " " + type + "UPDATE token SET indexInDocument=" + getTokenByID(tokenID).getIndexInDocument() + " WHERE tokenID=" + tokenID);
-                            updateUndoRedo.addBatch();
-                        }
-                    }
-
-                    conn.commit();
+//                    while (rs.next()) {
+//                        java.util.regex.Pattern tokidp = java.util.regex.Pattern.compile("UPDATE token SET indexInDocument=[0-9]+ WHERE tokenID=([0-9]+)");
+//                        String operation_id = rs.getString(1);
+//                        String part = rs.getString(2);
+//                        String type = rs.getString(3);
+//                        String command = rs.getString(5);
+//                        
+//                        System.out.println("OLD: " + operation_id + " " + part + " " + type + " " + command);
+//                        
+//                        Matcher m = tokidp.matcher(command);
+//                        if (m.matches()) {
+//                            int tokenID = Integer.parseInt(m.group(1));
+//                            updateUndoRedo.setString(1, "UPDATE token SET indexInDocument=" + getTokenByID(tokenID).getIndexInDocument() + " WHERE tokenID=" + tokenID);
+//                            updateUndoRedo.setString(2, operation_id);
+//                            updateUndoRedo.setString(3, part);
+//                            updateUndoRedo.setString(4, type);
+//                            System.out.println("NEW: " + operation_id + " " + part + " " + type + "UPDATE token SET indexInDocument=" + getTokenByID(tokenID).getIndexInDocument() + " WHERE tokenID=" + tokenID);
+//                            updateUndoRedo.addBatch();
+//                        }
+//                    }
+//
+//                    conn.commit();
                     return true;
                 } catch (SQLException ex) {
                     if (conn != null) {

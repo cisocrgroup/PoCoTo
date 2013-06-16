@@ -269,7 +269,12 @@ public class PageView extends JPanel {
                     this.remove(todelete);
                 }
             }
-            MessageCenter.getInstance().fireTokenSelectionEvent(new TokenSelectionEvent(affectedTv, affectedTokens.get(0), TokenSelectionType.NORMAL));
+            
+            this.tvMode.unSelect();
+            affectedTv.setSelected(true);
+            affectedTv.grabFocus();
+            this.getVisualizationMode().setSelectedTokenVisualization(affectedTv);
+            MessageCenter.getInstance().fireTokenSelectionEvent(new TokenSelectionEvent(affectedTv, affectedTv.getTokenID(), TokenSelectionType.NORMAL));
 
         } else if (t.equals(TokenStatusType.SPLIT)) {
 
@@ -476,12 +481,6 @@ public class PageView extends JPanel {
                 }
 
                 this.add(tokv, (index + i));
-            }
-
-
-            System.out.println("INSERT POID: " + affectedID);
-            for (int i = 0; i < affectedTokens.size(); i++) {
-                System.out.println("INSERT: " + affectedTokens.get(i));
             }
 
 //            Page p = MainController.findInstance().getPage(parent.getPageN() - 1);

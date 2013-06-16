@@ -44,10 +44,14 @@ public class CloneConcordanceTopComponent extends ConcordanceTopComponent {
     private JButton jB;
 
     @Override
-    public void removeSelected(int i) {
-        super.removeSelected(i);
-        if (this.toDo == 0) {
-            jB.setEnabled(false);
+    public void setSelected( int i, boolean b ) {
+        if( !b ) {
+            super.setSelected(i, b);
+            if (this.toDo == 0) {
+                jB.setEnabled(false);
+            }
+        } else {
+            super.setSelected( i, b);
         }
     }
 
@@ -56,7 +60,7 @@ public class CloneConcordanceTopComponent extends ConcordanceTopComponent {
         JToolBar bar = super.getToolBar();
 
         jB = new JButton();
-        jB.setText(java.util.ResourceBundle.getBundle("jav/gui/concordance/Bundle").getString("changeCandidate"));
+        jB.setText(java.util.ResourceBundle.getBundle("jav/concordance/Bundle").getString("changeCandidate"));
         jB.setFocusable(false);
         jB.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jB.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -68,7 +72,7 @@ public class CloneConcordanceTopComponent extends ConcordanceTopComponent {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                NotifyDescriptor.InputLine d = new NotifyDescriptor.InputLine(java.util.ResourceBundle.getBundle("jav/gui/concordance/Bundle").getString("newcand"), java.util.ResourceBundle.getBundle("jav/gui/concordance/Bundle").getString("candidateRep"));
+                NotifyDescriptor.InputLine d = new NotifyDescriptor.InputLine(java.util.ResourceBundle.getBundle("jav/concordance/Bundle").getString("newcand"), java.util.ResourceBundle.getBundle("jav/concordance/Bundle").getString("candidateRep"));
 
                 String candidateString = tokens.get(tokens.keySet().iterator().next()).getCandidateString();
                 d.setInputText(candidateString);

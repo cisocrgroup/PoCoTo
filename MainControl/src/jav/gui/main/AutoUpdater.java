@@ -44,6 +44,7 @@ import org.openide.util.RequestProcessor;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
+@Deprecated
 public class AutoUpdater implements Runnable {
 
     @Override

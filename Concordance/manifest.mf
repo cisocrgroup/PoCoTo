@@ -1,4 +1,5 @@
 OpenIDE-Module: jav.concordance
-OpenIDE-Module-Implementation-Version: 02052013
+OpenIDE-Module-Implementation-Version: 1
+OpenIDE-Module-Install: jav/concordance/control/Installer.class
 OpenIDE-Module-Localizing-Bundle: jav/concordance/Bundle.properties
 
