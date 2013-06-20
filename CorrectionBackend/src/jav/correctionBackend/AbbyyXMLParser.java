@@ -55,8 +55,10 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
     private String thischar_;
     private int pages = 0;
     private int position_ = 0;
+    private boolean globalIsSuspicious = false;
     private boolean inVariant_ = false;
-    private boolean isSuspicious_ = true;
+    private boolean isSuspicious_ = false;
+    private boolean isDict_ = false;
     private Document doc_ = null;
     private Token temptoken_ = null;
     private String tempimage_ = null;
@@ -130,7 +132,10 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
 //            tempchar_.setRight(Integer.parseInt(atts.getValue("r")));
 //            tempchar_.setIsSuspicious((atts.getValue("suspicious") != null));
             this.isSuspicious_ = (atts.getValue("suspicious") != null);
+            this.isDict_ = Boolean.parseBoolean(atts.getValue("wordFromDictionary"));
 
+            
+            System.out.println("charparams " + this.isSuspicious_ + " " + this.isDict_);
 //            doc_.addCharacter(tempchar_);
 
             left_temp = Integer.parseInt(atts.getValue("l"));
@@ -185,7 +190,7 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
                     temptoken_.setSpecialSeq(SpecialSequenceType.NORMAL);
                 }
                 temptoken_.setIndexInDocument(tokenIndex_);
-                temptoken_.setIsSuspicious(this.isSuspicious_);
+                temptoken_.setIsSuspicious(this.globalIsSuspicious);
                 temptoken_.setIsCorrected(false);
                 temptoken_.setPageIndex(pages);
                 temptoken_.setIsNormal(myAlnum.matcher(temp_).matches());
@@ -205,6 +210,8 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
 
                 temptoken_.setOrigID(orig_id);
                 doc_.addToken(temptoken_);
+                System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                this.globalIsSuspicious = false;
                 orig_id++;
                 tokenIndex_++;
             }
@@ -256,7 +263,7 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
                             temptoken_.setSpecialSeq(SpecialSequenceType.NORMAL);
                         }
                         temptoken_.setIndexInDocument(tokenIndex_);
-                        temptoken_.setIsSuspicious(this.isSuspicious_);
+                        temptoken_.setIsSuspicious(this.globalIsSuspicious);
                         temptoken_.setIsCorrected(false);
                         temptoken_.setPageIndex(pages);
                         temptoken_.setIsNormal(myAlnum.matcher(temp_).matches());
@@ -277,6 +284,8 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
 
                         temptoken_.setOrigID(orig_id);
                         doc_.addToken(temptoken_);
+                        System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                        this.globalIsSuspicious = false;
                         orig_id++;
                         tokenIndex_++;
                         temptoken_ = null;
@@ -300,7 +309,7 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
                             temptoken_.setSpecialSeq(SpecialSequenceType.NORMAL);
                         }
                         temptoken_.setIndexInDocument(tokenIndex_);
-                        temptoken_.setIsSuspicious(this.isSuspicious_);
+                        temptoken_.setIsSuspicious(this.globalIsSuspicious);
                         temptoken_.setIsCorrected(false);
                         temptoken_.setPageIndex(pages);
                         temptoken_.setIsNormal(myAlnum.matcher(temp_).matches());
@@ -321,6 +330,8 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
 
                         temptoken_.setOrigID(orig_id);
                         doc_.addToken(temptoken_);
+                        System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                        this.globalIsSuspicious = false;
                         tokenIndex_++;
                         orig_id++;
                         temptoken_ = null;
@@ -334,6 +345,11 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
                     }
                 }
                 lastchar_ = thischar_;
+            }
+            
+            if( this.isSuspicious_ && !this.isDict_ ) {
+                System.out.println("global");
+                this.globalIsSuspicious = true;
             }
 
             // if left unset set it

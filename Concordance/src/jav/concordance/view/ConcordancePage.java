@@ -92,7 +92,7 @@ public class ConcordancePage extends JPanel {
     ConcordancePage(final ConcordanceTopComponent par, int start, int len) {
         super();
         
-//        System.out.println("Page construction " + begintime);
+        System.out.println("Page construction " + begintime);
 
         tvMode = new TokenVisualizationConcordanceMode();
 
@@ -160,16 +160,19 @@ public class ConcordancePage extends JPanel {
         while (counter < len) {
             Integer tok = (Integer) data[start + counter];
             ConcordanceEntry cce = parent.getEntryRegistry().get(tok);
+            long row = System.currentTimeMillis();
             this.addRow(tok, cce.getCandidateString(), cce.isSelected(), cce.isCorrected(), cce.isDisabled());
             counter++;
-//            System.out.println("Row add " + (System.currentTimeMillis()-begintime));
+            System.out.println("Row add " + (System.currentTimeMillis()-row));
         }
-//        System.out.println("Done " + (System.currentTimeMillis()-begintime));
+        System.out.println("Done " + (System.currentTimeMillis()-begintime));
     }
 
     private void createLeftContext(int tokenId, JPanel container, boolean corrected) {
         for (int i = 1; i <= parent.getLeftContextSize(); i++) {
+            long prev = System.currentTimeMillis();
             Token tt = MainController.findInstance().getDocument().getPreviousToken(tokenId);
+            System.out.println("prev " + (System.currentTimeMillis()-prev));
             if (tt != null) {
                 tokenId = tt.getID();
                 TokenVisualization tv = this.createTokenVisualization(tt);
@@ -189,7 +192,9 @@ public class ConcordancePage extends JPanel {
 
     private void createRightContext(int tokenId, JPanel container, boolean corrected) {
         for (int i = 1; i <= parent.getRightContextSize(); i++) {
+            long next = System.currentTimeMillis();
             Token ttt = MainController.findInstance().getDocument().getNextToken(tokenId);
+            System.out.println("next " + (System.currentTimeMillis()-next));
             if (ttt != null) {
                 tokenId = ttt.getID();
                 TokenVisualization tokv = this.createTokenVisualization(ttt);
@@ -263,7 +268,9 @@ public class ConcordancePage extends JPanel {
         }
 
         if (!disabled) {
+            long lc = System.currentTimeMillis();
             this.createLeftContext(tokenID, leftC, corrected);
+            System.out.println("left context " + (System.currentTimeMillis()-lc));
         }
 
         if (selected) {
@@ -319,7 +326,9 @@ public class ConcordancePage extends JPanel {
         this.add(word, "1, " + (tl.getNumRow() - 1));
 
         if (!disabled) {
+            long rc = System.currentTimeMillis();
             this.createRightContext(tokenID, rightC, corrected);
+            System.out.println("right context " + (System.currentTimeMillis()-rc));
         }
 
         if (selected) {
@@ -362,8 +371,7 @@ public class ConcordancePage extends JPanel {
 
     private TokenVisualization createTokenVisualization(Token t) {
 
-//        System.out.println("create tv " + (System.currentTimeMillis()-begintime));
-
+        long time = System.currentTimeMillis();
         TokenVisualization tv;
         TokenImageInfoBox tiib = t.getTokenImageInfoBox();
         if (tiib != null && parent.showImage() && parent.hasImage()) {
@@ -389,7 +397,7 @@ public class ConcordancePage extends JPanel {
         } else {
             tv = new OnlyTextTokenVisualization(t, parent.getFontSize());
         }
-
+        System.out.println("tv " + (System.currentTimeMillis()-time));
         return tv;
     }
 

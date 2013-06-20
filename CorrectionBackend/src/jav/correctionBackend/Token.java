@@ -162,7 +162,8 @@ public class Token {
         if (getWOCR().length() <= 3) { // rely on abbyy's judgment
             return this.isSuspicious;
         } else if (this.topSuggestion.equals("")) {
-            return true;
+            // return true;
+            return this.isSuspicious;
         } else {
             return this.topcandDLev > 0;
         }
@@ -178,10 +179,7 @@ public class Token {
 //        else {
 //            return getTopCandidate().getLevDistance() > 0;
 //        }
-//    }
-
-    
-    
+//    }  
 
     public int getNumberOfCandidates() {
         return this.numCands;
