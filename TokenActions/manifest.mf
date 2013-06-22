@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 OpenIDE-Module: jav.gui.token.actions
-OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Implementation-Version: 1
 OpenIDE-Module-Localizing-Bundle: jav/gui/token/actions/Bundle.properties
 OpenIDE-Module-Requires: org.openide.windows.WindowManager
 

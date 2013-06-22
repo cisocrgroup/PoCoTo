@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 OpenIDE-Module: jav.gui.actions
-OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Implementation-Version: 1
 OpenIDE-Module-Layer: jav/gui/actions/layer.xml
 OpenIDE-Module-Localizing-Bundle: jav/gui/actions/Bundle.properties
 

@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
 OpenIDE-Module: jav.gui.events
-OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Implementation-Version: 1
 OpenIDE-Module-Localizing-Bundle: jav/gui/events/Bundle.properties
 

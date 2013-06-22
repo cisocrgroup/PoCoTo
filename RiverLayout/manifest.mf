@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
 OpenIDE-Module: se.datadosen.component
-OpenIDE-Module-Implementation-Version: 18022013
+OpenIDE-Module-Implementation-Version: 1
 OpenIDE-Module-Localizing-Bundle: se/datadosen/component/Bundle.properties
 

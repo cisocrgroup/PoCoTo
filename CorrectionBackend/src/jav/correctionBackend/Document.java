@@ -990,7 +990,7 @@ public abstract class Document {
         try {
             Connection conn = jcp.getConnection();
             Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " ORDER BY indexInDocument DESC LIMIT 1");
+            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " ORDER BY indexInDocument LIMIT 1");
             if (rs.next()) {
                 retval = new Token(rs.getString(4));
                 retval.setId(rs.getInt(1));
