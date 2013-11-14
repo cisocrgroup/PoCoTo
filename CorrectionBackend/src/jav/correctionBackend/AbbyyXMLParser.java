@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
@@ -80,17 +81,41 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
 
     @Override
     public void parse(String filename, String imageFile, String encoding) {
+        this.tempimage_ = imageFile;
         try {
-            this.tempimage_ = imageFile;
-            
-            InputStream inputStream= new FileInputStream(filename);
-            Reader reader = new InputStreamReader(inputStream, encoding);
-            InputSource is = new InputSource(reader);
+            InputSource is = new InputSource(getReader(filename));
 //            is.setEncoding(encoding);
             xr.parse(is);
         } catch (IOException ex) {
+             throw new RuntimeException(ex);
         } catch (SAXException ex) {
+            throw new RuntimeException(ex);
         }
+    }
+    
+    private final static int BOM_SIZE = 4;
+    private Reader getReader(String path) throws IOException {
+        PushbackInputStream is = new PushbackInputStream(
+                new BufferedInputStream(new FileInputStream(path)), BOM_SIZE);
+        byte[] bom = new byte[BOM_SIZE];
+        is.read(bom);
+        // utf8
+        if ((bom[0] == (byte)0xef) && (bom[1] == (byte)0xbb) && (bom[2] == (byte)0xbf)) {
+            is.unread(bom, 3, 1);
+        } else if ((bom[0] == (byte)0xfe) && (bom[1] == (byte)0xff)) {
+            is.unread(bom, 2, 2);
+        } else if ((bom[0] == (byte)0xff) && (bom[1] == (byte)0xfe)) {
+            is.unread(bom, 2, 2);
+        } else if ((bom[0] == (byte)0x0) && (bom[1] == (byte)0x0) && 
+                (bom[2] == (byte)0xfe) && (bom[3] == (byte)0xff)) {
+            /* do nothing */
+        } else if ((bom[0] == (byte)0xff) && (bom[1] == (byte)0xfe) && 
+                (bom[2] == (byte)0x0) && (bom[3] == (byte)0x0)) {  
+            /* do nothing */
+        } else {
+            is.unread(bom, 0, BOM_SIZE);
+        }
+        return new InputStreamReader(is);
     }
 
     @Override
