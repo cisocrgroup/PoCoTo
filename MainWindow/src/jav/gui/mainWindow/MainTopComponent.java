@@ -301,7 +301,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                 currentPageIndex = 0;
                 if (page.hasImage()) {
                     hasImage = true;
-                    pv = new PageView(getDefault(), tempit, page.getImageFilename(), fontSize, imgScale);
+                    pv = new PageView(getDefault(), tempit, page.getImageCanonical(), fontSize, imgScale);
 //                    if (!showImages) {
 //                        pv.toggleImages(false);
 //                    }
@@ -431,7 +431,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                     Page page = MainController.findInstance().getPage(p);
                     long time = System.currentTimeMillis();
                     if (page.hasImage()) {
-                        pv = new PageView(getDefault(), MainController.findInstance().getDocument().tokenIterator(page), page.getImageFilename(), fontSize, imgScale);
+                        pv = new PageView(getDefault(), MainController.findInstance().getDocument().tokenIterator(page), page.getImageCanonical(), fontSize, imgScale);
                     } else {
                         pv = new PageView(getDefault(), MainController.findInstance().getDocument().tokenIterator(page), fontSize);
                     }

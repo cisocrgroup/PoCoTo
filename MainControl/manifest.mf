@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 OpenIDE-Module: jav.gui.main
-OpenIDE-Module-Implementation-Version: 1
+OpenIDE-Module-Implementation-Version: 2
 OpenIDE-Module-Install: jav/gui/main/Installer.class
 OpenIDE-Module-Layer: jav/gui/main/layer.xml
 OpenIDE-Module-Localizing-Bundle: jav/gui/main/Bundle.properties

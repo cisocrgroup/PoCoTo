@@ -1,6 +1,10 @@
 package jav.correctionBackend;
 
+import jav.gui.dialogs.CustomErrorDialog;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -67,15 +71,15 @@ public abstract class Document {
     public Document(JdbcConnectionPool j) {
         this.jcp = j;
     }
-    
+
     public UndoRedo.Manager getUndoRedoManager() {
         return manager;
     }
-    
-    public void setUndoRedoManager( UndoRedo.Manager man ) {
+
+    public void setUndoRedoManager(UndoRedo.Manager man) {
         this.manager = man;
     }
-    
+
     /**
      * returns the baseImagePath
      */
@@ -155,7 +159,7 @@ public abstract class Document {
         } catch (SQLException ex) {
         }
     }
-    
+
     public void clearPatterns() {
         Connection conn = null;
         try {
@@ -166,7 +170,7 @@ public abstract class Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
-        }        
+        }
     }
 
     public void clearCandidates() {
@@ -268,7 +272,7 @@ public abstract class Document {
         PreparedStatement wcor = null;
         PreparedStatement setcor = null;
         PreparedStatement undo_redo = null;
-        
+
         try {
             Iterator<Integer> iter = art.keySet().iterator();
             conn = jcp.getConnection();
@@ -285,7 +289,7 @@ public abstract class Document {
                 wcor.setString(1, corr);
                 wcor.setInt(2, tokenID);
                 wcor.addBatch();
-                
+
                 setcor.setBoolean(1, true);
                 setcor.setInt(2, tokenID);
                 setcor.addBatch();
@@ -453,7 +457,7 @@ public abstract class Document {
             Statement t = conn.createStatement();
             ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='undo' ORDER BY part");
 
-            if (rs.next()) {                
+            if (rs.next()) {
                 if (rs.getString(4).equals(MyEditType.SETCORRECTED.toString())) {
 
                     SetCorrectedUndoRedoInformation retval = null;
@@ -673,10 +677,10 @@ public abstract class Document {
                     this.numTokens += affectedTokens.size();
                     Token tok = this.getTokenByID(affectedTokens.get(0));
                     Token prev = this.getPreviousToken(affectedTokens.get(0));
-                    if( tok == null || tok.getPageIndex() != prev.getPageIndex()) {
-                        retval = new DeleteUndoRedoInformation( -1, affectedTokens );
+                    if (tok == null || tok.getPageIndex() != prev.getPageIndex()) {
+                        retval = new DeleteUndoRedoInformation(-1, affectedTokens);
                     } else {
-                        retval = new DeleteUndoRedoInformation( prev.getID(), affectedTokens );
+                        retval = new DeleteUndoRedoInformation(prev.getID(), affectedTokens);
                     }
 
                     System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
@@ -1106,7 +1110,7 @@ public abstract class Document {
         return retval;
     }
 
-    public Token getNextNormalTokenByIndex(int indexInDocument ) {
+    public Token getNextNormalTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
             Connection conn = jcp.getConnection();
@@ -1145,7 +1149,7 @@ public abstract class Document {
         }
         return retval;
     }
-    
+
     public Token getPreviousNormalToken(int tokenID) {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
@@ -1359,11 +1363,15 @@ public abstract class Document {
                 retval = new Page(index);
                 retval.setStartIndex(rs.getInt(1));
                 retval.setEndIndex(rs.getInt(2));
-                retval.setImageFilename(this.getTokenByIndex(rs.getInt(1)).getImageFilename());
+                String path = this.getTokenByIndex(rs.getInt(1)).getImageFilename();
+                String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
+                retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
+                retval.setImageCanonical(path);
             }
             s.close();
             conn.close();
         } catch (SQLException ex) {
+            ex.printStackTrace();
         }
         return retval;
     }
@@ -1437,20 +1445,20 @@ public abstract class Document {
 
     public MyIterator<Page> pageIterator() {
         try {
-            return new PageIterator(jcp.getConnection(), this);
+            return new PageIterator(jcp.getConnection(), this, this.baseImagePath);
         } catch (SQLException ex) {
             ex.printStackTrace();
             return null;
         }
     }
-    
+
     public MyIterator<Token> allTokenIterator() {
         try {
             return new TokenIterator(jcp.getConnection());
         } catch (SQLException ex) {
             ex.printStackTrace();
             return null;
-        }        
+        }
     }
 
     /**
@@ -1520,11 +1528,60 @@ public abstract class Document {
     }
 
     public void exportAsPageSeparatedPlaintext(String filename) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        File f = new File(filename);
+        if (!(f.isDirectory() || f.canWrite())) {
+            new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("ErrorCantWrite"));
+        } else {
+            MyIterator<Page> page_iter = this.pageIterator();
+            while (page_iter.hasNext()) {
+                BufferedWriter writer = null;
+                try {
+                    Page seite = page_iter.next();
+                    writer = new BufferedWriter(new FileWriter(f.getCanonicalPath() + File.separator + seite.getImageFilename() + ".txt"));
+                    MyIterator<Token> token_it = this.tokenIterator(seite);
+                    while (token_it.hasNext()) {
+                        Token t = token_it.next();
+                        writer.write(t.getWDisplay());
+                    }
+                } catch (IOException ex) {
+                    new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
+                } finally {
+                    try {
+                        writer.flush();
+                        writer.close();
+                    } catch (Exception e) {
+                        new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
+                    }
+                }
+            }
+        }
     }
 
     public void exportAsPlainText(String filename) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(filename));
+            MyIterator<Page> page_iter = this.pageIterator();
+            while (page_iter.hasNext()) {
+                Page seite = page_iter.next();
+
+                MyIterator<Token> token_it = this.tokenIterator(seite);
+                while (token_it.hasNext()) {
+                    Token t = token_it.next();
+                    writer.write(t.getWDisplay());
+                }
+                writer.write("\n\n####################################################################################################################\n\n");
+            }
+        } catch (IOException ex) {
+            new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
+        } finally {
+            try {
+                writer.flush();
+                writer.close();
+            } catch (Exception e) {
+                new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
+            }
+        }
     }
 
     public ArrayList<Integer> mergeRightward(int iD) throws SQLException {
@@ -1534,7 +1591,7 @@ public abstract class Document {
         if (next == null) {
             return null;
         }
-        
+
         boolean skipSpace = false;
         // decide if immediate neighbour should be skipped, 
         // e.g. if it contains just whitespace
@@ -1734,11 +1791,9 @@ public abstract class Document {
             while (id_it.hasNext()) {
                 int tokenID = id_it.next();
 
-
                 setcor.setBoolean(1, b);
                 setcor.setInt(2, tokenID);
                 setcor.addBatch();
-
 
                 if (b == true) {
                     undo_redo.setInt(1, undo_redo_id);
@@ -1849,6 +1904,7 @@ public abstract class Document {
 
     public String getProjectFilename() {
         return this.propertiespath;
+
     }
 }
 
@@ -1868,7 +1924,7 @@ class TokenIterator implements MyIterator<Token> {
             ex.printStackTrace();
         }
     }
-    
+
     protected TokenIterator(Connection c, String i) {
         try {
             baseImagePath = i;
@@ -2045,13 +2101,15 @@ class PageIterator implements MyIterator<Page> {
 
     private Connection conn;
     private Document doc;
+    private String baseImgPath;
     private ResultSet rs = null;
     private Statement s;
 
-    protected PageIterator(Connection c, Document d) {
+    protected PageIterator(Connection c, Document d, String path) {
         try {
             doc = d;
             conn = c;
+            baseImgPath = path;
             s = conn.createStatement();
             rs = s.executeQuery("SELECT pageIndex, MIN(indexInDocument) as min, MAX(indexInDocument) as max from token WHERE indexInDocument <> -1 GROUP BY pageIndex");
         } catch (SQLException ex) {
@@ -2086,7 +2144,10 @@ class PageIterator implements MyIterator<Page> {
             retval = new Page(rs.getInt(1));
             retval.setStartIndex(rs.getInt(2));
             retval.setEndIndex(rs.getInt(3));
-            retval.setImageFilename(doc.getTokenByIndex(rs.getInt(2)).getImageFilename());
+            String path = doc.getTokenByIndex(rs.getInt(2)).getImageFilename();
+            String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
+            retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
+            retval.setImageCanonical(path);
         } catch (SQLException ex) {
         }
         return retval;

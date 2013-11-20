@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
 OpenIDE-Module: jav.correctionBackend
-OpenIDE-Module-Implementation-Version: 1
+OpenIDE-Module-Implementation-Version: 3
 OpenIDE-Module-Localizing-Bundle: jav/correctionBackend/Bundle.properties
 

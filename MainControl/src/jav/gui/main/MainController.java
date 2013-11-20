@@ -680,7 +680,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         Iterator<Pattern> iterp = globalDocument.patternIterator();
         while (iterp.hasNext()) {
             Pattern p = iterp.next();
-            System.out.println(p.getPatternID() + " " + p.getLeft() + " " + p.getRight());
             Iterator<PatternOccurrence> iterpo = globalDocument.patternOccurrenceIterator(p.getPatternID());
             while (iterpo.hasNext()) {
                 p.addOccurence(iterpo.next(), false);
