@@ -35,6 +35,7 @@ public class Page {
     private int index;
     private int tokenIndexFrom;
     private int tokenIndexTo;
+    private String imageCanonical;
     private String imageFilename;
     
     protected Page( int i ) {
@@ -43,6 +44,10 @@ public class Page {
     
     protected void setImageFilename( String s ) {
         this.imageFilename = s;
+    }
+    
+    protected void setImageCanonical( String s ) {
+        this.imageCanonical = s;
     }
     
     protected void setStartIndex( int i ) {
@@ -67,6 +72,10 @@ public class Page {
     
     public String getImageFilename() {
         return this.imageFilename;
+    }
+    
+    public String getImageCanonical() {
+        return this.imageCanonical;
     }
     
     public boolean hasImage() {

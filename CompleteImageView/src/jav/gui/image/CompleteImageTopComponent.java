@@ -222,7 +222,7 @@ public final class CompleteImageTopComponent extends AbstractMyTopComponent impl
 
                 @Override
                 public void run() {
-                    actualPageString = p.getImageFilename();
+                    actualPageString = p.getImageCanonical();
                     if (p.hasImage()) {
                         hasImage = true;
                         loadImage(actualPageString, scale);

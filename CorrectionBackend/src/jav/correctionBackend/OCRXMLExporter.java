@@ -55,7 +55,7 @@ public class OCRXMLExporter {
 
             while (pages.hasNext()) {
                 Page p = pages.next();
-                out.write("<page imageFile=\"" + p.getImageFilename() + "\" sourceFile=\"\">\n");
+                out.write("<page imageFile=\"" + p.getImageCanonical() + "\" sourceFile=\"\">\n");
                 Iterator<Token> tokens = doc.tokenIterator(p);
                 while (tokens.hasNext()) {
                     Token t = tokens.next();
