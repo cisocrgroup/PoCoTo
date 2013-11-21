@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ResourceBundle;
 import java.util.Set;
+import javax.swing.JFileChooser;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.openide.NotifyDescriptor;
@@ -54,11 +55,16 @@ public class NewProjectWizardPanel0 implements WizardDescriptor.Panel<WizardDesc
     private boolean isValid = false;
     private ResourceBundle bundle = NbBundle.getBundle(NewProjectWizardPanel0.class);
     private String completeProjectPath;
+    private JFileChooser fileChooser;
 
+    public NewProjectWizardPanel0(JFileChooser jfc) {
+        fileChooser = jfc;
+    }
+    
     @Override
     public NewProjectVisualPanel0 getComponent() {
         if (view == null) {
-            view = new NewProjectVisualPanel0();
+            view = new NewProjectVisualPanel0(fileChooser);
             view.putClientProperty("WizardPanel_contentSelectedIndex", new Integer(0));
             view.putClientProperty("WizardPanel_autoWizardStyle", Boolean.TRUE);
             view.putClientProperty("WizardPanel_contentDisplayed", Boolean.TRUE);

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ResourceBundle;
 import java.util.Set;
+import javax.swing.JFileChooser;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.openide.WizardDescriptor;
@@ -54,7 +55,13 @@ public class NewProjectWizardPanel2 implements WizardDescriptor.FinishablePanel<
     private WizardDescriptor model = null;
     private boolean isValid = false;
     private ResourceBundle bundle = NbBundle.getBundle(NewProjectWizardPanel2.class);
+    private JFileChooser fileChooser;
 
+    public NewProjectWizardPanel2(JFileChooser jfc) {
+        fileChooser = jfc;
+    }
+
+    
     // Get the visual component for the panel. In this template, the component
     // is kept separate. This can be more efficient: if the wizard is created
     // but never displayed, or not all panels are displayed, it is better to
@@ -62,7 +69,7 @@ public class NewProjectWizardPanel2 implements WizardDescriptor.FinishablePanel<
     @Override
     public NewProjectVisualPanel2 getComponent() {
         if (view == null) {
-            view = new NewProjectVisualPanel2();
+            view = new NewProjectVisualPanel2(fileChooser);
             view.putClientProperty("WizardPanel_contentSelectedIndex", new Integer(2));
             view.putClientProperty("WizardPanel_autoWizardStyle", Boolean.TRUE);
             view.putClientProperty("WizardPanel_contentDisplayed", Boolean.TRUE);
