@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
 OpenIDE-Module: jav.gui.wizard
-OpenIDE-Module-Implementation-Version: 1
+OpenIDE-Module-Implementation-Version: 2
 OpenIDE-Module-Localizing-Bundle: jav/gui/wizard/Bundle.properties
 

@@ -48,9 +48,9 @@ public final class NewProjectVisualPanel0 extends JPanel implements DocumentList
     public static final String PROP_NAME = "Proj_Name";
 
     /** Creates new form NewProjectVisualPanel1 */
-    public NewProjectVisualPanel0() {
+    public NewProjectVisualPanel0(JFileChooser jfc) {
         initComponents();
-                
+        fileChooser = jfc;      
         jTextField1.setText("");
         jTextField1.getDocument().addDocumentListener(this);
 
@@ -60,12 +60,11 @@ public final class NewProjectVisualPanel0 extends JPanel implements DocumentList
         jButton1.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser jfc = new JFileChooser();
 //                AbstractButton button = SwingUtils.getDescendantOfType(AbstractButton.class, jfc, "Icon", UIManager.getIcon("FileChooser.detailsViewIcon"));
 //                button.doClick();
-                jfc.setDialogTitle(java.util.ResourceBundle.getBundle("jav/gui/wizard/newProject/Bundle").getString("NewProjectVisualPanel0.path"));
-                jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                jfc.setFileFilter(new FileFilter() {
+                fileChooser.setDialogTitle(java.util.ResourceBundle.getBundle("jav/gui/wizard/newProject/Bundle").getString("NewProjectVisualPanel0.path"));
+                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                fileChooser.setFileFilter(new FileFilter() {
                     @Override
                     public boolean accept(File f) {
                         return f.isDirectory();
@@ -77,10 +76,11 @@ public final class NewProjectVisualPanel0 extends JPanel implements DocumentList
                     }
                 });
 
-                if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                     try {
-                        File file = jfc.getSelectedFile();
+                        File file = fileChooser.getSelectedFile();
                         jTextField1.setText(file.getCanonicalPath());
+                        fileChooser.setCurrentDirectory(file);
                     } catch (IOException ex) {
                         Exceptions.printStackTrace(ex);
                     }
@@ -203,7 +203,8 @@ public final class NewProjectVisualPanel0 extends JPanel implements DocumentList
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     // End of variables declaration//GEN-END:variables
-
+    private JFileChooser fileChooser;
+    
     @Override
     public void insertUpdate(DocumentEvent e) {
         if( jTextField1.getDocument() == e.getDocument()) {

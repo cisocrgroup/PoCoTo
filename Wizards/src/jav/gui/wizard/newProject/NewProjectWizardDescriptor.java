@@ -3,6 +3,7 @@ package jav.gui.wizard.newProject;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JFileChooser;
 import org.openide.WizardDescriptor;
 import org.openide.util.NbBundle;
 
@@ -38,19 +39,19 @@ import org.openide.util.NbBundle;
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class NewProjectWizardDescriptor extends WizardDescriptor {
-   
-   private NewProjectWizardPanel0 panel0 = new NewProjectWizardPanel0();
-   private NewProjectWizardPanel1 panel1 = new NewProjectWizardPanel1();
-   private NewProjectWizardPanel2 panel2 = new NewProjectWizardPanel2();
+   private JFileChooser jfc = new JFileChooser();
+   private NewProjectWizardPanel0 panel0 = new NewProjectWizardPanel0(jfc);
+   private NewProjectWizardPanel1 panel1 = new NewProjectWizardPanel1(jfc);
+   private NewProjectWizardPanel2 panel2 = new NewProjectWizardPanel2(jfc);
 //   private NewProjectWizardPanel3 panel3 = new NewProjectWizardPanel3();
 
    public NewProjectWizardDescriptor() {
-      List<Panel<WizardDescriptor>> panels = new ArrayList<Panel<WizardDescriptor>>();
+      List<Panel<WizardDescriptor>> panels = new ArrayList<>();
       panels.add(panel0);
       panels.add(panel1);
       panels.add(panel2);
 //      panels.add(panel3);
-      this.setPanelsAndSettings(new ArrayIterator<WizardDescriptor>(panels), this);
+      this.setPanelsAndSettings(new ArrayIterator<>(panels), this);
 
       // {0} will be replaced by WizardDesriptor.Panel.getComponent().getName()
       this.setTitleFormat(new MessageFormat("{0}"));
