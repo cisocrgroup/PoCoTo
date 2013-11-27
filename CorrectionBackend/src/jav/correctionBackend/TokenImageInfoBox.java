@@ -43,35 +43,67 @@ public class TokenImageInfoBox {
     }
 
     public int getCoordinateLeft() {
-        return coordinate_left;
+        if( coordinate_left < 0 ) {
+            return 1;
+        } else {
+            return coordinate_left;
+        }
     }
 
     public void setCoordinateLeft(int i) {
-        this.coordinate_left = i;
+        if( i < 0 ) {
+            this.coordinate_left = 1;
+        } else {
+            this.coordinate_left = i;
+        }
     }
 
     public int getCoordinateRight() {
-        return coordinate_right;
+        if( coordinate_right < 0 ) {
+            return 1;
+        } else {
+            return coordinate_right;
+        }
     }
 
     public void setCoordinateRight(int i) {
-        this.coordinate_right = i;
+        if( i < 0 ) {
+            this.coordinate_right = 1;
+        } else {
+            this.coordinate_right = i;
+        }
     }
 
     public int getCoordinateTop() {
-        return coordinate_top;
+        if( coordinate_top < 0 ) {
+            return 1;
+        } else {
+            return coordinate_top;            
+        }
     }
 
     public void setCoordinateTop(int i) {
-        this.coordinate_top = i;
+        if( i < 0 ) {
+            this.coordinate_top = 1;
+        } else {
+            this.coordinate_top = i;
+        }
     }
 
     public int getCoordinateBottom() {
-        return coordinate_bottom;
+        if( coordinate_bottom < 0 ) {
+            return 1;
+        } else {
+            return coordinate_bottom;
+        }
     }
 
     public void setCoordinateBottom(int i) {
-        this.coordinate_bottom = i;
+        if( i < 0 ) {
+            this.coordinate_bottom = 1;
+        } else {
+            this.coordinate_bottom = i;
+        }
     }
 
     public String getImageFileName() {
