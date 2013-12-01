@@ -344,9 +344,7 @@ public class SpreadIndexDocument extends Document {
                         b.setCoordinateLeft(atIndex.getTokenImageInfoBox().getCoordinateLeft());
                         b.setImageFileName(atIndex.getImageFilename().substring(atIndex.getImageFilename().lastIndexOf(File.separator) + 1, atIndex.getImageFilename().length()));
                     }
-                    if (atIndex.getTokenImageInfoBox().getCoordinateRight() < rightToken.getTokenImageInfoBox().getCoordinateLeft()) {
-                        b.setCoordinateRight(rightToken.getTokenImageInfoBox().getCoordinateRight());
-                    }
+                    b.setCoordinateRight(java.lang.Math.max(atIndex.getTokenImageInfoBox().getCoordinateRight(), rightToken.getTokenImageInfoBox().getCoordinateRight()));
                 }
 
                 if (!rightToken.getWDisplay().equals(" ")) {
