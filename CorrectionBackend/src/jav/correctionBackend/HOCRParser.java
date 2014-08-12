@@ -3,6 +3,8 @@ package jav.correctionBackend;
 import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import org.xml.sax.Attributes;
@@ -62,20 +64,49 @@ public class HOCRParser extends DefaultHandler implements Parser {
         pages++;
     }
 
+        private static boolean isWord(String name, Attributes attrs) {
+                return "span".equals(name) && (
+                        "ocr_word".equals(attrs.getValue("class")) ||
+                        "ocrx_word".equals(attrs.getValue("class"))
+                        );
+        }
+
+        private static boolean isLine(String name, Attributes attrs) {
+                return "span".equals(name) &&
+                        "ocr_line".equals(attrs.getValue("class"));
+        }
+        private static boolean isPage(String name, Attributes attrs) {
+                return "div".equals(name) &&
+                        "ocr_page".equals(attrs.getValue("class"));
+        }
+
+        private static int[] parseBbox(String str) {
+                Pattern p = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
+                int[] res = {0,0,0,0};
+                if (str != null) {
+                        Matcher m = p.matcher(str);
+                        if (m.find()) {
+                                for (int i = 0; i < 4; ++i) {
+                                        res[i] = Integer.parseInt(m.group(i + 1));
+                                }
+                        }
+                }
+                return res;
+        }
+
     @Override
     public void startElement(String uri, String nname, String qName, Attributes atts) {
-        if (nname.equals("span") && atts.getValue("class").equals("ocr_word")) {
-
+            if (isWord(nname, atts)) {
             String id = atts.getValue("id");
             orig_id = Integer.parseInt(id.substring(id.lastIndexOf("_") + 1, id.length()));
-            String[] vals = atts.getValue("title").split(" ");
-            this.left_ = Integer.parseInt(vals[1]);
-            this.right_ = Integer.parseInt(vals[3]);
+            int[] bbox = parseBbox(atts.getValue("title"));
+            this.left_ = bbox[0];
+            this.right_ = bbox[2];
             this.tokenIsToBeAdded = true;
 
-        } else if (nname.equals("div") && atts.getValue("class").equals("ocr_page")) {
+            } else if (isPage(nname, atts)) {
 
-        } else if (nname.equals("span") && atts.getValue("class").equals("ocr_line")) {
+            } else if (isLine(nname, atts)) {
 
             // beginning of new line, if not first line add newline token
             if (this.temptoken_ != null) {
@@ -92,13 +123,12 @@ public class HOCRParser extends DefaultHandler implements Parser {
                 doc_.addToken(temptoken_);
                 tokenIndex_++;
             }
-
-            String[] vals = atts.getValue("title").split(" ");
-            this.top_ = Integer.parseInt(vals[2]);
+            int[] bbox = parseBbox(atts.getValue("title"));
+            this.top_ = bbox[1];
             if (this.top_ < 0) {
                 this.top_ = 0;
             }
-            this.bottom_ = Integer.parseInt(vals[4]);
+            this.bottom_ = bbox[3];
         }
     }
 

@@ -1564,7 +1564,7 @@ public abstract class Document {
             MyIterator<Page> page_iter = this.pageIterator();
             while (page_iter.hasNext()) {
                 Page seite = page_iter.next();
-                
+
                 writer.write("#### Seite " + ((int) seite.getIndex()+1) + " von " + this.numPages + " ###");
                 writer.newLine();
                 writer.newLine();
@@ -1578,9 +1578,9 @@ public abstract class Document {
                         writer.write(t.getWDisplay());
                     }
                 }
-                
+
                 writer.newLine();
-                writer.newLine();               
+                writer.newLine();
             }
         } catch (IOException ex) {
             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
@@ -1603,7 +1603,7 @@ public abstract class Document {
         }
 
         boolean skipSpace = false;
-        // decide if immediate neighbour should be skipped, 
+        // decide if immediate neighbour should be skipped,
         // e.g. if it contains just whitespace
         if (next.getWDisplay().equals(" ")) {
             end = this.getNextToken(next.getID());
