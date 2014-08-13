@@ -80,7 +80,7 @@ public class HOCRParser extends DefaultHandler implements Parser {
     }
 
     private static int[] parseBbox(String str) {
-        Pattern p = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
+        final Pattern p = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
         int[] res = {0, 0, 0, 0};
         if (str != null) {
             Matcher m = p.matcher(str);
@@ -94,12 +94,28 @@ public class HOCRParser extends DefaultHandler implements Parser {
     }
     
     private static String parseImageFileName(String str) {
-        Pattern p = Pattern.compile("image\\s+\"(.*?)\"");
-        String res = new String();
+        final Pattern p1 = Pattern.compile("image\\s+\"(.*)\"");
+        final Pattern p2 = Pattern.compile("file\\s+(.*)");
+        if (str != null) {
+            Matcher m = p1.matcher(str);
+            if (m.find()) {
+                return m.group(1);
+            }
+            m = p2.matcher(str);
+            if (m.find()) {
+                return m.group(1);
+            }
+        }
+        return "";
+    }
+    
+    private static int parseId(String str) {
+        final Pattern p = Pattern.compile("_(\\d+)$");
+        int res = 0;
         if (str != null) {
             Matcher m = p.matcher(str);
             if (m.find()) {
-                res = m.group(1);
+                res = Integer.parseInt(m.group(1));
             }
         }
         return res;
@@ -108,8 +124,7 @@ public class HOCRParser extends DefaultHandler implements Parser {
     @Override
     public void startElement(String uri, String nname, String qName, Attributes atts) {
         if (isWord(nname, atts)) {
-            String id = atts.getValue("id");
-            orig_id = Integer.parseInt(id.substring(id.lastIndexOf("_") + 1, id.length()));
+            orig_id = parseId(atts.getValue("id"));
             int[] bbox = parseBbox(atts.getValue("title"));
             this.left_ = bbox[0];
             this.right_ = bbox[2];
