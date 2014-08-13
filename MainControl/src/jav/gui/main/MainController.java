@@ -151,8 +151,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
         try {
             // create an instance of the ProfilerStub
-                //stub = new ProfilerWebServiceStub("http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService");
-                stub = new ProfilerWebServiceStub("http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService");
+                stub = new ProfilerWebServiceStub("http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService");
+                //stub = new ProfilerWebServiceStub("http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService");
             stub._getServiceClient().getOptions().setManageSession(true);
             stub._getServiceClient().getOptions().setProperty(Constants.Configuration.ENABLE_MTOM, Constants.VALUE_TRUE);
             stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(3600000);
