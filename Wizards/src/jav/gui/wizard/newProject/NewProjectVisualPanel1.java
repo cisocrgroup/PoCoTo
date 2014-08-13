@@ -51,17 +51,24 @@ import org.openide.util.NbBundle;
 public final class NewProjectVisualPanel1 extends JPanel implements DocumentListener, ItemListener {
 
     public static final String PROP_XML_DIRNAME = "XMLDIRName";
-
+    private static String DEFAULT_ENCODING = "UTF-8";
     /**
      * Creates new form NewProjectVisualPanel1
      */
     public NewProjectVisualPanel1(JFileChooser jfc) {
         initComponents();
         fileChooser = jfc;
-        Object[] encodings = Charset.availableCharsets().keySet().toArray();
+        String[] encodingNames = Charset.availableCharsets().keySet().toArray(new String[0]);
+        String def = null;
+        for (int i = 0; i < encodingNames.length; ++i) {
+            if (DEFAULT_ENCODING.equalsIgnoreCase(encodingNames[i])) {
+                def = encodingNames[i];
+                break;
+            }
+        }
         
-        jComboBox2.setModel(new DefaultComboBoxModel(encodings));
-        jComboBox2.setSelectedItem(null);
+        jComboBox2.setModel(new DefaultComboBoxModel(encodingNames));
+        jComboBox2.setSelectedItem(def);
         jComboBox2.addItemListener(this);
         
         jTextField1.setText("");
