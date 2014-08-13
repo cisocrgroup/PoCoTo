@@ -1353,6 +1353,20 @@ public abstract class Document {
         return retval;
     }
 
+    private static String getFileName(String path) {
+        String str = path;
+        if (str != null && !"".equals(str)) {
+            int i = str.lastIndexOf(File.separator);
+            if (i != -1) {
+                str = str.substring(i + 1);
+            }
+            i = str.lastIndexOf(".");
+            if (i != -1) {
+                str = str.substring(0, i);
+            }
+        }
+        return str;
+    }
     public Page getPage(int index) {
         Page retval = null;
         try {
@@ -1364,7 +1378,8 @@ public abstract class Document {
                 retval.setStartIndex(rs.getInt(1));
                 retval.setEndIndex(rs.getInt(2));
                 String path = this.getTokenByIndex(rs.getInt(1)).getImageFilename();
-                String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
+                
+                String filename = getFileName(path);
                 retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
                 retval.setImageCanonical(path);
             }
