@@ -64,39 +64,50 @@ public class HOCRParser extends DefaultHandler implements Parser {
         pages++;
     }
 
-        private static boolean isWord(String name, Attributes attrs) {
-                return "span".equals(name) && (
-                        "ocr_word".equals(attrs.getValue("class")) ||
-                        "ocrx_word".equals(attrs.getValue("class"))
-                        );
-        }
+    private static boolean isWord(String name, Attributes attrs) {
+        return "span".equals(name) && ("ocr_word".equals(attrs.getValue("class"))
+                || "ocrx_word".equals(attrs.getValue("class")));
+    }
 
-        private static boolean isLine(String name, Attributes attrs) {
-                return "span".equals(name) &&
-                        "ocr_line".equals(attrs.getValue("class"));
-        }
-        private static boolean isPage(String name, Attributes attrs) {
-                return "div".equals(name) &&
-                        "ocr_page".equals(attrs.getValue("class"));
-        }
+    private static boolean isLine(String name, Attributes attrs) {
+        return "span".equals(name)
+                && "ocr_line".equals(attrs.getValue("class"));
+    }
 
-        private static int[] parseBbox(String str) {
-                Pattern p = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
-                int[] res = {0,0,0,0};
-                if (str != null) {
-                        Matcher m = p.matcher(str);
-                        if (m.find()) {
-                                for (int i = 0; i < 4; ++i) {
-                                        res[i] = Integer.parseInt(m.group(i + 1));
-                                }
-                        }
+    private static boolean isPage(String name, Attributes attrs) {
+        return "div".equals(name)
+                && "ocr_page".equals(attrs.getValue("class"));
+    }
+
+    private static int[] parseBbox(String str) {
+        Pattern p = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
+        int[] res = {0, 0, 0, 0};
+        if (str != null) {
+            Matcher m = p.matcher(str);
+            if (m.find()) {
+                for (int i = 0; i < 4; ++i) {
+                    res[i] = Integer.parseInt(m.group(i + 1));
                 }
-                return res;
+            }
         }
+        return res;
+    }
+    
+    private static String parseImageFileName(String str) {
+        Pattern p = Pattern.compile("image\\s+\"(.*?)\"");
+        String res = new String();
+        if (str != null) {
+            Matcher m = p.matcher(str);
+            if (m.find()) {
+                res = m.group(1);
+            }
+        }
+        return res;
+    }
 
     @Override
     public void startElement(String uri, String nname, String qName, Attributes atts) {
-            if (isWord(nname, atts)) {
+        if (isWord(nname, atts)) {
             String id = atts.getValue("id");
             orig_id = Integer.parseInt(id.substring(id.lastIndexOf("_") + 1, id.length()));
             int[] bbox = parseBbox(atts.getValue("title"));
@@ -104,13 +115,13 @@ public class HOCRParser extends DefaultHandler implements Parser {
             this.right_ = bbox[2];
             this.tokenIsToBeAdded = true;
 
-            } else if (isPage(nname, atts)) {
-
-            } else if (isLine(nname, atts)) {
+        } else if (isPage(nname, atts)) {
+            this.tempimage_ = parseImageFileName(atts.getValue("title"));
+        } else if (isLine(nname, atts)) {
 
             // beginning of new line, if not first line add newline token
             if (this.temptoken_ != null) {
-                temptoken_ = new Token( "\n" );
+                temptoken_ = new Token("\n");
                 temptoken_.setSpecialSeq(SpecialSequenceType.NEWLINE);
                 temptoken_.setIndexInDocument(tokenIndex_);
                 temptoken_.setIsSuspicious(false);
@@ -136,7 +147,7 @@ public class HOCRParser extends DefaultHandler implements Parser {
     public void endElement(String uri, String nname, String qName) {
         // paragraph end, add newline ??
         if (nname.equals("p")) {
-            temptoken_ = new Token( "\n" );
+            temptoken_ = new Token("\n");
             temptoken_.setSpecialSeq(SpecialSequenceType.NEWLINE);
             temptoken_.setIndexInDocument(tokenIndex_);
             temptoken_.setIsSuspicious(false);
@@ -160,7 +171,7 @@ public class HOCRParser extends DefaultHandler implements Parser {
             if (this.temp_.length() > 60) {
                 this.temp_ = this.temp_.substring(0, 60);
             }
-            temptoken_ = new Token( this.temp_ );
+            temptoken_ = new Token(this.temp_);
             if (temp_.matches("^[\\p{Space}]+$")) {
                 temptoken_.setSpecialSeq(SpecialSequenceType.SPACE);
             } else if (temp_.matches("^[\\p{Punct}]+$")) {
