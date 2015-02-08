@@ -124,7 +124,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private ProfilerWebServiceStub stub = null;
     private File tempFile;
     private UndoRedo.Manager manager = null;
-    
+
     static {
         instance = new MainController();
     }
@@ -146,12 +146,13 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         saveAs = new SaveAsWrap();
         manager = new UndoRedo.Manager();
         manager.setLimit(-1);
-        
+
 //        timestamper = new Timestamper();
 
         try {
             // create an instance of the ProfilerStub
-            stub = new ProfilerWebServiceStub("http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService");
+                stub = new ProfilerWebServiceStub("http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService");
+                //stub = new ProfilerWebServiceStub("http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService");
             stub._getServiceClient().getOptions().setManageSession(true);
             stub._getServiceClient().getOptions().setProperty(Constants.Configuration.ENABLE_MTOM, Constants.VALUE_TRUE);
             stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(3600000);
@@ -311,13 +312,13 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
-        
+
         this.refreshID();
 
         if (d != null) {
             // TODO implement error handling because undoredo only has content at this point if tool crashed without proper shutdown
             globalDocument = d;
-            globalDocument.setUndoRedoManager(manager);            
+            globalDocument.setUndoRedoManager(manager);
             globalDocument.truncateUndoRedo();
             content.add(saveAs);
             content.add(csrcookie);
@@ -494,7 +495,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             Exceptions.printStackTrace(ex);
         }
     }
-    
+
     public void deleteToken(int index) {
         try {
             MessageCenter.getInstance().fireCancelEvent(new CancelEvent(this));
@@ -509,7 +510,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             MainController.changeCursorWaitStatus(false);
         } catch (SQLException ex) {
             Exceptions.printStackTrace(ex);
-        }        
+        }
     }
 
     public void deleteToken(int begin, int afterend) {
@@ -704,7 +705,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                     }
                 } catch (Exception e) {
-                    // probably not worth handling 
+                    // probably not worth handling
                 }
             }
         });

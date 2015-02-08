@@ -1353,6 +1353,20 @@ public abstract class Document {
         return retval;
     }
 
+    private static String getFileName(String path) {
+        String str = path;
+        if (str != null && !"".equals(str)) {
+            int i = str.lastIndexOf(File.separator);
+            if (i != -1) {
+                str = str.substring(i + 1);
+            }
+            i = str.lastIndexOf(".");
+            if (i != -1) {
+                str = str.substring(0, i);
+            }
+        }
+        return str;
+    }
     public Page getPage(int index) {
         Page retval = null;
         try {
@@ -1364,7 +1378,8 @@ public abstract class Document {
                 retval.setStartIndex(rs.getInt(1));
                 retval.setEndIndex(rs.getInt(2));
                 String path = this.getTokenByIndex(rs.getInt(1)).getImageFilename();
-                String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
+                
+                String filename = getFileName(path);
                 retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
                 retval.setImageCanonical(path);
             }
@@ -1564,7 +1579,7 @@ public abstract class Document {
             MyIterator<Page> page_iter = this.pageIterator();
             while (page_iter.hasNext()) {
                 Page seite = page_iter.next();
-                
+
                 writer.write("#### Seite " + ((int) seite.getIndex()+1) + " von " + this.numPages + " ###");
                 writer.newLine();
                 writer.newLine();
@@ -1578,9 +1593,9 @@ public abstract class Document {
                         writer.write(t.getWDisplay());
                     }
                 }
-                
+
                 writer.newLine();
-                writer.newLine();               
+                writer.newLine();
             }
         } catch (IOException ex) {
             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
@@ -1603,7 +1618,7 @@ public abstract class Document {
         }
 
         boolean skipSpace = false;
-        // decide if immediate neighbour should be skipped, 
+        // decide if immediate neighbour should be skipped,
         // e.g. if it contains just whitespace
         if (next.getWDisplay().equals(" ")) {
             end = this.getNextToken(next.getID());
