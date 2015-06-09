@@ -47,7 +47,7 @@ public class CorrectionSystem {
 
     private JdbcConnectionPool jcp;
     private SpreadIndexDocument document;
-    private Parser parser;
+    private OcrDocumentParser parser;
 
     public CorrectionSystem() {
     }

@@ -31,7 +31,7 @@ package jav.correctionBackend;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public interface Parser {
+public interface OcrDocumentParser {
     public void parse(String xml, String img, String encoding);
 
 }

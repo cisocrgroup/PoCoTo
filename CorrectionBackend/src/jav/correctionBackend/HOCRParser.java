@@ -16,7 +16,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class HOCRParser extends DefaultHandler implements Parser {
+public class HOCRParser extends DefaultHandler implements OcrDocumentParser {
 
     private int orig_id = 1;
     private SAXParser sx;

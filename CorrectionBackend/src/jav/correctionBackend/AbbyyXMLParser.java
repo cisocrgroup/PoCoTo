@@ -41,7 +41,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class AbbyyXMLParser extends DefaultHandler implements Parser {
+public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser {
 
     private int orig_id = 1;
     private int tokenIndex_ = 0;
