@@ -113,7 +113,7 @@ public class CorrectionSystem {
             jcp.setLoginTimeout(0);
             
             this.document = new SpreadIndexDocument(jcp);
-            new OCRXMLImporter().importDocument(document, ocrcxmlfile, imagedir);
+            new OcrXmlImporter().importDocument(document, ocrcxmlfile, imagedir);
             document.loadNumberOfPagesFromDB();
             document.loadNumberOfTokensFromDB();
             retval = 0;
@@ -132,7 +132,7 @@ public class CorrectionSystem {
             FilenameFilter fil = null;
             this.document = new SpreadIndexDocument(jcp);
             if (t.equals(FileType.ABBYY_XML_DIR)) {
-                parser = new AbbyyXMLParser(this.document);
+                parser = new AbbyyXmlParser(this.document);
                 fil = new FilenameFilter() {
 
                     @Override
@@ -141,7 +141,7 @@ public class CorrectionSystem {
                     }
                 };
             } else if (t.equals(FileType.HOCR)) {
-                parser = new HOCRParser(this.document);
+                parser = new HocrParser(this.document);
                 fil = new FilenameFilter() {
 
                     @Override

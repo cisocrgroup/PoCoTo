@@ -41,7 +41,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser {
+public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser {
 
     private int orig_id = 1;
     private int tokenIndex_ = 0;
@@ -66,7 +66,7 @@ public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser 
     private XMLReader xr;
     private Pattern myAlnum;
 
-    public AbbyyXMLParser(Document d) {
+    public AbbyyXmlParser(Document d) {
         this.doc_ = d;
 //        this.myAlnum = Pattern.compile("[\\p{Space}\\p{Punct}]");
         this.myAlnum = Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
