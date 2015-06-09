@@ -160,7 +160,7 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
             this.isDict_ = Boolean.parseBoolean(atts.getValue("wordFromDictionary"));
 
             
-            System.out.println("charparams " + this.isSuspicious_ + " " + this.isDict_);
+//            System.out.println("charparams " + this.isSuspicious_ + " " + this.isDict_);
 //            doc_.addCharacter(tempchar_);
 
             left_temp = Integer.parseInt(atts.getValue("l"));
