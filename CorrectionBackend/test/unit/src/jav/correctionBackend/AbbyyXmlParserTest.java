@@ -5,7 +5,6 @@
  */
 package jav.correctionBackend;
 
-import java.io.File;
 import java.net.URL;
 import org.junit.After;
 import org.junit.AfterClass;
