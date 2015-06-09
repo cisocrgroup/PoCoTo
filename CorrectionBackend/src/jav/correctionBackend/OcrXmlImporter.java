@@ -41,9 +41,9 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class OCRXMLImporter {
+public class OcrXmlImporter {
 
-    public OCRXMLImporter() {
+    public OcrXmlImporter() {
     }
 
     public void simpleUpdateDocument(Document doc, String documentfile) {

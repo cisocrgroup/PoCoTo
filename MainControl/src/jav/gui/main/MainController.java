@@ -534,7 +534,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         return this.docOpened;
     }
 
-    public HashMap<String, OCRErrorInfo> computeErrorFreqList() {
+    public HashMap<String, OcrErrorInfo> computeErrorFreqList() {
         return globalDocument.computeErrorFreqList();
     }
 
@@ -1085,7 +1085,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             doc_out.close();
 
                             globalDocument.clearCandidates();
-                            new OCRXMLImporter().importCandidates(globalDocument, tempFile.getCanonicalPath());
+                            new OcrXmlImporter().importCandidates(globalDocument, tempFile.getCanonicalPath());
 
                             tempFile = File.createTempFile("profile", ".xml");
                             tempFile.deleteOnExit();
@@ -1110,7 +1110,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             prof_out.close();
 
                             globalDocument.clearPatterns();
-                            new OCRXMLImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
+                            new OcrXmlImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
 
                             retval = 0;
                             done = true;
@@ -1276,7 +1276,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             doc_out.close();
 
                             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing_doc"));
-                            new OCRXMLImporter().simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
+                            new OcrXmlImporter().simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
                             retval = 0;
                             done = true;
                         } catch (FileNotFoundException ex) {

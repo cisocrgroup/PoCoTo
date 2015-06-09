@@ -113,7 +113,7 @@ public class CorrectionSystem {
             jcp.setLoginTimeout(0);
             
             this.document = new SpreadIndexDocument(jcp);
-            new OCRXMLImporter().importDocument(document, ocrcxmlfile, imagedir);
+            new OcrXmlImporter().importDocument(document, ocrcxmlfile, imagedir);
             document.loadNumberOfPagesFromDB();
             document.loadNumberOfTokensFromDB();
             retval = 0;
