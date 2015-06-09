@@ -132,7 +132,7 @@ public class CorrectionSystem {
             FilenameFilter fil = null;
             this.document = new SpreadIndexDocument(jcp);
             if (t.equals(FileType.ABBYY_XML_DIR)) {
-                parser = new AbbyyXMLParser(this.document);
+                parser = new AbbyyXmlParser(this.document);
                 fil = new FilenameFilter() {
 
                     @Override
