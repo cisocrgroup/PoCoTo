@@ -141,7 +141,7 @@ public class CorrectionSystem {
                     }
                 };
             } else if (t.equals(FileType.HOCR)) {
-                parser = new HOCRParser(this.document);
+                parser = new HocrParser(this.document);
                 fil = new FilenameFilter() {
 
                     @Override

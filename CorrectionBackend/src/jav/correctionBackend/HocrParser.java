@@ -16,7 +16,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class HOCRParser extends DefaultHandler implements OcrDocumentParser {
+public class HocrParser extends DefaultHandler implements OcrDocumentParser {
 
     private int orig_id = 1;
     private SAXParser sx;
@@ -33,13 +33,13 @@ public class HOCRParser extends DefaultHandler implements OcrDocumentParser {
     private String tempimage_ = null;
     private java.util.regex.Pattern myAlnum;
 
-    public HOCRParser(Document d) {
+    public HocrParser(Document d) {
         this.doc_ = d;
         this.myAlnum = java.util.regex.Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
         try {
             sx = new org.ccil.cowan.tagsoup.jaxp.SAXFactoryImpl().newSAXParser();
         } catch (ParserConfigurationException ex) {
-            Logger.getLogger(HOCRParser.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(HocrParser.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
