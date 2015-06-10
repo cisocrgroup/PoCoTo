@@ -1,6 +1,6 @@
 package jav.gui.error;
 
-import jav.correctionBackend.OCRErrorInfo;
+import jav.correctionBackend.OcrErrorInfo;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -42,7 +42,7 @@ public class OCRFehlerPanel extends JPanel {
     private OCRFehlerLabel label;
     private NumberLabel num;
     
-    public OCRFehlerPanel(String key, OCRErrorInfo info, OCRFehlerMode olm) {
+    public OCRFehlerPanel(String key, OcrErrorInfo info, OCRFehlerMode olm) {
         super();
         this.setLayout(new BorderLayout());
         this.setBackground(Color.white);
