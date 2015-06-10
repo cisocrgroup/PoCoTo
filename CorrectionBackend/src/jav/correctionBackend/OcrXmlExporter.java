@@ -37,9 +37,9 @@ import org.apache.commons.lang3.StringEscapeUtils;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class OCRXMLExporter {
+public class OcrXmlExporter {
 
-    public OCRXMLExporter() {
+    public OcrXmlExporter() {
     }
 
     public void export(Document doc, String filename, boolean exportCandidates) {
@@ -106,7 +106,7 @@ public class OCRXMLExporter {
             out.close();
 
         } catch (IOException ex) {
-            Logger.getLogger(OCRXMLExporter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(OcrXmlExporter.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

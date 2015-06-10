@@ -31,47 +31,10 @@ package jav.correctionBackend;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class OCRErrorInfo {
-
-    private int occs;
-    private int corrected;
-    private int initial;
+public class OcrException extends Exception {
     
-    public OCRErrorInfo(int f) {
-        occs = f;
-        corrected = 0;
-        initial = f;
-    }
-    
-    public int getInitialN() {
-        return this.initial;
+    public OcrException( String message ) {
+        super(message);
     }
 
-    public void addOccurence() {
-        occs++;
-    }
-
-    public int getOccurencesN() {
-        return occs;
-    }
-
-    public void removeOccurence() {
-        if( occs > 0) {
-            occs--;
-        }
-    }
-
-    public int getCorrected() {
-        return this.corrected;
-    }
-
-    public void addCorrected() {
-        this.corrected++;
-    }
-
-    public void removeCorrected() {
-        if(corrected > 0) {
-            corrected--;
-        }
-    }
 }

@@ -1539,7 +1539,7 @@ public abstract class Document {
     public abstract ArrayList<Integer> splitToken(int iD, String editString) throws SQLException;
 
     public void exportAsDocXML(String filename, boolean exportCandidates) {
-        new OCRXMLExporter().export(this, filename, exportCandidates);
+        new OcrXmlExporter().export(this, filename, exportCandidates);
     }
 
     public void exportAsPageSeparatedPlaintext(String filename) {
@@ -1877,15 +1877,15 @@ public abstract class Document {
         }
     }
 
-    public HashMap<String, OCRErrorInfo> computeErrorFreqList() {
-        HashMap<String, OCRErrorInfo> freqList = new HashMap<>();
+    public HashMap<String, OcrErrorInfo> computeErrorFreqList() {
+        HashMap<String, OcrErrorInfo> freqList = new HashMap<>();
         Iterator<Token> it = this.tokenIterator();
         while (it.hasNext()) {
             Token tok = it.next();
             if (!tok.isCorrected() && tok.isSuspicious() && (tok.getWOCR().length() > 3) && tok.isNormal()) {
                 String tokString = tok.getWOCR();
                 if (!freqList.containsKey(tokString)) {
-                    freqList.put(tokString, new OCRErrorInfo(1));
+                    freqList.put(tokString, new OcrErrorInfo(1));
                 } else {
                     freqList.get(tokString).addOccurence();
                 }

@@ -41,7 +41,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser {
+public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser {
 
     private int orig_id = 1;
     private int tokenIndex_ = 0;
@@ -66,7 +66,7 @@ public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser 
     private XMLReader xr;
     private Pattern myAlnum;
 
-    public AbbyyXMLParser(Document d) {
+    public AbbyyXmlParser(Document d) {
         this.doc_ = d;
 //        this.myAlnum = Pattern.compile("[\\p{Space}\\p{Punct}]");
         this.myAlnum = Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
@@ -160,7 +160,7 @@ public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser 
             this.isDict_ = Boolean.parseBoolean(atts.getValue("wordFromDictionary"));
 
             
-            System.out.println("charparams " + this.isSuspicious_ + " " + this.isDict_);
+//            System.out.println("charparams " + this.isSuspicious_ + " " + this.isDict_);
 //            doc_.addCharacter(tempchar_);
 
             left_temp = Integer.parseInt(atts.getValue("l"));
@@ -235,7 +235,7 @@ public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser 
 
                 temptoken_.setOrigID(orig_id);
                 doc_.addToken(temptoken_);
-                System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                // System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                 this.globalIsSuspicious = false;
                 orig_id++;
                 tokenIndex_++;
@@ -309,7 +309,7 @@ public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser 
 
                         temptoken_.setOrigID(orig_id);
                         doc_.addToken(temptoken_);
-                        System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                        // System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                         this.globalIsSuspicious = false;
                         orig_id++;
                         tokenIndex_++;
@@ -355,7 +355,7 @@ public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser 
 
                         temptoken_.setOrigID(orig_id);
                         doc_.addToken(temptoken_);
-                        System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                        //System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                         this.globalIsSuspicious = false;
                         tokenIndex_++;
                         orig_id++;
@@ -373,7 +373,7 @@ public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser 
             }
             
             if( this.isSuspicious_ && !this.isDict_ ) {
-                System.out.println("global");
+                //System.out.println("global");
                 this.globalIsSuspicious = true;
             }
 
@@ -391,9 +391,6 @@ public class AbbyyXMLParser extends DefaultHandler implements OcrDocumentParser 
      */
     @Override
     public void characters(char ch[], int start, int length) {
-        if (length > 1) {
-            System.err.println("Error. Length > 1. " + new String(ch, start, length));
-        }
         thischar_ = new String(ch, start, length);
     }
 }
