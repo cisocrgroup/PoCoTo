@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
  * @author finkf
  */
 public class AbbyyXmlParserTest {
-    String testFile;
+    MockDocument document;
     public AbbyyXmlParserTest() {
     }
     
@@ -33,7 +33,9 @@ public class AbbyyXmlParserTest {
     @Before
     public void setUp() {
         URL url = getClass().getResource("/data/test.abbyy.xml");
-        testFile = url.getFile();
+        document = new MockDocument();
+        AbbyyXmlParser parser = new AbbyyXmlParser(document);
+        parser.parse(url.getFile(), "null", null);
     }
     
     @After
@@ -45,9 +47,6 @@ public class AbbyyXmlParserTest {
      */
     @Test
     public void testParse() {
-        MockDocument document = new MockDocument();
-        AbbyyXmlParser parser = new AbbyyXmlParser(document);
-        parser.parse(testFile, "null", null);
         Token token = document.findFirstToken("Cap");
         assertNotNull(token);
         TokenImageInfoBox box = token.getTokenImageInfoBox();
