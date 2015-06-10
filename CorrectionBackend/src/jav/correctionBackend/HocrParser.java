@@ -65,8 +65,9 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
     }
 
     private static boolean isWord(String name, Attributes attrs) {
-        return "span".equals(name) && ("ocr_word".equals(attrs.getValue("class"))
-                || "ocrx_word".equals(attrs.getValue("class")));
+        return "span".equals(name) && 
+                ("ocr_word".equals(attrs.getValue("class")) ||
+                 "ocrx_word".equals(attrs.getValue("class")));
     }
 
     private static boolean isLine(String name, Attributes attrs) {

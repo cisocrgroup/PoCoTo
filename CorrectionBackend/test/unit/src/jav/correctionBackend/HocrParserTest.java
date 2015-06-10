@@ -37,7 +37,7 @@ public class HocrParserTest {
         URL url = getClass().getResource("/data/test.hocr");
         document = new MockDocument();
         HocrParser parser = new HocrParser(document);
-        parser.parse(url.getFile(), "null", null);
+        parser.parse(url.getFile(), "null", "Utf8");
     }
     
     @After
@@ -53,9 +53,9 @@ public class HocrParserTest {
         assertNotNull(token);
         TokenImageInfoBox box = token.getTokenImageInfoBox();
         assertNotNull(box);
-        assertEquals(930, box.getCoordinateLeft());
-        assertEquals(333, box.getCoordinateTop());
-        assertEquals(1090, box.getCoordinateRight());
-        assertEquals(408, box.getCoordinateBottom());
+        assertEquals(1316, box.getCoordinateLeft());
+        assertEquals(238, box.getCoordinateTop());
+        assertEquals(1474, box.getCoordinateRight());
+        assertEquals(314, box.getCoordinateBottom());
     }
 }
