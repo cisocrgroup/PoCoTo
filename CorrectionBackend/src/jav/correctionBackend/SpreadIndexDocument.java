@@ -282,7 +282,7 @@ public class SpreadIndexDocument extends Document {
 
     @Override
     public ArrayList<Integer> mergeRightward(int tokenID, int numTok) throws SQLException {
-        System.out.println("Beginning database transaction");
+        //System.out.println("Beginning database transaction");
         long now = System.currentTimeMillis();
 
         Connection conn = null;
@@ -593,7 +593,7 @@ public class SpreadIndexDocument extends Document {
         }
     }
 
-    public boolean spreadIndex(final int tokenID, final int indexToAdd) {
+    private boolean spreadIndex(final int tokenID, final int indexToAdd) {
         ProgressRunnable<Boolean> r = new ProgressRunnable<Boolean>() {
             @Override
             public Boolean run(ProgressHandle ph) {

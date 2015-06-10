@@ -235,7 +235,7 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
                 temptoken_.setOrigID(orig_id);
                 doc_.addToken(temptoken_);
-                System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                // System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                 this.globalIsSuspicious = false;
                 orig_id++;
                 tokenIndex_++;
@@ -309,7 +309,7 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
                         temptoken_.setOrigID(orig_id);
                         doc_.addToken(temptoken_);
-                        System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                        // System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                         this.globalIsSuspicious = false;
                         orig_id++;
                         tokenIndex_++;
@@ -355,7 +355,7 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
                         temptoken_.setOrigID(orig_id);
                         doc_.addToken(temptoken_);
-                        System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                        //System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                         this.globalIsSuspicious = false;
                         tokenIndex_++;
                         orig_id++;
@@ -373,7 +373,7 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
             }
             
             if( this.isSuspicious_ && !this.isDict_ ) {
-                System.out.println("global");
+                //System.out.println("global");
                 this.globalIsSuspicious = true;
             }
 
@@ -391,9 +391,6 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
      */
     @Override
     public void characters(char ch[], int start, int length) {
-        if (length > 1) {
-            System.err.println("Error. Length > 1. " + new String(ch, start, length));
-        }
         thischar_ = new String(ch, start, length);
     }
 }
