@@ -12,7 +12,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.xml.sax.Attributes;
 
 /**
  *
@@ -21,17 +20,6 @@ import org.xml.sax.Attributes;
 public class HocrParserTest {
     private MockDocument document;
     
-    public HocrParserTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
     @Before
     public void setUp() {
         URL url = getClass().getResource("/data/test.hocr");
@@ -39,16 +27,12 @@ public class HocrParserTest {
         HocrParser parser = new HocrParser(document);
         parser.parse(url.getFile(), "null", "Utf8");
     }
-    
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of parse method, of class HocrParser.
      */
     @Test
-    public void testParse() {
+    public void shouldContainRightToken() {
         Token token = document.findFirstToken("εἶχον");
         assertNotNull(token);
         TokenImageInfoBox box = token.getTokenImageInfoBox();
@@ -57,5 +41,16 @@ public class HocrParserTest {
         assertEquals(238, box.getCoordinateTop());
         assertEquals(1474, box.getCoordinateRight());
         assertEquals(314, box.getCoordinateBottom());
+    }
+    @Test
+    public void shouldContainRightLastToken() {
+        Token token = document.findLastToken("Κῦρος");
+        assertNotNull(token);
+        TokenImageInfoBox box = token.getTokenImageInfoBox();
+        assertNotNull(box);
+        assertEquals(2031, box.getCoordinateLeft());
+        assertEquals(2282, box.getCoordinateTop());
+        assertEquals(2215, box.getCoordinateRight());
+        assertEquals(2362, box.getCoordinateBottom());
     }
 }

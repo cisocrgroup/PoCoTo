@@ -6,10 +6,7 @@
 package jav.correctionBackend;
 
 import java.net.URL;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -19,16 +16,6 @@ import static org.junit.Assert.*;
  */
 public class AbbyyXmlParserTest {
     MockDocument document;
-    public AbbyyXmlParserTest() {
-    }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
     
     @Before
     public void setUp() {
@@ -37,16 +24,9 @@ public class AbbyyXmlParserTest {
         AbbyyXmlParser parser = new AbbyyXmlParser(document);
         parser.parse(url.getFile(), "null", null);
     }
-    
-    @After
-    public void tearDown() {
-    }
 
-    /**
-     * Test of parse method, of class AbbyyXmlParser.
-     */
     @Test
-    public void testParse() {
+    public void shouldContainRightToken() {
         Token token = document.findFirstToken("Cap");
         assertNotNull(token);
         TokenImageInfoBox box = token.getTokenImageInfoBox();
@@ -55,5 +35,17 @@ public class AbbyyXmlParserTest {
         assertEquals(125, box.getCoordinateTop());
         assertEquals(413, box.getCoordinateRight());
         assertEquals(207, box.getCoordinateBottom());
-    }   
+    }
+    
+    @Test
+    public void shouldContainRightLastToken() {
+        Token token = document.findLastToken("deni");
+        assertNotNull(token);
+        TokenImageInfoBox box = token.getTokenImageInfoBox();
+        assertNotNull(box);
+        assertEquals(1780, box.getCoordinateLeft());
+        assertEquals(2700, box.getCoordinateTop());
+        assertEquals(1877, box.getCoordinateRight());
+        assertEquals(2752, box.getCoordinateBottom());
+    }
 }
