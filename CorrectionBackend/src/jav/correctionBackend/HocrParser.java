@@ -1,5 +1,6 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,6 +47,7 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
     @Override
     public void parse(String xmlFile, String imgFile, String encoding) {
         try {
+            Log.debug(this, "parse(%s, %s, %s)", xmlFile, imgFile, encoding);
             InputStream inputStream = new FileInputStream(xmlFile);
             Reader reader = new InputStreamReader(inputStream, encoding);
             InputSource is = new InputSource(reader);
@@ -54,7 +56,11 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
             this.tempimage_ = imgFile;
             sx.parse(is, this);
         } catch (SAXException ex) {
+            Log.error(this, "Invalid xml file %s: %s", xmlFile, ex.getMessage());
+            throw new RuntimeException(ex);
         } catch (IOException ex) {
+            Log.error(this, "Could not read file %s: %s", xmlFile, ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 
@@ -62,6 +68,12 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
     public void endDocument() {
         temptoken_ = null;
         pages++;
+        Log.info(
+                this, 
+                "Loaded Document with %d pages and %d token",
+                doc_.getNumberOfPages(),
+                doc_.getNumberOfTokens()
+        );
     }
 
     private static boolean isWord(String name, Attributes attrs) {
