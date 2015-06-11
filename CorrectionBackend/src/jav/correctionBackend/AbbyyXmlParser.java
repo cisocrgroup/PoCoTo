@@ -365,6 +365,7 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
                         left_ = 0;
 
                         // previous char non-alnum and actual char non-alnum -> attach tempchar_ to token
+                        // IS THIS REALLY '&' ? not '&&'?
                     } else if (!myAlnum.matcher(lastchar_).matches() & !myAlnum.matcher(thischar_).matches()) {
                         temp_ += thischar_;
                     }

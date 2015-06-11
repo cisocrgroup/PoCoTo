@@ -25,6 +25,13 @@ public class MockDocument extends Document {
         }
         return null;
     }
+    public final Token findLastToken(String what) {
+        for (int i = tokens.size(); i > 0; --i) {
+            if (what.equals(tokens.get(i - 1).getWOCR()))
+                return tokens.get(i - 1);
+        }
+        return null;
+    }
     @Override
     protected final int addToken(Token token) {
         tokens.add(token);
