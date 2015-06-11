@@ -34,14 +34,7 @@ public class Log {
     }
     public static void log(Object o, Level level, String fmt, Object...objs) {
         if (logger != null) 
-            logger.log(
-                    level, 
-                    String.format(
-                            "[%s] %s", 
-                            o.getClass().getName(), 
-                            String.format(fmt, objs)
-                    )
-            );
+            logger.log(level, formatMessage(o, fmt, objs));
     }
     public static void info(Object o, String fmt, Object...objs) {
         log(o, Level.INFO, String.format(fmt, objs));
@@ -54,6 +47,13 @@ public class Log {
     }
     public static void fatal(Object o, String fmt, Object...objs) {
         log(o, Level.FATAL, fmt, objs);
+    }
+    private static String formatMessage(Object o, String fmt, Object...objs) {
+        return String.format(
+                "[%s]\t%s", 
+                o.getClass().getName(),
+                String.format(fmt, objs)
+        );
     }
     private static void init() {
         try {
