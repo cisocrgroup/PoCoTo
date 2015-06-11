@@ -1,6 +1,9 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -81,6 +84,7 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
     @Override
     public void parse(String filename, String imageFile, String encoding) {
+        Log.info(this, "parse(%s, %s, %s)", filename, imageFile, encoding);
         this.tempimage_ = imageFile;
         try {
             InputSource is = new InputSource(getReader(filename));

@@ -35,6 +35,7 @@ import jav.gui.events.saved.SavedEventSlot;
 import jav.gui.events.tokenStatus.*;
 import jav.gui.filter.AbstractTokenFilter;
 import jav.gui.main.undoredo.MyUndoableEdit;
+import jav.logging.log4j.Log;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.io.*;
@@ -51,10 +52,6 @@ import javax.swing.*;
 import javax.swing.event.UndoableEditEvent;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.Constants;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
 import org.netbeans.api.progress.ProgressUtils;
@@ -113,8 +110,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private DocumentLoadedCookie docloadcookie;
     private String baseDir;
     private boolean logging;
-    private Logger logger;
-    private FileAppender appender;
     private boolean docOpened = false;
     private Document globalDocument = null;
     private Properties docproperties;
@@ -175,14 +170,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         node = NbPreferences.forModule(this.getClass());
         logging = node.getBoolean("logging", true);
         if (logging) {
-            logger = Logger.getLogger("Logger");
-            try {
-                appender = new FileAppender(new PatternLayout("%d{dd-MM-yyyy HH:mm:ss} - %m%n"), baseDir + File.separator + "log.txt", true);
-                logger.setLevel(Level.ALL);
-                logger.addAppender(appender);
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+            Log.setup();
+            Log.debug(this, "Setup logging");
         }
 
         docproperties = new Properties();
@@ -201,7 +190,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void addToLog(String msg) {
-        logger.log(Level.INFO, msg);
+        Log.info(this, msg);
     }
 
     public UndoRedo getUndoRedo() {
