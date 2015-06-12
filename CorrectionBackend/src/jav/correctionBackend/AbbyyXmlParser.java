@@ -1,6 +1,9 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -81,14 +84,16 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
     @Override
     public void parse(String filename, String imageFile, String encoding) {
+        Log.info(this, "parse(%s, %s, %s)", filename, imageFile, encoding);
         this.tempimage_ = imageFile;
         try {
             InputSource is = new InputSource(getReader(filename));
-//            is.setEncoding(encoding);
             xr.parse(is);
         } catch (IOException ex) {
+            Log.error(this, "Could not read %s: %s", filename, ex.getMessage());
              throw new RuntimeException(ex);
         } catch (SAXException ex) {
+            Log.error(this, "Invalid Xml file %s: %s", filename, ex.getMessage());
             throw new RuntimeException(ex);
         }
     }
@@ -120,13 +125,16 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
     @Override
     public void startDocument() {
-//        System.out.println("Parsing started.");
-//        this.starttime_ = System.currentTimeMillis();
     }
 
     @Override
     public void endDocument() {
-//        System.out.println("Parsing ended. " + (System.currentTimeMillis() - this.starttime_));
+        Log.info(
+                this, 
+                "Loaded Document with %d pages and %d tokens", 
+                doc_.getNumberOfPages(),
+                doc_.getNumberOfTokens()
+        );
     }
 
     @Override
@@ -151,17 +159,8 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
             inVariant_ = true;
         } else if (qName.equals("formatting")) {
         } else if (qName.equals("charParams")) {
-
-//            tempchar_ = new Character(this.tokenIndex_, position_);
-//            tempchar_.setLeft(Integer.parseInt(atts.getValue("l")));
-//            tempchar_.setRight(Integer.parseInt(atts.getValue("r")));
-//            tempchar_.setIsSuspicious((atts.getValue("suspicious") != null));
             this.isSuspicious_ = (atts.getValue("suspicious") != null);
             this.isDict_ = Boolean.parseBoolean(atts.getValue("wordFromDictionary"));
-
-            
-//            System.out.println("charparams " + this.isSuspicious_ + " " + this.isDict_);
-//            doc_.addCharacter(tempchar_);
 
             left_temp = Integer.parseInt(atts.getValue("l"));
             right_temp = Integer.parseInt(atts.getValue("r"));
@@ -235,7 +234,6 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
                 temptoken_.setOrigID(orig_id);
                 doc_.addToken(temptoken_);
-                // System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                 this.globalIsSuspicious = false;
                 orig_id++;
                 tokenIndex_++;
@@ -309,7 +307,6 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
                         temptoken_.setOrigID(orig_id);
                         doc_.addToken(temptoken_);
-                        // System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                         this.globalIsSuspicious = false;
                         orig_id++;
                         tokenIndex_++;
@@ -355,7 +352,6 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
 
                         temptoken_.setOrigID(orig_id);
                         doc_.addToken(temptoken_);
-                        //System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
                         this.globalIsSuspicious = false;
                         tokenIndex_++;
                         orig_id++;
@@ -374,7 +370,6 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
             }
             
             if( this.isSuspicious_ && !this.isDict_ ) {
-                //System.out.println("global");
                 this.globalIsSuspicious = true;
             }
 
