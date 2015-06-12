@@ -89,12 +89,10 @@ final class UserIDPanel extends javax.swing.JPanel implements DocumentListener {
     }
 
     boolean valid() {
-        if( !jTextField1.getText().equals("") && jTextField1.getText().matches(".{8}-.{4}-.{4}-.{4}-.{12}")) {
-            return true;
-        } else {
-            return false;
-        }
+        return !jTextField1.getText().equals("") && 
+                jTextField1.getText().matches(".{8}-.{4}-.{4}-.{4}-.{12}");
     }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField jTextField1;
     // End of variables declaration//GEN-END:variables
