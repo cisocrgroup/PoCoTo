@@ -46,19 +46,19 @@ keywordsCategory = "Profiler/UserID",
 id = "userid")
 public final class UserIDOptionsPanelController extends OptionsPanelController {
 
-    private UserIDPanel panel;
+    private UserIDPanel userIdPanel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;
 
     @Override
     public void update() {
-        getPanel().load();
+        getUserIdPanel().load();
         changed = false;
     }
 
     @Override
     public void applyChanges() {
-        getPanel().store();
+        getUserIdPanel().store();
         changed = false;
         MainController.findInstance().refreshID();
     }
@@ -70,7 +70,7 @@ public final class UserIDOptionsPanelController extends OptionsPanelController {
 
     @Override
     public boolean isValid() {
-        return getPanel().valid();
+        return getUserIdPanel().valid();
     }
 
     @Override
@@ -85,7 +85,7 @@ public final class UserIDOptionsPanelController extends OptionsPanelController {
 
     @Override
     public JComponent getComponent(Lookup masterLookup) {
-        return getPanel();
+        return getUserIdPanel();
     }
 
     @Override
@@ -98,11 +98,11 @@ public final class UserIDOptionsPanelController extends OptionsPanelController {
         pcs.removePropertyChangeListener(l);
     }
 
-    private UserIDPanel getPanel() {
-        if (panel == null) {
-            panel = new UserIDPanel(this);
+    private UserIDPanel getUserIdPanel() {
+        if (userIdPanel == null) {
+            userIdPanel = new UserIDPanel(this);
         }
-        return panel;
+        return userIdPanel;
     }
 
     void changed() {
