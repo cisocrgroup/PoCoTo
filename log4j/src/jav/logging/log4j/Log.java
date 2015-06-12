@@ -16,7 +16,7 @@ import org.apache.log4j.PatternLayout;
  * @author flo
  */
 public class Log {
-    private static final String LOG_FORMAT = "%d{ISO8601} - %m\n";
+    private static final String LOG_FORMAT = "[%p] %d{ISO8601} - %m%n";
     private static Logger logger = null;
     private Log() {}
     public static synchronized void setup() {
