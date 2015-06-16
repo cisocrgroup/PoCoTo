@@ -35,7 +35,7 @@ public class MockDocument extends Document {
     @Override
     protected final int addToken(Token token) {
         tokens.add(token);
-         return tokens.size();
+        return tokens.size();
     }
     @Override
     protected final int addToken(Token token, Connection conn) {
@@ -56,5 +56,17 @@ public class MockDocument extends Document {
     @Override
     public final void loadNumberOfTokensFromDB() {
         throw new RuntimeException("loadNumberOfTokensFromDB(): not implemented");
+    }
+    @Override
+    public final void loadNumberOfPagesFromDB() {
+        throw new RuntimeException("loadNumberOfPagesFromDB(): not implemented");
+    }
+    @Override
+    public final int getNumberOfPages() {
+        return 0;
+    }
+    @Override
+    public final int getNumberOfTokens() {
+        return tokens.size();
     }
 }
