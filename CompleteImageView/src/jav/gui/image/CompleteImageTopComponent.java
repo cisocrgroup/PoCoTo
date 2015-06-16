@@ -86,7 +86,7 @@ public final class CompleteImageTopComponent extends AbstractMyTopComponent impl
     private TokenBoxPainter _tokenAnMaler = null;
     private InstanceContent content = new InstanceContent();
     private static CompleteImageTopComponent instance;
-    private SwingWorker worker = null;
+    private SwingWorker<Boolean,Object> worker = null;
     /**
      * path to the icon used by the component and its open action
      */
