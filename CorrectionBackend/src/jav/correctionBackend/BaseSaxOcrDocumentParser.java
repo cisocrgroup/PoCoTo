@@ -55,10 +55,10 @@ public class BaseSaxOcrDocumentParser extends DefaultHandler implements OcrDocum
             InputSource is = new InputSource(getReader(xml, enc));
             xr.parse(is);
         } catch (IOException ex) {
-            Log.error(this, "Could not read %s: %s", xml, ex);
+            Log.error(this, "Could not read %s: %s", xml, ex.getMessage());
              throw new RuntimeException(ex);
         } catch (SAXException ex) {
-            Log.error(this, "Invalid Xml file %s: %s", xml, ex);
+            Log.error(this, "Invalid Xml file %s: %s", xml, ex.getMessage());
             throw new RuntimeException(ex);
         }
     }
