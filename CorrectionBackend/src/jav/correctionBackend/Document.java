@@ -1411,9 +1411,9 @@ public abstract class Document {
 //        return retval;
 //    }
     public int getNumberOfTokens() {
-        if (this.numTokens == 0) {
+        //if (this.numTokens == 0) {
             this.loadNumberOfTokensFromDB();
-        }
+        //}
         return this.numTokens;
     }
 
