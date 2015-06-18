@@ -124,6 +124,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         instance = new MainController();
     }
 
+    
     public static MainController findInstance() {
         return instance;
     }
