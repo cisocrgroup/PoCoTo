@@ -168,6 +168,12 @@ public class CorrectionSystem {
                 String imagefile = "";
                 if (mappings.containsKey(basename))
                     imagefile = mappings.get(basename);
+                Log.debug(
+                        this, 
+                        "found image file: %s for basename: %s", 
+                        imagefile,
+                        basename
+                );
                 ph.progress("Parsing file " + xmlfile + " (" + imagefile + ")");
                 try {
                     parser.parse(
@@ -198,17 +204,7 @@ public class CorrectionSystem {
         HashMap<String, String> mappings = new HashMap<>();
         String[] images = getAllImageFiles(dir);
         for (String image: images) {
-                File imagefile = new File(dir, image);
-                try {
-                    mappings.put(getBaseName(image), imagefile.getCanonicalPath());
-                } catch (IOException ex) {
-                    Log.error(
-                            this, 
-                            "invalid image file %s: %s", 
-                            imagefile,
-                            ex.getMessage()
-                    );
-                }
+            mappings.put(getBaseName(image), image);
         }       
         return mappings;
     }
