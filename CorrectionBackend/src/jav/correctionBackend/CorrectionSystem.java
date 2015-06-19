@@ -170,9 +170,9 @@ public class CorrectionSystem {
                     imagefile = mappings.get(basename);
                 Log.debug(
                         this, 
-                        "found image file: %s for basename: %s", 
+                        "found image file: %s for file: %s", 
                         imagefile,
-                        basename
+                        xmlfile
                 );
                 ph.progress("Parsing file " + xmlfile + " (" + imagefile + ")");
                 try {
