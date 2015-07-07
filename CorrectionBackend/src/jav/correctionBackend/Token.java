@@ -216,6 +216,10 @@ public class Token {
             return this.wCOR;
         }
     }
+    @Override
+    public String toString() {
+        return getWCOR() + " " + getID() + " " + getIndexInDocument();
+    }
     
 @Override
     public boolean equals(Object obj) {

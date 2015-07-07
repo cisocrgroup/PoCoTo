@@ -22,11 +22,11 @@ public class AbbyyXmlParserTest {
         URL url = getClass().getResource("/data/test.abbyy.xml");
         document = new MockDocument();
         AbbyyXmlParser parser = new AbbyyXmlParser(document);
-        parser.parse(url.getFile(), "null", null);
+        parser.parse(url.getFile(), "null", "UTF-8");
     }
 
     @Test
-    public void shouldContainRightToken() {
+    public void documentShouldContainRightToken() {
         Token token = document.findFirstToken("Cap");
         assertNotNull(token);
         TokenImageInfoBox box = token.getTokenImageInfoBox();
@@ -38,7 +38,7 @@ public class AbbyyXmlParserTest {
     }
     
     @Test
-    public void shouldContainRightLastToken() {
+    public void documentShouldContainRightLastToken() {
         Token token = document.findLastToken("deni");
         assertNotNull(token);
         TokenImageInfoBox box = token.getTokenImageInfoBox();
@@ -47,5 +47,15 @@ public class AbbyyXmlParserTest {
         assertEquals(2700, box.getCoordinateTop());
         assertEquals(1877, box.getCoordinateRight());
         assertEquals(2752, box.getCoordinateBottom());
+    }
+    
+    @Test
+    public void documentShouldContainRightNumberOfTokens() {
+        assertEquals(799, document.getNumberOfTokens());
+    }
+    
+    @Test
+    public void documentShouldContainRightNumberOfPages() {
+        assertEquals(0, document.getNumberOfPages());
     }
 }

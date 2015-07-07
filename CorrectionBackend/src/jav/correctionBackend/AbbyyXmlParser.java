@@ -1,17 +1,8 @@
 package jav.correctionBackend;
 
 import jav.logging.log4j.Log;
-import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
@@ -44,7 +35,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser {
+public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
     private int orig_id = 1;
     private int tokenIndex_ = 0;
@@ -58,83 +49,49 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
     private String lastchar_;
     private String thischar_;
     private int pages = 0;
-    private int position_ = 0;
+    private int tokensPerXmlDocument = 0;
     private boolean globalIsSuspicious = false;
     private boolean inVariant_ = false;
     private boolean isSuspicious_ = false;
     private boolean isDict_ = false;
-    private Document doc_ = null;
     private Token temptoken_ = null;
-    private String tempimage_ = null;
-    private XMLReader xr;
-    private Pattern myAlnum;
+    private int position_;
+    private final static Pattern myAlnum =
+            Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");;
 
     public AbbyyXmlParser(Document d) {
-        this.doc_ = d;
-//        this.myAlnum = Pattern.compile("[\\p{Space}\\p{Punct}]");
-        this.myAlnum = Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
-
-        try {
-            xr = XMLReaderFactory.createXMLReader();
-            xr.setContentHandler(this);
-            xr.setErrorHandler(this);
-        } catch (SAXException e1) {
-        }
-    }
-
-    @Override
-    public void parse(String filename, String imageFile, String encoding) {
-        Log.info(this, "parse(%s, %s, %s)", filename, imageFile, encoding);
-        this.tempimage_ = imageFile;
-        try {
-            InputSource is = new InputSource(getReader(filename));
-            xr.parse(is);
-        } catch (IOException ex) {
-            Log.error(this, "Could not read %s: %s", filename, ex.getMessage());
-             throw new RuntimeException(ex);
-        } catch (SAXException ex) {
-            Log.error(this, "Invalid Xml file %s: %s", filename, ex.getMessage());
-            throw new RuntimeException(ex);
-        }
-    }
-    
-    private final static int BOM_SIZE = 4;
-    private Reader getReader(String path) throws IOException {
-        PushbackInputStream is = new PushbackInputStream(
-                new BufferedInputStream(new FileInputStream(path)), BOM_SIZE);
-        byte[] bom = new byte[BOM_SIZE];
-        is.read(bom);
-        // utf8
-        if ((bom[0] == (byte)0xef) && (bom[1] == (byte)0xbb) && (bom[2] == (byte)0xbf)) {
-            is.unread(bom, 3, 1);
-        } else if ((bom[0] == (byte)0xfe) && (bom[1] == (byte)0xff)) {
-            is.unread(bom, 2, 2);
-        } else if ((bom[0] == (byte)0xff) && (bom[1] == (byte)0xfe)) {
-            is.unread(bom, 2, 2);
-        } else if ((bom[0] == (byte)0x0) && (bom[1] == (byte)0x0) && 
-                (bom[2] == (byte)0xfe) && (bom[3] == (byte)0xff)) {
-            /* do nothing */
-        } else if ((bom[0] == (byte)0xff) && (bom[1] == (byte)0xfe) && 
-                (bom[2] == (byte)0x0) && (bom[3] == (byte)0x0)) {  
-            /* do nothing */
-        } else {
-            is.unread(bom, 0, BOM_SIZE);
-        }
-        return new InputStreamReader(is);
+        super(d);
     }
 
     @Override
     public void startDocument() {
+        tokensPerXmlDocument = 0;
     }
 
     @Override
     public void endDocument() {
         Log.info(
                 this, 
-                "Loaded Document with %d pages and %d tokens", 
-                doc_.getNumberOfPages(),
-                doc_.getNumberOfTokens()
+                "Loaded Document with %d page(s) and %d tokens", 
+                pages,
+                tokensPerXmlDocument
         );
+        if (tokensPerXmlDocument == 0) {
+            Log.info(this, "empty xml document; adding fake token");
+            Token fakeToken = new Token("");
+            TokenImageInfoBox iib = new TokenImageInfoBox(0, 0, 0, 0);
+            iib.setImageFileName(getImageFile());
+            fakeToken.setTokenImageInfoBox(iib);
+            fakeToken.setIsSuspicious(false);
+            fakeToken.setIsCorrected(false);
+            fakeToken.setNumberOfCandidates(0);
+            fakeToken.setIsNormal(false);
+            fakeToken.setSpecialSeq(SpecialSequenceType.SPACE);
+            fakeToken.setIndexInDocument(tokenIndex_);
+            fakeToken.setPageIndex(pages);
+            getDocument().addToken(fakeToken);
+            ++tokenIndex_;
+        }
     }
 
     @Override
@@ -190,7 +147,8 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
             temptoken_.setPageIndex(pages);
             temptoken_.setTokenImageInfoBox(null);
 
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
+            tokensPerXmlDocument++;
             tokenIndex_++;
             temptoken_ = null;
             position_ = 0;
@@ -226,14 +184,15 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
                     tiib.setCoordinateLeft(left_);
                     tiib.setCoordinateRight(right_);
                     tiib.setCoordinateTop(top_);
-                    tiib.setImageFileName(this.tempimage_);
+                    tiib.setImageFileName(getImageFile());
                     temptoken_.setTokenImageInfoBox(tiib);
                 } else {
                     temptoken_.setTokenImageInfoBox(null);
                 }
 
                 temptoken_.setOrigID(orig_id);
-                doc_.addToken(temptoken_);
+                getDocument().addToken(temptoken_);
+                tokensPerXmlDocument++;
                 this.globalIsSuspicious = false;
                 orig_id++;
                 tokenIndex_++;
@@ -249,7 +208,8 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
             temptoken_.setPageIndex(pages);
             temptoken_.setTokenImageInfoBox(null);
 
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
+            tokensPerXmlDocument++;
             tokenIndex_++;
             temptoken_ = null;
             position_ = 0;
@@ -299,14 +259,15 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
                             tiib.setCoordinateLeft(left_);
                             tiib.setCoordinateRight(right_);
                             tiib.setCoordinateTop(top_);
-                            tiib.setImageFileName(this.tempimage_);
+                            tiib.setImageFileName(getImageFile());
                             temptoken_.setTokenImageInfoBox(tiib);
                         } else {
                             temptoken_.setTokenImageInfoBox(null);
                         }
 
                         temptoken_.setOrigID(orig_id);
-                        doc_.addToken(temptoken_);
+                        getDocument().addToken(temptoken_);
+                        tokensPerXmlDocument++;
                         this.globalIsSuspicious = false;
                         orig_id++;
                         tokenIndex_++;
@@ -344,14 +305,15 @@ public class AbbyyXmlParser extends DefaultHandler implements OcrDocumentParser 
                             tiib.setCoordinateLeft(left_);
                             tiib.setCoordinateRight(right_);
                             tiib.setCoordinateTop(top_);
-                            tiib.setImageFileName(this.tempimage_);
+                            tiib.setImageFileName(getImageFile());
                             temptoken_.setTokenImageInfoBox(tiib);
                         } else {
                             temptoken_.setTokenImageInfoBox(null);
                         }
 
                         temptoken_.setOrigID(orig_id);
-                        doc_.addToken(temptoken_);
+                        getDocument().addToken(temptoken_);
+                        tokensPerXmlDocument++;
                         this.globalIsSuspicious = false;
                         tokenIndex_++;
                         orig_id++;

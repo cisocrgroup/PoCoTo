@@ -25,14 +25,11 @@ public class HocrParserTest {
         URL url = getClass().getResource("/data/test.hocr");
         document = new MockDocument();
         HocrParser parser = new HocrParser(document);
-        parser.parse(url.getFile(), "null", "Utf8");
+        parser.parse(url.getFile(), "null", "UTF-8");
     }
 
-    /**
-     * Test of parse method, of class HocrParser.
-     */
     @Test
-    public void shouldContainRightToken() {
+    public void documentShouldContainRightToken() {
         Token token = document.findFirstToken("εἶχον");
         assertNotNull(token);
         TokenImageInfoBox box = token.getTokenImageInfoBox();
@@ -43,7 +40,7 @@ public class HocrParserTest {
         assertEquals(314, box.getCoordinateBottom());
     }
     @Test
-    public void shouldContainRightLastToken() {
+    public void documentShouldContainRightLastToken() {
         Token token = document.findLastToken("Κῦρος");
         assertNotNull(token);
         TokenImageInfoBox box = token.getTokenImageInfoBox();
@@ -52,5 +49,15 @@ public class HocrParserTest {
         assertEquals(2282, box.getCoordinateTop());
         assertEquals(2215, box.getCoordinateRight());
         assertEquals(2362, box.getCoordinateBottom());
+    }
+    
+    @Test
+    public void documentShouldContainRightNumberOfTokens() {
+        assertEquals(439, document.getNumberOfTokens());
+    }
+    
+    @Test
+    public void documentShouldContainRightNumberOfPages() {
+        assertEquals(0, document.getNumberOfPages());
     }
 }

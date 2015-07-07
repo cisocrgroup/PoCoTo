@@ -1,23 +1,16 @@
 package jav.correctionBackend;
 
 import jav.logging.log4j.Log;
-import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 /**
  *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class HocrParser extends DefaultHandler implements OcrDocumentParser {
+public class HocrParser extends BaseSaxOcrDocumentParser {
 
     private int orig_id = 1;
     private SAXParser sx;
@@ -29,39 +22,12 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
     private String temp_ = "";
     private int pages = 0;
     private boolean tokenIsToBeAdded = false;
-    private Document doc_ = null;
     private Token temptoken_ = null;
-    private String tempimage_ = null;
-    private java.util.regex.Pattern myAlnum;
+    private static final Pattern myAlnum = 
+            Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
 
     public HocrParser(Document d) {
-        this.doc_ = d;
-        this.myAlnum = java.util.regex.Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
-        try {
-            sx = new org.ccil.cowan.tagsoup.jaxp.SAXFactoryImpl().newSAXParser();
-        } catch (ParserConfigurationException ex) {
-            Logger.getLogger(HocrParser.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    public void parse(String xmlFile, String imgFile, String encoding) {
-        try {
-            Log.debug(this, "parse(%s, %s, %s)", xmlFile, imgFile, encoding);
-            InputStream inputStream = new FileInputStream(xmlFile);
-            Reader reader = new InputStreamReader(inputStream, encoding);
-            InputSource is = new InputSource(reader);
-//            is.setEncoding(encoding);
-
-            this.tempimage_ = imgFile;
-            sx.parse(is, this);
-        } catch (SAXException ex) {
-            Log.error(this, "Invalid xml file %s: %s", xmlFile, ex.getMessage());
-            throw new RuntimeException(ex);
-        } catch (IOException ex) {
-            Log.error(this, "Could not read file %s: %s", xmlFile, ex.getMessage());
-            throw new RuntimeException(ex);
-        }
+        super(d);
     }
 
     @Override
@@ -70,9 +36,9 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
         pages++;
         Log.info(
                 this, 
-                "Loaded Document with %d pages and %d token",
-                doc_.getNumberOfPages(),
-                doc_.getNumberOfTokens()
+                "Loaded Document with %d page(s) and %d token",
+                getDocument().getNumberOfPages(),
+                getDocument().getNumberOfTokens()
         );
     }
 
@@ -144,7 +110,7 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
             this.tokenIsToBeAdded = true;
 
         } else if (isPage(nname, atts)) {
-            this.tempimage_ = parseImageFileName(atts.getValue("title"));
+            setImageFile(parseImageFileName(atts.getValue("title")));
         } else if (isLine(nname, atts)) {
 
             // beginning of new line, if not first line add newline token
@@ -159,7 +125,7 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
                 temptoken_.setPageIndex(pages);
                 temptoken_.setTokenImageInfoBox(null);
 
-                doc_.addToken(temptoken_);
+                getDocument().addToken(temptoken_);
                 tokenIndex_++;
             }
             int[] bbox = parseBbox(atts.getValue("title"));
@@ -185,7 +151,7 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
             temptoken_.setPageIndex(pages);
             temptoken_.setTokenImageInfoBox(null);
 
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
             tokenIndex_++;
         }
     }
@@ -223,14 +189,14 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
                 tiib.setCoordinateLeft(left_);
                 tiib.setCoordinateRight(right_);
                 tiib.setCoordinateTop(top_);
-                tiib.setImageFileName(this.tempimage_);
+                tiib.setImageFileName(getImageFile());
                 temptoken_.setTokenImageInfoBox(tiib);
             } else {
                 temptoken_.setTokenImageInfoBox(null);
             }
 
             temptoken_.setOrigID(orig_id);
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
             tokenIndex_++;
             this.tokenIsToBeAdded = false;
         }
@@ -247,14 +213,8 @@ public class HocrParser extends DefaultHandler implements OcrDocumentParser {
             temptoken_.setPageIndex(pages);
             temptoken_.setTokenImageInfoBox(null);
 
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
             tokenIndex_++;
         }
     }
 }
-//def coordsToAbbyCoords(hOCRCoords: ((Int,Int),(Int,Int)), p: Page) = {
-//   val ((leftDistance,topDistance),(hOCRRight,hOCRbottom)) = hOCRCoords
-//   val ((,),(pageRight, pageBottom)) = p.coordinates
-//
-//   ((leftDistance,topDistance),(pageRight - hOCRRight, pageBottom - hOCRbottom))
-// }

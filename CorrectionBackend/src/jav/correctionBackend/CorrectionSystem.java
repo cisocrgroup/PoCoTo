@@ -1,11 +1,14 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -157,34 +160,33 @@ public class CorrectionSystem {
             File imgd = new File(imagedir);
             String[] xmlfiles = xmld.list(fil);
             java.util.Arrays.sort(xmlfiles);
-
-            HashMap<String, String> imgs = new HashMap<String, String>();
-            if (imagedir != null) {
-                String[] imgfiles = imgd.list(new FilenameFilter() {
-
-                    @Override
-                    public boolean accept(File d, String name) {
-                        return name.endsWith(".tif") || name.endsWith(".jpg") || name.endsWith(".jpeg");
-                    }
-                });
-
-                for (int j = 0; j < imgfiles.length; j++) {
-                    imgs.put(imgfiles[j].substring(0, imgfiles[j].lastIndexOf(".")), imgfiles[j]);
-                }
-            }
+            HashMap<String, String> mappings = getImageFileMappings(imgd);
 
             long time_start = System.currentTimeMillis();
-            for (int i = 0; i < xmlfiles.length; i++) {
+            for (String xmlfile: xmlfiles) {
+                String basename = getBaseName(xmlfile);
+                String imagefile = "";
+                if (mappings.containsKey(basename))
+                    imagefile = mappings.get(basename);
+                Log.debug(
+                        this, 
+                        "found image file: %s for file: %s", 
+                        imagefile,
+                        xmlfile
+                );
+                ph.progress("Parsing file " + xmlfile + " (" + imagefile + ")");
                 try {
-                    if (imgs.containsKey(xmlfiles[i].substring(0, xmlfiles[i].indexOf(".")))) {
-                        ph.progress("Parsing file: " + xmlfiles[i]);
-                        parser.parse(xmld.getCanonicalPath() + "/" + xmlfiles[i], imgs.get(xmlfiles[i].substring(0, xmlfiles[i].indexOf("."))), encoding);
-                    } else {
-                        ph.progress("Parsing file: " + xmlfiles[i]);
-                        parser.parse(xmld.getCanonicalPath() + "/" + xmlfiles[i], "", encoding);
-                    }
+                    parser.parse(
+                            new File(xmld, xmlfile).getCanonicalPath(), 
+                            imagefile, 
+                            encoding
+                    );
                 } catch (IOException ex) {
-                    Logger.getLogger(CorrectionSystem.class.getName()).log(Level.SEVERE, null, ex);
+                    Log.error(
+                            this, "could not parse %s: invalid image file: %s",
+                            xmlfile,
+                            ex.getMessage()
+                    );
                 }
             }
             long duration = System.currentTimeMillis() - time_start;
@@ -197,6 +199,33 @@ public class CorrectionSystem {
         }
         return retval;
     }
+    
+    private HashMap<String, String> getImageFileMappings(File dir) {   
+        HashMap<String, String> mappings = new HashMap<>();
+        String[] images = getAllImageFiles(dir);
+        for (String image: images) {
+            mappings.put(getBaseName(image), image);
+        }       
+        return mappings;
+    }
+    
+    private String[] getAllImageFiles(File dir) {
+        if (dir == null)
+            return new String[0];
+        return dir.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File d, String name) {
+                return name.endsWith(".tif") ||
+                        name.endsWith(".jpg") || 
+                        name.endsWith(".jpeg");
+            }
+        });
+    }
+    
+    private static String getBaseName(String filename) {
+        return filename.substring(0, filename.indexOf('.') + 1);
+    }
+
     
     public void importProfile( Document doc, String filename) {
         new ProfileImporter().parse(doc, filename);
@@ -211,7 +240,7 @@ public class CorrectionSystem {
             conn.close();
             jcp.dispose();
         } catch (SQLException ex) {
-            Logger.getLogger(CorrectionSystem.class.getName()).log(Level.SEVERE, null, ex);
+            Log.error(this, "could not shutdown database: %s", ex.getMessage());
         }
     }
 
