@@ -39,7 +39,14 @@ public class TokenImageInfoBox {
     private int coordinate_bottom;
     private String imageFileName;
 
+    public TokenImageInfoBox(int l, int t, int r, int b) {
+        coordinate_left = l;
+        coordinate_top = t;
+        coordinate_right = r;
+        coordinate_bottom = b;
+    }
     public TokenImageInfoBox() {
+        this(0, 0, 0, 0);
     }
 
     public int getCoordinateLeft() {
