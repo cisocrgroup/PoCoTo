@@ -50,7 +50,7 @@ public class Log {
     }
     private static String formatMessage(Object o, String fmt, Object...objs) {
         return String.format(
-                "[%s]\t%s", 
+                "[%s] %s", 
                 o.getClass().getName(),
                 String.format(fmt, objs)
         );
