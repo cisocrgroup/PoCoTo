@@ -1,5 +1,6 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -172,6 +173,7 @@ public class SpreadIndexDocument extends Document {
             Connection conn = jcp.getConnection();
             return this.addToken(t, conn);
         } catch (SQLException ex) {
+            Log.error(this, "could not insert Token: %s", ex.getMessage());
             return 0;
         }
     }
