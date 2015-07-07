@@ -49,6 +49,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
     private String lastchar_;
     private String thischar_;
     private int pages = 0;
+    private int tokensPerXmlDocument = 0;
     private boolean globalIsSuspicious = false;
     private boolean inVariant_ = false;
     private boolean isSuspicious_ = false;
@@ -64,6 +65,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
     @Override
     public void startDocument() {
+        tokensPerXmlDocument = 0;
     }
 
     @Override
@@ -71,9 +73,25 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
         Log.info(
                 this, 
                 "Loaded Document with %d page(s) and %d tokens", 
-                getDocument().getNumberOfPages(),
-                getDocument().getNumberOfTokens()
+                pages,
+                tokensPerXmlDocument
         );
+        if (tokensPerXmlDocument == 0) {
+            Log.info(this, "empty xml document; adding fake token");
+            Token fakeToken = new Token("");
+            TokenImageInfoBox iib = new TokenImageInfoBox(0, 0, 0, 0);
+            iib.setImageFileName(getImageFile());
+            fakeToken.setTokenImageInfoBox(iib);
+            fakeToken.setIsSuspicious(false);
+            fakeToken.setIsCorrected(false);
+            fakeToken.setNumberOfCandidates(0);
+            fakeToken.setIsNormal(false);
+            fakeToken.setSpecialSeq(SpecialSequenceType.SPACE);
+            fakeToken.setIndexInDocument(tokenIndex_);
+            fakeToken.setPageIndex(pages);
+            getDocument().addToken(fakeToken);
+            ++tokenIndex_;
+        }
     }
 
     @Override
@@ -130,6 +148,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
             temptoken_.setTokenImageInfoBox(null);
 
             getDocument().addToken(temptoken_);
+            tokensPerXmlDocument++;
             tokenIndex_++;
             temptoken_ = null;
             position_ = 0;
@@ -173,6 +192,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
                 temptoken_.setOrigID(orig_id);
                 getDocument().addToken(temptoken_);
+                tokensPerXmlDocument++;
                 this.globalIsSuspicious = false;
                 orig_id++;
                 tokenIndex_++;
@@ -189,6 +209,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
             temptoken_.setTokenImageInfoBox(null);
 
             getDocument().addToken(temptoken_);
+            tokensPerXmlDocument++;
             tokenIndex_++;
             temptoken_ = null;
             position_ = 0;
@@ -246,6 +267,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
                         temptoken_.setOrigID(orig_id);
                         getDocument().addToken(temptoken_);
+                        tokensPerXmlDocument++;
                         this.globalIsSuspicious = false;
                         orig_id++;
                         tokenIndex_++;
@@ -291,6 +313,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
                         temptoken_.setOrigID(orig_id);
                         getDocument().addToken(temptoken_);
+                        tokensPerXmlDocument++;
                         this.globalIsSuspicious = false;
                         tokenIndex_++;
                         orig_id++;
