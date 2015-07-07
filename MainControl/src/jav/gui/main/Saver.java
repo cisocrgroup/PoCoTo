@@ -2,6 +2,7 @@ package jav.gui.main;
 
 import jav.gui.events.MessageCenter;
 import jav.gui.events.saved.SavedEvent;
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.JFileChooser;
@@ -171,7 +172,7 @@ public class Saver implements SaveCookie {
     public void saveAs(String filename, final boolean changeProjName) throws IOException {
         
         final File filetoSave = new File(filename);
-
+        Log.debug(this, "saveAs(%s, %b)", filename, changeProjName);
         MainController.findInstance().discardEdits();
         ProgressRunnable<Integer> r = new ProgressRunnable<Integer>() {
 

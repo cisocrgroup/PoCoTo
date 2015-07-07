@@ -119,7 +119,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private ProfilerWebServiceStub stub = null;
     private File tempFile;
     private UndoRedo.Manager manager = null;
-
+    private Thread backgroundSaverThread = null;
+    
     static {
         instance = new MainController();
     }
@@ -182,6 +183,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         content.add(csrcookie);
         this.refreshID();
 
+        backgroundSaverThread = new Thread(new BackgroundSaver());
+        backgroundSaverThread.start();
         MessageCenter.getInstance().addTokenStatusEventListener(this);
         MessageCenter.getInstance().addSavedEventListener(this);
     }
