@@ -1357,7 +1357,7 @@ public abstract class Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Log.error(this, ex.getMessage());
         }
         return token;
     }

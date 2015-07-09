@@ -158,8 +158,8 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
 
     @Override
     public void characters(char ch[], int start, int length) {
+        
         this.temp_ = new String(ch, start, length);
-
         if (this.tokenIsToBeAdded) {
 
             if (this.temp_.length() > 60) {
