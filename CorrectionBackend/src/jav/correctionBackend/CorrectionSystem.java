@@ -149,7 +149,7 @@ public class CorrectionSystem {
 
                     @Override
                     public boolean accept(File d, String name) {
-                        return name.endsWith(".html");
+                        return name.endsWith(".html") || name.endsWith(".hocr");
                     }
                 };
             } else {
