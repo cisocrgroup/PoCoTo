@@ -1,6 +1,7 @@
 package jav.correctionBackend;
 
 import jav.logging.log4j.Log;
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.parsers.SAXParser;
@@ -23,8 +24,9 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
     private int pages = 0;
     private boolean tokenIsToBeAdded = false;
     private Token temptoken_ = null;
-    private static final Pattern myAlnum = 
-            Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
+    private static final Pattern myAlnum = Pattern.compile(
+        "[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+"
+    );
 
     public HocrParser(Document d) {
         super(d);
@@ -59,7 +61,9 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
     }
 
     private static int[] parseBbox(String str) {
-        final Pattern p = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
+        final Pattern p = Pattern.compile(
+                "bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)"
+        );
         int[] res = {0, 0, 0, 0};
         if (str != null) {
             Matcher m = p.matcher(str);
@@ -73,19 +77,19 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
     }
     
     private static String parseImageFileName(String str) {
+        if (str == null)
+            return "";
         final Pattern p1 = Pattern.compile("image\\s+\"(.*)\"");
         final Pattern p2 = Pattern.compile("file\\s+(.*)");
-        if (str != null) {
-            Matcher m = p1.matcher(str);
-            if (m.find()) {
-                return m.group(1);
-            }
-            m = p2.matcher(str);
-            if (m.find()) {
-                return m.group(1);
-            }
-        }
-        return "";
+
+        File img = null;
+        Matcher m = p1.matcher(str);
+        if (m.find())
+            img = new File(m.group(1));
+        m = p2.matcher(str);
+        if (m.find()) 
+            img = new File(m.group(1));
+        return img != null ? img.getName() : "";
     }
     
     private static int parseId(String str) {
@@ -101,7 +105,11 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
     }
 
     @Override
-    public void startElement(String uri, String nname, String qName, Attributes atts) {
+    public void startElement(
+            String uri, 
+            String nname, 
+            String qName, Attributes atts
+    ) {
         if (isWord(nname, atts)) {
             orig_id = parseId(atts.getValue("id"));
             int[] bbox = parseBbox(atts.getValue("title"));
@@ -183,7 +191,7 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
             temptoken_.setNumberOfCandidates(0);
 
             // if document has coordinates
-            if (left_ >= 0) { // && (temptoken_.getSpecialSeq().equals(SpecialSequenceType.NORMAL) || temptoken_.getSpecialSeq().equals(SpecialSequenceType.PUNCTUATION))) {
+            if (left_ >= 0) { 
                 TokenImageInfoBox tiib = new TokenImageInfoBox();
                 tiib.setCoordinateBottom(bottom_);
                 tiib.setCoordinateLeft(left_);
