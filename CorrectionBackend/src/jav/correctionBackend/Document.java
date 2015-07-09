@@ -1352,7 +1352,6 @@ public abstract class Document {
                     tiib.setCoordinateRight(rs.getInt(10));
                     token.setTokenImageInfoBox(tiib);
                 }
-                Log.debug(this, "token: %s", token.toString());
             }
             s.close();
             conn.close();
