@@ -6,6 +6,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.parsers.SAXParser;
 import org.xml.sax.Attributes;
+import org.xml.sax.SAXParseException;
+import org.ccil.cowan.tagsoup.jaxp.SAXParserImpl;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 /**
  *
@@ -30,6 +34,20 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
 
     public HocrParser(Document d) {
         super(d);
+    }
+    
+    @Override
+    public void error(SAXParseException e) {
+        Log.info(this, "non fatal xml error: %s", e.getMessage());
+    }
+    
+    @Override
+    protected XMLReader createXmlReader() throws SAXException {
+        XMLReader xr = SAXParserImpl.newInstance(null).getXMLReader();
+        xr.setContentHandler(this);
+        xr.setEntityResolver(this);
+        xr.setErrorHandler(this);
+        return xr;
     }
 
     @Override
