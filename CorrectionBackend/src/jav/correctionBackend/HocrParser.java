@@ -52,6 +52,8 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
 
     @Override
     public void endDocument() {
+        if (tokensPerPage_ == 0)
+            handleEmptyPage(tokenIndex_++, pages);
         temptoken_ = null;
         pages++;
         Log.info(
@@ -137,6 +139,7 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
 
         } else if (isPage(nname, atts)) {
             setImageFile(parseImageFileName(atts.getValue("title")));
+            tokensPerPage_ = 0;
         } else if (isLine(nname, atts)) {
 
             // beginning of new line, if not first line add newline token
@@ -153,6 +156,7 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
 
                 getDocument().addToken(temptoken_);
                 tokenIndex_++;
+                tokensPerPage_++;
             }
             int[] bbox = parseBbox(atts.getValue("title"));
             this.top_ = bbox[1];
@@ -179,6 +183,7 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
 
             getDocument().addToken(temptoken_);
             tokenIndex_++;
+            tokensPerPage_++;
         }
     }
 
@@ -224,6 +229,7 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
             temptoken_.setOrigID(orig_id);
             getDocument().addToken(temptoken_);
             tokenIndex_++;
+            tokensPerPage_++;
             this.tokenIsToBeAdded = false;
         }
 
@@ -241,6 +247,7 @@ public class HocrParser extends BaseSaxOcrDocumentParser {
 
             getDocument().addToken(temptoken_);
             tokenIndex_++;
+            tokensPerPage_++;
         }
     }
 }

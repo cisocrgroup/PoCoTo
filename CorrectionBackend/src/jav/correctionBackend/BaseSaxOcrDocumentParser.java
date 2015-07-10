@@ -13,8 +13,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.io.StringReader;
-import javax.xml.parsers.SAXParser;
-import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -31,10 +29,12 @@ public class BaseSaxOcrDocumentParser
     
     private Document document_;
     private String imageFile_;
+    protected int tokensPerPage_;
     
     public BaseSaxOcrDocumentParser(Document document) {
         assert(document != null);
         this.document_ = document;
+        this.tokensPerPage_ = 0;
     }
     public Document getDocument() {
         return this.document_;
@@ -73,6 +73,26 @@ public class BaseSaxOcrDocumentParser
         xr.setErrorHandler(this);
         xr.setEntityResolver(this); //prohibits long parsing times (#4)
         return xr;
+    }
+    
+    protected void handleEmptyPage(int indexInDocument, int pageNumber) {
+        Log.info(
+                this,
+                "Encountered an empty page '%s'",
+                imageFile_
+        );
+        Token fakeToken = new Token("");
+        TokenImageInfoBox tiib = new TokenImageInfoBox(0, 0, 0, 0);
+        tiib.setImageFileName(imageFile_);
+        fakeToken.setTokenImageInfoBox(tiib);
+        fakeToken.setIsSuspicious(false);
+        fakeToken.setIsCorrected(false);
+        fakeToken.setNumberOfCandidates(0);
+        fakeToken.setIsNormal(false);
+        fakeToken.setSpecialSeq(SpecialSequenceType.SPACE);
+        fakeToken.setIndexInDocument(indexInDocument);
+        fakeToken.setPageIndex(pageNumber);
+        document_.addToken(fakeToken);
     }
     
     @Override
