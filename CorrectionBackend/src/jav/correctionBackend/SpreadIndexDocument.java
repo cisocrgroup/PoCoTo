@@ -191,6 +191,7 @@ public class SpreadIndexDocument extends Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
+            Log.error(this, "could not load number of tokens from db %s", ex.getMessage());
             this.numTokens = 0;
         }
     }
