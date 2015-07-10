@@ -1,5 +1,6 @@
 package jav.gui.actions;
 
+import cis.profiler.client.ProfilerWebServiceStub;
 import cis.profiler.client.ProfilerWebServiceStub.CheckQuotaRequest;
 import cis.profiler.client.ProfilerWebServiceStub.CheckQuotaRequestType;
 import cis.profiler.client.ProfilerWebServiceStub.CheckQuotaResponse;
@@ -8,6 +9,7 @@ import jav.gui.cookies.ProfilerIDCookie;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.CustomInformationDialog;
 import jav.gui.main.MainController;
+import jav.logging.log4j.Log;
 import java.rmi.RemoteException;
 import javax.swing.Action;
 import org.netbeans.api.progress.ProgressHandle;
@@ -18,6 +20,7 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.Lookup;
+import org.openide.util.NbPreferences;
 import org.openide.util.Utilities;
 
 /**
@@ -99,16 +102,24 @@ public class CheckQuotaAction extends ContextAction<ProfilerIDCookie> {
 
         @Override
         public Integer run(ProgressHandle ph) {
+            Log.info(
+                    this, 
+                    "checkQuota '%s' '%s'", 
+                    getProfilerServiceUrl(), 
+                    getProfilerUserId());
             try {
                 ph.progress(java.util.ResourceBundle.getBundle("jav/gui/actions/Bundle").getString("checking_quota"));
                 ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/actions/Bundle").getString("checking_quota"));
 
                 CheckQuotaRequest req = new CheckQuotaRequest();
                 CheckQuotaRequestType reqt = new CheckQuotaRequestType();
-                reqt.setUserid(MainController.findInstance().getProfilerUserID());
+                reqt.setUserid(getProfilerUserId());//MainController.findInstance().getProfilerUserID());
                 req.setCheckQuotaRequest(reqt);
                 try {
-                    CheckQuotaResponse resp = MainController.findInstance().getProfilerWebServiceStub().checkQuota(req);
+                    ProfilerWebServiceStub stub = 
+                            new ProfilerWebServiceStub(getProfilerServiceUrl());//"http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService");
+                    CheckQuotaResponse resp = stub.checkQuota(req);
+                    //CheckQuotaResponse resp = MainController.findInstance().getProfilerWebServiceStub().checkQuota(req);
                     CheckQuotaResponseType rst = resp.getCheckQuotaResponse();
                     if (rst.getReturncode() == 0) {
                         return rst.getQuota();
@@ -123,6 +134,14 @@ public class CheckQuotaAction extends ContextAction<ProfilerIDCookie> {
             } catch (Exception e) {
                 return -1;
             }
+        }
+        private String getProfilerServiceUrl() {
+            return NbPreferences.forModule(MainController.class)
+                    .get("profiler_service_url", "");
+        }
+        private String getProfilerUserId() {
+            return NbPreferences.forModule(MainController.class)
+                    .get("profiler_user_id", "");
         }
     }
 }
