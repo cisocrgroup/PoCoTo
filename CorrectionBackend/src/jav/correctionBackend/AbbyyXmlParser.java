@@ -49,7 +49,6 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
     private String lastchar_;
     private String thischar_;
     private int pages = 0;
-    private int tokensPerXmlDocument = 0;
     private boolean globalIsSuspicious = false;
     private boolean inVariant_ = false;
     private boolean isSuspicious_ = false;
@@ -65,7 +64,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
     @Override
     public void startDocument() {
-        tokensPerXmlDocument = 0;
+        tokensPerPage_ = 0;
     }
 
     @Override
@@ -74,30 +73,15 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
                 this, 
                 "Loaded Document with %d page(s) and %d tokens", 
                 pages,
-                tokensPerXmlDocument
+                tokensPerPage_
         );
-        if (tokensPerXmlDocument == 0) {
-            Log.info(this, "empty xml document; adding fake token");
-            Token fakeToken = new Token("");
-            TokenImageInfoBox iib = new TokenImageInfoBox(0, 0, 0, 0);
-            iib.setImageFileName(getImageFile());
-            fakeToken.setTokenImageInfoBox(iib);
-            fakeToken.setIsSuspicious(false);
-            fakeToken.setIsCorrected(false);
-            fakeToken.setNumberOfCandidates(0);
-            fakeToken.setIsNormal(false);
-            fakeToken.setSpecialSeq(SpecialSequenceType.SPACE);
-            fakeToken.setIndexInDocument(tokenIndex_);
-            fakeToken.setPageIndex(pages);
-            getDocument().addToken(fakeToken);
-            ++tokenIndex_;
-        }
     }
 
     @Override
     public void startElement(String uri, String nname, String qName, Attributes atts) {
         if (qName.equals("document")) {
         } else if (qName.equals("page")) {
+            tokensPerPage_ = 0;
         } else if (qName.equals("block")) {
         } else if (qName.equals("region")) {
         } else if (qName.equals("rect")) {
@@ -130,6 +114,10 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
         if (qName.equals("document")) {
         } else if (qName.equals("page")) {
             orig_id = 1;
+            if (tokensPerPage_ == 0) {
+                handleEmptyPage(tokenIndex_++, pages);
+                tokensPerPage_ = 0;
+            }
             pages++;
         } else if (qName.equals("block")) {
         } else if (qName.equals("region")) {
@@ -148,7 +136,6 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
             temptoken_.setTokenImageInfoBox(null);
 
             getDocument().addToken(temptoken_);
-            tokensPerXmlDocument++;
             tokenIndex_++;
             temptoken_ = null;
             position_ = 0;
@@ -192,7 +179,6 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
                 temptoken_.setOrigID(orig_id);
                 getDocument().addToken(temptoken_);
-                tokensPerXmlDocument++;
                 this.globalIsSuspicious = false;
                 orig_id++;
                 tokenIndex_++;
@@ -209,7 +195,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
             temptoken_.setTokenImageInfoBox(null);
 
             getDocument().addToken(temptoken_);
-            tokensPerXmlDocument++;
+            tokensPerPage_++;
             tokenIndex_++;
             temptoken_ = null;
             position_ = 0;
@@ -267,7 +253,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
                         temptoken_.setOrigID(orig_id);
                         getDocument().addToken(temptoken_);
-                        tokensPerXmlDocument++;
+                        tokensPerPage_++;
                         this.globalIsSuspicious = false;
                         orig_id++;
                         tokenIndex_++;
@@ -313,7 +299,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
                         temptoken_.setOrigID(orig_id);
                         getDocument().addToken(temptoken_);
-                        tokensPerXmlDocument++;
+                        tokensPerPage_++;
                         this.globalIsSuspicious = false;
                         tokenIndex_++;
                         orig_id++;
