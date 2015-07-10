@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.io.StringReader;
+import javax.xml.parsers.SAXParser;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -26,7 +27,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class BaseSaxOcrDocumentParser 
         extends DefaultHandler 
-        implements OcrDocumentParser, EntityResolver {
+        implements OcrDocumentParser {
     
     private Document document_;
     private String imageFile_;
@@ -55,8 +56,8 @@ public class BaseSaxOcrDocumentParser
                 Log.error(this, "missing image file");
         imageFile_ = img;
         try {
-            XMLReader xr = createXmlReader();
-            xr.parse(getInputSource(xml, enc));
+           XMLReader xr = createXmlReader(); 
+           xr.parse(getInputSource(xml, enc));
         } catch (IOException ex) {
             Log.error(this, "Could not read %s: %s", xml, ex.getMessage());
             throw new RuntimeException(ex);
