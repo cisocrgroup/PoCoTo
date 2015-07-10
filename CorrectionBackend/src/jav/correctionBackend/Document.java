@@ -1320,7 +1320,6 @@ public abstract class Document {
 
     public Token getTokenByIndex(int indexInDocument) {
         Token token = null;
-        Log.debug(this, "getTokenByIndex(%d)", indexInDocument);
         try {
             Connection conn = jcp.getConnection();
             Statement s = conn.createStatement();

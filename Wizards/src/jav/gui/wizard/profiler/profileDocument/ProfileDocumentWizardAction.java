@@ -197,7 +197,7 @@ public final class ProfileDocumentWizardAction extends ContextAction<ProfilerIDC
 
                 CheckQuotaRequest req = new CheckQuotaRequest();
                 CheckQuotaRequestType reqt = new CheckQuotaRequestType();
-                reqt.setUserid(MainController.findInstance().getProfilerUserID());
+                reqt.setUserid(MainController.findInstance().getProfilerUserId());
                 req.setCheckQuotaRequest(reqt);
                 try {
                     CheckQuotaResponse resp = MainController.findInstance().getProfilerWebServiceStub().checkQuota(req);
