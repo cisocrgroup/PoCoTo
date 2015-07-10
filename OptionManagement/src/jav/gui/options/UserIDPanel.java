@@ -93,8 +93,8 @@ final class UserIDPanel extends javax.swing.JPanel implements DocumentListener {
     }// </editor-fold>//GEN-END:initComponents
 
     void load() {
-        userId.setText(NbPreferences.forModule(MainController.class).get("profiler_user_id", ""));
-        profilerUrl.setText(NbPreferences.forModule(MainController.class).get("profiler_service_url", ""));
+        userId.setText(MainController.findInstance().getProfilerUserId());
+        profilerUrl.setText(MainController.findInstance().getProfilerServiceUrl());
         Log.debug(this, "load() profiler_user_id: '%s'", userId.getText());
         Log.debug(this, "load() profiler_service_url: '%s'", profilerUrl.getText());
     }
@@ -102,8 +102,8 @@ final class UserIDPanel extends javax.swing.JPanel implements DocumentListener {
     void store() {
         Log.debug(this, "store() profiler_user_id: '%s'", userId.getText());
         Log.debug(this, "store() profiler_service_url: '%s'", userId.getText());
-        NbPreferences.forModule(MainController.class).put("profiler_user_id", userId.getText());
-        NbPreferences.forModule(MainController.class).put("profiler_service_url", profilerUrl.getText());
+        MainController.findInstance().setProfilerUserId(userId.getText());
+        MainController.findInstance().setProfilerServiceUrl(profilerUrl.getText());
     }
 
     boolean valid() {

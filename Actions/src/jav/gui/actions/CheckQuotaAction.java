@@ -105,21 +105,21 @@ public class CheckQuotaAction extends ContextAction<ProfilerIDCookie> {
             Log.info(
                     this, 
                     "checkQuota '%s' '%s'", 
-                    getProfilerServiceUrl(), 
-                    getProfilerUserId());
+                    MainController.findInstance().getProfilerServiceUrl(), 
+                    MainController.findInstance().getProfilerUserId()
+            );
             try {
                 ph.progress(java.util.ResourceBundle.getBundle("jav/gui/actions/Bundle").getString("checking_quota"));
                 ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/actions/Bundle").getString("checking_quota"));
 
                 CheckQuotaRequest req = new CheckQuotaRequest();
                 CheckQuotaRequestType reqt = new CheckQuotaRequestType();
-                reqt.setUserid(getProfilerUserId());//MainController.findInstance().getProfilerUserID());
+                reqt.setUserid(MainController.findInstance().getProfilerUserId());
                 req.setCheckQuotaRequest(reqt);
                 try {
                     ProfilerWebServiceStub stub = 
-                            new ProfilerWebServiceStub(getProfilerServiceUrl());//"http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService");
+                            MainController.findInstance().getProfilerWebServiceStub();
                     CheckQuotaResponse resp = stub.checkQuota(req);
-                    //CheckQuotaResponse resp = MainController.findInstance().getProfilerWebServiceStub().checkQuota(req);
                     CheckQuotaResponseType rst = resp.getCheckQuotaResponse();
                     if (rst.getReturncode() == 0) {
                         return rst.getQuota();
@@ -134,14 +134,6 @@ public class CheckQuotaAction extends ContextAction<ProfilerIDCookie> {
             } catch (Exception e) {
                 return -1;
             }
-        }
-        private String getProfilerServiceUrl() {
-            return NbPreferences.forModule(MainController.class)
-                    .get("profiler_service_url", "");
-        }
-        private String getProfilerUserId() {
-            return NbPreferences.forModule(MainController.class)
-                    .get("profiler_user_id", "");
         }
     }
 }

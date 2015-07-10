@@ -152,7 +152,7 @@ public class GetTransactionsAction extends ContextAction<ProfilerIDCookie> {
                 GetTransactionsRequest grq = new GetTransactionsRequest();
                 GetTransactionsRequestType grqt = new GetTransactionsRequestType();
 
-                grqt.setUserid(MainController.findInstance().getProfilerUserID());
+                grqt.setUserid(MainController.findInstance().getProfilerUserId());
                 grq.setGetTransactionsRequest(grqt);
 
                 try {

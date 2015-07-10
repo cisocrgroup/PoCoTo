@@ -55,10 +55,7 @@ public class BaseSaxOcrDocumentParser
                 Log.error(this, "missing image file");
         imageFile_ = img;
         try {
-            XMLReader xr = XMLReaderFactory.createXMLReader();
-            xr.setContentHandler(this);
-            xr.setErrorHandler(this);
-            xr.setEntityResolver(this); //prohibits long parsing times (#4)
+            XMLReader xr = createXmlReader();
             xr.parse(getInputSource(xml, enc));
         } catch (IOException ex) {
             Log.error(this, "Could not read %s: %s", xml, ex.getMessage());
@@ -67,6 +64,14 @@ public class BaseSaxOcrDocumentParser
             Log.error(this, "Invalid Xml file %s: %s", xml, ex.getMessage());
             throw new RuntimeException(ex);
         }
+    }
+    
+    protected XMLReader createXmlReader() throws SAXException {
+        XMLReader xr = XMLReaderFactory.createXMLReader();
+        xr.setContentHandler(this);
+        xr.setErrorHandler(this);
+        xr.setEntityResolver(this); //prohibits long parsing times (#4)
+        return xr;
     }
     
     @Override
