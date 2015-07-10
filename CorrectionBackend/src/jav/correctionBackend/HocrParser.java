@@ -1,22 +1,21 @@
 package jav.correctionBackend;
 
-import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import jav.logging.log4j.Log;
+import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
+import org.xml.sax.SAXParseException;
+import org.ccil.cowan.tagsoup.jaxp.SAXParserImpl;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.XMLReader;
 
 /**
  *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class HOCRParser extends DefaultHandler implements Parser {
+public class HocrParser extends BaseSaxOcrDocumentParser {
 
     private int orig_id = 1;
     private SAXParser sx;
@@ -28,45 +27,47 @@ public class HOCRParser extends DefaultHandler implements Parser {
     private String temp_ = "";
     private int pages = 0;
     private boolean tokenIsToBeAdded = false;
-    private Document doc_ = null;
     private Token temptoken_ = null;
-    private String tempimage_ = null;
-    private java.util.regex.Pattern myAlnum;
+    private static final Pattern myAlnum = Pattern.compile(
+        "[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+"
+    );
 
-    public HOCRParser(Document d) {
-        this.doc_ = d;
-        this.myAlnum = java.util.regex.Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
-        try {
-            sx = new org.ccil.cowan.tagsoup.jaxp.SAXFactoryImpl().newSAXParser();
-        } catch (ParserConfigurationException ex) {
-            Logger.getLogger(HOCRParser.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public HocrParser(Document d) {
+        super(d);
     }
-
+    
     @Override
-    public void parse(String xmlFile, String imgFile, String encoding) {
-        try {
-            InputStream inputStream = new FileInputStream(xmlFile);
-            Reader reader = new InputStreamReader(inputStream, encoding);
-            InputSource is = new InputSource(reader);
-//            is.setEncoding(encoding);
-
-            this.tempimage_ = imgFile;
-            sx.parse(is, this);
-        } catch (SAXException ex) {
-        } catch (IOException ex) {
-        }
+    public void error(SAXParseException e) {
+        Log.info(this, "non fatal xml error: %s", e.getMessage());
+    }
+    
+    @Override
+    protected XMLReader createXmlReader() throws SAXException {
+        XMLReader xr = SAXParserImpl.newInstance(null).getXMLReader();
+        xr.setContentHandler(this);
+        xr.setEntityResolver(this);
+        xr.setErrorHandler(this);
+        return xr;
     }
 
     @Override
     public void endDocument() {
+        if (tokensPerPage_ == 0)
+            handleEmptyPage(tokenIndex_++, pages);
         temptoken_ = null;
         pages++;
+        Log.info(
+                this, 
+                "Loaded Document with %d page(s) and %d token",
+                getDocument().getNumberOfPages(),
+                getDocument().getNumberOfTokens()
+        );
     }
 
     private static boolean isWord(String name, Attributes attrs) {
-        return "span".equals(name) && ("ocr_word".equals(attrs.getValue("class"))
-                || "ocrx_word".equals(attrs.getValue("class")));
+        return "span".equals(name) && 
+                ("ocr_word".equals(attrs.getValue("class")) ||
+                 "ocrx_word".equals(attrs.getValue("class")));
     }
 
     private static boolean isLine(String name, Attributes attrs) {
@@ -80,7 +81,9 @@ public class HOCRParser extends DefaultHandler implements Parser {
     }
 
     private static int[] parseBbox(String str) {
-        final Pattern p = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
+        final Pattern p = Pattern.compile(
+                "bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)"
+        );
         int[] res = {0, 0, 0, 0};
         if (str != null) {
             Matcher m = p.matcher(str);
@@ -94,19 +97,19 @@ public class HOCRParser extends DefaultHandler implements Parser {
     }
     
     private static String parseImageFileName(String str) {
+        if (str == null)
+            return "";
         final Pattern p1 = Pattern.compile("image\\s+\"(.*)\"");
         final Pattern p2 = Pattern.compile("file\\s+(.*)");
-        if (str != null) {
-            Matcher m = p1.matcher(str);
-            if (m.find()) {
-                return m.group(1);
-            }
-            m = p2.matcher(str);
-            if (m.find()) {
-                return m.group(1);
-            }
-        }
-        return "";
+
+        File img = null;
+        Matcher m = p1.matcher(str);
+        if (m.find())
+            img = new File(m.group(1));
+        m = p2.matcher(str);
+        if (m.find()) 
+            img = new File(m.group(1));
+        return img != null ? img.getName() : "";
     }
     
     private static int parseId(String str) {
@@ -122,7 +125,11 @@ public class HOCRParser extends DefaultHandler implements Parser {
     }
 
     @Override
-    public void startElement(String uri, String nname, String qName, Attributes atts) {
+    public void startElement(
+            String uri, 
+            String nname, 
+            String qName, Attributes atts
+    ) {
         if (isWord(nname, atts)) {
             orig_id = parseId(atts.getValue("id"));
             int[] bbox = parseBbox(atts.getValue("title"));
@@ -131,7 +138,8 @@ public class HOCRParser extends DefaultHandler implements Parser {
             this.tokenIsToBeAdded = true;
 
         } else if (isPage(nname, atts)) {
-            this.tempimage_ = parseImageFileName(atts.getValue("title"));
+            setImageFile(parseImageFileName(atts.getValue("title")));
+            tokensPerPage_ = 0;
         } else if (isLine(nname, atts)) {
 
             // beginning of new line, if not first line add newline token
@@ -146,8 +154,9 @@ public class HOCRParser extends DefaultHandler implements Parser {
                 temptoken_.setPageIndex(pages);
                 temptoken_.setTokenImageInfoBox(null);
 
-                doc_.addToken(temptoken_);
+                getDocument().addToken(temptoken_);
                 tokenIndex_++;
+                tokensPerPage_++;
             }
             int[] bbox = parseBbox(atts.getValue("title"));
             this.top_ = bbox[1];
@@ -172,15 +181,16 @@ public class HOCRParser extends DefaultHandler implements Parser {
             temptoken_.setPageIndex(pages);
             temptoken_.setTokenImageInfoBox(null);
 
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
             tokenIndex_++;
+            tokensPerPage_++;
         }
     }
 
     @Override
     public void characters(char ch[], int start, int length) {
+        
         this.temp_ = new String(ch, start, length);
-
         if (this.tokenIsToBeAdded) {
 
             if (this.temp_.length() > 60) {
@@ -204,21 +214,22 @@ public class HOCRParser extends DefaultHandler implements Parser {
             temptoken_.setNumberOfCandidates(0);
 
             // if document has coordinates
-            if (left_ >= 0) { // && (temptoken_.getSpecialSeq().equals(SpecialSequenceType.NORMAL) || temptoken_.getSpecialSeq().equals(SpecialSequenceType.PUNCTUATION))) {
+            if (left_ >= 0) { 
                 TokenImageInfoBox tiib = new TokenImageInfoBox();
                 tiib.setCoordinateBottom(bottom_);
                 tiib.setCoordinateLeft(left_);
                 tiib.setCoordinateRight(right_);
                 tiib.setCoordinateTop(top_);
-                tiib.setImageFileName(this.tempimage_);
+                tiib.setImageFileName(getImageFile());
                 temptoken_.setTokenImageInfoBox(tiib);
             } else {
                 temptoken_.setTokenImageInfoBox(null);
             }
 
             temptoken_.setOrigID(orig_id);
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
             tokenIndex_++;
+            tokensPerPage_++;
             this.tokenIsToBeAdded = false;
         }
 
@@ -234,14 +245,9 @@ public class HOCRParser extends DefaultHandler implements Parser {
             temptoken_.setPageIndex(pages);
             temptoken_.setTokenImageInfoBox(null);
 
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
             tokenIndex_++;
+            tokensPerPage_++;
         }
     }
 }
-//def coordsToAbbyCoords(hOCRCoords: ((Int,Int),(Int,Int)), p: Page) = {
-//   val ((leftDistance,topDistance),(hOCRRight,hOCRbottom)) = hOCRCoords
-//   val ((,),(pageRight, pageBottom)) = p.coordinates
-//
-//   ((leftDistance,topDistance),(pageRight - hOCRRight, pageBottom - hOCRbottom))
-// }

@@ -1,5 +1,6 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -172,6 +173,7 @@ public class SpreadIndexDocument extends Document {
             Connection conn = jcp.getConnection();
             return this.addToken(t, conn);
         } catch (SQLException ex) {
+            Log.error(this, "could not insert Token: %s", ex.getMessage());
             return 0;
         }
     }
@@ -189,6 +191,7 @@ public class SpreadIndexDocument extends Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
+            Log.error(this, "could not load number of tokens from db %s", ex.getMessage());
             this.numTokens = 0;
         }
     }
@@ -282,7 +285,7 @@ public class SpreadIndexDocument extends Document {
 
     @Override
     public ArrayList<Integer> mergeRightward(int tokenID, int numTok) throws SQLException {
-        System.out.println("Beginning database transaction");
+        //System.out.println("Beginning database transaction");
         long now = System.currentTimeMillis();
 
         Connection conn = null;
@@ -593,7 +596,7 @@ public class SpreadIndexDocument extends Document {
         }
     }
 
-    public boolean spreadIndex(final int tokenID, final int indexToAdd) {
+    private boolean spreadIndex(final int tokenID, final int indexToAdd) {
         ProgressRunnable<Boolean> r = new ProgressRunnable<Boolean>() {
             @Override
             public Boolean run(ProgressHandle ph) {

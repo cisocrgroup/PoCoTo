@@ -1,6 +1,6 @@
 package jav.gui.error;
 
-import jav.correctionBackend.OCRErrorInfo;
+import jav.correctionBackend.OcrErrorInfo;
 import java.awt.Color;
 import java.awt.event.MouseListener;
 
@@ -37,7 +37,7 @@ import java.awt.event.MouseListener;
  */
 public interface OCRFehlerMode {
     public MouseListener getMouseListener();
-    public OCRErrorInfo getSelectedOCRError();
+    public OcrErrorInfo getSelectedOCRError();
     public void concordanceAction();
     public Color getSelectedColor();
     public Color getUnselectedColor();

@@ -1,14 +1,8 @@
 package jav.correctionBackend;
 
-import java.io.*;
+import jav.logging.log4j.Log;
 import java.util.regex.Pattern;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
  *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
@@ -41,7 +35,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class AbbyyXMLParser extends DefaultHandler implements Parser {
+public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
 
     private int orig_id = 1;
     private int tokenIndex_ = 0;
@@ -55,84 +49,39 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
     private String lastchar_;
     private String thischar_;
     private int pages = 0;
-    private int position_ = 0;
     private boolean globalIsSuspicious = false;
     private boolean inVariant_ = false;
     private boolean isSuspicious_ = false;
     private boolean isDict_ = false;
-    private Document doc_ = null;
     private Token temptoken_ = null;
-    private String tempimage_ = null;
-    private XMLReader xr;
-    private Pattern myAlnum;
+    private int position_;
+    private final static Pattern myAlnum =
+            Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");;
 
-    public AbbyyXMLParser(Document d) {
-        this.doc_ = d;
-//        this.myAlnum = Pattern.compile("[\\p{Space}\\p{Punct}]");
-        this.myAlnum = Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
-
-        try {
-            xr = XMLReaderFactory.createXMLReader();
-            xr.setContentHandler(this);
-            xr.setErrorHandler(this);
-        } catch (SAXException e1) {
-        }
-    }
-
-    @Override
-    public void parse(String filename, String imageFile, String encoding) {
-        this.tempimage_ = imageFile;
-        try {
-            InputSource is = new InputSource(getReader(filename));
-//            is.setEncoding(encoding);
-            xr.parse(is);
-        } catch (IOException ex) {
-             throw new RuntimeException(ex);
-        } catch (SAXException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-    
-    private final static int BOM_SIZE = 4;
-    private Reader getReader(String path) throws IOException {
-        PushbackInputStream is = new PushbackInputStream(
-                new BufferedInputStream(new FileInputStream(path)), BOM_SIZE);
-        byte[] bom = new byte[BOM_SIZE];
-        is.read(bom);
-        // utf8
-        if ((bom[0] == (byte)0xef) && (bom[1] == (byte)0xbb) && (bom[2] == (byte)0xbf)) {
-            is.unread(bom, 3, 1);
-        } else if ((bom[0] == (byte)0xfe) && (bom[1] == (byte)0xff)) {
-            is.unread(bom, 2, 2);
-        } else if ((bom[0] == (byte)0xff) && (bom[1] == (byte)0xfe)) {
-            is.unread(bom, 2, 2);
-        } else if ((bom[0] == (byte)0x0) && (bom[1] == (byte)0x0) && 
-                (bom[2] == (byte)0xfe) && (bom[3] == (byte)0xff)) {
-            /* do nothing */
-        } else if ((bom[0] == (byte)0xff) && (bom[1] == (byte)0xfe) && 
-                (bom[2] == (byte)0x0) && (bom[3] == (byte)0x0)) {  
-            /* do nothing */
-        } else {
-            is.unread(bom, 0, BOM_SIZE);
-        }
-        return new InputStreamReader(is);
+    public AbbyyXmlParser(Document d) {
+        super(d);
     }
 
     @Override
     public void startDocument() {
-//        System.out.println("Parsing started.");
-//        this.starttime_ = System.currentTimeMillis();
+        tokensPerPage_ = 0;
     }
 
     @Override
     public void endDocument() {
-//        System.out.println("Parsing ended. " + (System.currentTimeMillis() - this.starttime_));
+        Log.info(
+                this, 
+                "Loaded Document with %d page(s) and %d tokens", 
+                pages,
+                tokensPerPage_
+        );
     }
 
     @Override
     public void startElement(String uri, String nname, String qName, Attributes atts) {
         if (qName.equals("document")) {
         } else if (qName.equals("page")) {
+            tokensPerPage_ = 0;
         } else if (qName.equals("block")) {
         } else if (qName.equals("region")) {
         } else if (qName.equals("rect")) {
@@ -151,17 +100,8 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
             inVariant_ = true;
         } else if (qName.equals("formatting")) {
         } else if (qName.equals("charParams")) {
-
-//            tempchar_ = new Character(this.tokenIndex_, position_);
-//            tempchar_.setLeft(Integer.parseInt(atts.getValue("l")));
-//            tempchar_.setRight(Integer.parseInt(atts.getValue("r")));
-//            tempchar_.setIsSuspicious((atts.getValue("suspicious") != null));
             this.isSuspicious_ = (atts.getValue("suspicious") != null);
             this.isDict_ = Boolean.parseBoolean(atts.getValue("wordFromDictionary"));
-
-            
-            System.out.println("charparams " + this.isSuspicious_ + " " + this.isDict_);
-//            doc_.addCharacter(tempchar_);
 
             left_temp = Integer.parseInt(atts.getValue("l"));
             right_temp = Integer.parseInt(atts.getValue("r"));
@@ -174,6 +114,10 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
         if (qName.equals("document")) {
         } else if (qName.equals("page")) {
             orig_id = 1;
+            if (tokensPerPage_ == 0) {
+                handleEmptyPage(tokenIndex_++, pages);
+                tokensPerPage_ = 0;
+            }
             pages++;
         } else if (qName.equals("block")) {
         } else if (qName.equals("region")) {
@@ -191,7 +135,7 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
             temptoken_.setPageIndex(pages);
             temptoken_.setTokenImageInfoBox(null);
 
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
             tokenIndex_++;
             temptoken_ = null;
             position_ = 0;
@@ -227,15 +171,14 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
                     tiib.setCoordinateLeft(left_);
                     tiib.setCoordinateRight(right_);
                     tiib.setCoordinateTop(top_);
-                    tiib.setImageFileName(this.tempimage_);
+                    tiib.setImageFileName(getImageFile());
                     temptoken_.setTokenImageInfoBox(tiib);
                 } else {
                     temptoken_.setTokenImageInfoBox(null);
                 }
 
                 temptoken_.setOrigID(orig_id);
-                doc_.addToken(temptoken_);
-                System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                getDocument().addToken(temptoken_);
                 this.globalIsSuspicious = false;
                 orig_id++;
                 tokenIndex_++;
@@ -251,7 +194,8 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
             temptoken_.setPageIndex(pages);
             temptoken_.setTokenImageInfoBox(null);
 
-            doc_.addToken(temptoken_);
+            getDocument().addToken(temptoken_);
+            tokensPerPage_++;
             tokenIndex_++;
             temptoken_ = null;
             position_ = 0;
@@ -301,15 +245,15 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
                             tiib.setCoordinateLeft(left_);
                             tiib.setCoordinateRight(right_);
                             tiib.setCoordinateTop(top_);
-                            tiib.setImageFileName(this.tempimage_);
+                            tiib.setImageFileName(getImageFile());
                             temptoken_.setTokenImageInfoBox(tiib);
                         } else {
                             temptoken_.setTokenImageInfoBox(null);
                         }
 
                         temptoken_.setOrigID(orig_id);
-                        doc_.addToken(temptoken_);
-                        System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                        getDocument().addToken(temptoken_);
+                        tokensPerPage_++;
                         this.globalIsSuspicious = false;
                         orig_id++;
                         tokenIndex_++;
@@ -347,15 +291,15 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
                             tiib.setCoordinateLeft(left_);
                             tiib.setCoordinateRight(right_);
                             tiib.setCoordinateTop(top_);
-                            tiib.setImageFileName(this.tempimage_);
+                            tiib.setImageFileName(getImageFile());
                             temptoken_.setTokenImageInfoBox(tiib);
                         } else {
                             temptoken_.setTokenImageInfoBox(null);
                         }
 
                         temptoken_.setOrigID(orig_id);
-                        doc_.addToken(temptoken_);
-                        System.out.println("token add " + temptoken_.getWOCR() + " " + temptoken_.isSuspicious());
+                        getDocument().addToken(temptoken_);
+                        tokensPerPage_++;
                         this.globalIsSuspicious = false;
                         tokenIndex_++;
                         orig_id++;
@@ -365,6 +309,7 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
                         left_ = 0;
 
                         // previous char non-alnum and actual char non-alnum -> attach tempchar_ to token
+                        // IS THIS REALLY '&' ? not '&&'?
                     } else if (!myAlnum.matcher(lastchar_).matches() & !myAlnum.matcher(thischar_).matches()) {
                         temp_ += thischar_;
                     }
@@ -373,7 +318,6 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
             }
             
             if( this.isSuspicious_ && !this.isDict_ ) {
-                System.out.println("global");
                 this.globalIsSuspicious = true;
             }
 
@@ -391,9 +335,6 @@ public class AbbyyXMLParser extends DefaultHandler implements Parser {
      */
     @Override
     public void characters(char ch[], int start, int length) {
-        if (length > 1) {
-            System.err.println("Error. Length > 1. " + new String(ch, start, length));
-        }
         thischar_ = new String(ch, start, length);
     }
 }

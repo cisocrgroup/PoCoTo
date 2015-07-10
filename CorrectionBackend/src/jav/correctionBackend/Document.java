@@ -1,6 +1,7 @@
 package jav.correctionBackend;
 
 import jav.gui.dialogs.CustomErrorDialog;
+import jav.logging.log4j.Log;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -450,7 +451,7 @@ public abstract class Document {
 
     public UndoRedoInformation undo(int index) {
         long time = System.currentTimeMillis();
-        System.out.println("starting undo " + index);
+        Log.info(this, "starting undo %d", index);
         try {
             Connection conn = jcp.getConnection();
             Statement s = conn.createStatement();
@@ -522,7 +523,11 @@ public abstract class Document {
                         }
                         t.execute(rs.getString(5));
                     }
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
+                    Log.info(
+                            this, 
+                            "undo finished. Time taken = %d",
+                            (System.currentTimeMillis() - time)
+                    );
                     s.close();
                     t.close();
                     conn.close();
@@ -700,6 +705,7 @@ public abstract class Document {
                 return null;
             }
         } catch (SQLException ex) {
+            Log.error(this, "could not undo: %s", ex.getMessage());
             ex.printStackTrace();
             return null;
         }
@@ -1313,28 +1319,29 @@ public abstract class Document {
     }
 
     public Token getTokenByIndex(int indexInDocument) {
-        Token retval = null;
+        Token token = null;
         try {
             Connection conn = jcp.getConnection();
             Statement s = conn.createStatement();
             ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument);
             while (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+                
+                token = new Token(rs.getString(4));
+                token.setId(rs.getInt(1));
+                token.setIndexInDocument(rs.getInt(2));
+                token.setOrigID(rs.getInt(3));
+                token.setWCOR(rs.getString(5));
+                token.setIsSuspicious(rs.getBoolean(15));
+                token.setIsCorrected(rs.getBoolean(7));
+                token.setIsNormal(rs.getBoolean(6));
+                token.setNumberOfCandidates(rs.getInt(8));
+                token.setPageIndex(rs.getInt(16));
+                token.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                token.setTopSuggestion(rs.getString(17));
+                token.setTopCandDLev(rs.getInt(18));
 
                 if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
+                    token.setTokenImageInfoBox(null);
                 } else {
                     TokenImageInfoBox tiib = new TokenImageInfoBox();
                     tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
@@ -1342,15 +1349,15 @@ public abstract class Document {
                     tiib.setCoordinateTop(rs.getInt(11));
                     tiib.setCoordinateLeft(rs.getInt(9));
                     tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    token.setTokenImageInfoBox(tiib);
                 }
             }
             s.close();
             conn.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Log.error(this, ex.getMessage());
         }
-        return retval;
+        return token;
     }
 
     private static String getFileName(String path) {
@@ -1368,27 +1375,42 @@ public abstract class Document {
         return str;
     }
     public Page getPage(int index) {
-        Page retval = null;
+        Page page = null;
         try {
             Connection conn = jcp.getConnection();
             Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT MIN(indexInDocument) as min, MAX(indexInDocument) as max from token WHERE pageIndex=" + index + "AND indexInDocument <> -1");
+            ResultSet rs = s.executeQuery(
+                    "SELECT MIN(indexInDocument) as min, " +
+                    "MAX(indexInDocument) as max from token WHERE pageIndex = " + 
+                    index + 
+                    "AND indexInDocument <> -1"
+            );
             if (rs.next()) {
-                retval = new Page(index);
-                retval.setStartIndex(rs.getInt(1));
-                retval.setEndIndex(rs.getInt(2));
-                String path = this.getTokenByIndex(rs.getInt(1)).getImageFilename();
-                
+                page = new Page(index);
+                int startIndex = rs.getInt(1);
+                int endIndex = rs.getInt(2);
+                page.setStartIndex(startIndex);
+                page.setEndIndex(endIndex);
+                String path = this.getTokenByIndex(startIndex).getImageFilename();
+                Log.debug(
+                        this, 
+                        "getPage index %d startIndex %d endIndex %d filename %s", 
+                        index,
+                        startIndex,
+                        endIndex,
+                        this.getTokenByIndex(startIndex).getImageFilename()
+                );
                 String filename = getFileName(path);
-                retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
-                retval.setImageCanonical(path);
+                page.setImageFilename(filename);
+                page.setImageCanonical(path);
             }
             s.close();
             conn.close();
         } catch (SQLException ex) {
+            Log.error(this, "error getting page %d: %s", index, ex.getMessage());
             ex.printStackTrace();
         }
-        return retval;
+        return page;
     }
 
 //    public Page getPage(int index) {
@@ -1539,7 +1561,7 @@ public abstract class Document {
     public abstract ArrayList<Integer> splitToken(int iD, String editString) throws SQLException;
 
     public void exportAsDocXML(String filename, boolean exportCandidates) {
-        new OCRXMLExporter().export(this, filename, exportCandidates);
+        new OcrXmlExporter().export(this, filename, exportCandidates);
     }
 
     public void exportAsPageSeparatedPlaintext(String filename) {
@@ -1877,15 +1899,15 @@ public abstract class Document {
         }
     }
 
-    public HashMap<String, OCRErrorInfo> computeErrorFreqList() {
-        HashMap<String, OCRErrorInfo> freqList = new HashMap<>();
+    public HashMap<String, OcrErrorInfo> computeErrorFreqList() {
+        HashMap<String, OcrErrorInfo> freqList = new HashMap<>();
         Iterator<Token> it = this.tokenIterator();
         while (it.hasNext()) {
             Token tok = it.next();
             if (!tok.isCorrected() && tok.isSuspicious() && (tok.getWOCR().length() > 3) && tok.isNormal()) {
                 String tokString = tok.getWOCR();
                 if (!freqList.containsKey(tokString)) {
-                    freqList.put(tokString, new OCRErrorInfo(1));
+                    freqList.put(tokString, new OcrErrorInfo(1));
                 } else {
                     freqList.get(tokString).addOccurence();
                 }

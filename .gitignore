@@ -17,5 +17,14 @@ private.xml
 
 # Others #
 log.txt
+pocoto.log
 .svn/
 /MainWindow/nbproject/private/
+/junit/nbproject/private/
+/Logging/nbproject/private/
+/MultiSelectionLayer/nbproject/private/
+/jide-oss/nbproject/private/
+/jxlayer/nbproject/private/
+/log4j/nbproject/private/
+/Cookies/nbproject/private/
+/RiverLayout/nbproject/private/

@@ -14,6 +14,7 @@ import jav.gui.events.tokenSelection.TokenSelectionEvent;
 import jav.gui.events.tokenSelection.TokenSelectionEventSlot;
 import jav.gui.main.AbstractMyTopComponent;
 import jav.gui.main.MainController;
+import jav.logging.log4j.Log;
 import java.awt.EventQueue;
 import java.awt.RenderingHints;
 import java.util.logging.Logger;
@@ -86,7 +87,7 @@ public final class CompleteImageTopComponent extends AbstractMyTopComponent impl
     private TokenBoxPainter _tokenAnMaler = null;
     private InstanceContent content = new InstanceContent();
     private static CompleteImageTopComponent instance;
-    private SwingWorker worker = null;
+    private SwingWorker<Boolean,Object> worker = null;
     /**
      * path to the icon used by the component and its open action
      */
@@ -234,7 +235,7 @@ public final class CompleteImageTopComponent extends AbstractMyTopComponent impl
 
     private void loadImage(String filename, double scalef) {
 
-        System.out.println("imageload" + filename);
+        Log.info(this, "loadImage(%s, %f)", filename, scalef);
         if (sp != null) {
             content.remove(this);
         }

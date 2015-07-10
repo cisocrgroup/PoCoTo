@@ -1,6 +1,6 @@
 package jav.gui.error;
 
-import jav.correctionBackend.OCRErrorInfo;
+import jav.correctionBackend.OcrErrorInfo;
 import jav.correctionBackend.Token;
 import jav.gui.events.MessageCenter;
 import jav.gui.events.concordance.ConcordanceEvent;
@@ -68,7 +68,7 @@ public class OCRFehlerDefaultMode implements OCRFehlerMode {
                 if (e.getSource() instanceof OCRFehlerLabel) {
 
                     final OCRFehlerLabel pl = (OCRFehlerLabel) e.getSource();
-                    final OCRErrorInfo info = pl.getErrorInfo();
+                    final OcrErrorInfo info = pl.getErrorInfo();
 
                     // single click = selection / deselection
                     if (e.getClickCount() == 1) {
@@ -141,7 +141,7 @@ public class OCRFehlerDefaultMode implements OCRFehlerMode {
     }
 
     @Override
-    public OCRErrorInfo getSelectedOCRError() {
+    public OcrErrorInfo getSelectedOCRError() {
         if (lastSelectedError != null) {
             return lastSelectedError.getErrorInfo();
         } else {

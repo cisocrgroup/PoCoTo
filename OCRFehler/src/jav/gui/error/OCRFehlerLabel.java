@@ -1,6 +1,6 @@
 package jav.gui.error;
 
-import jav.correctionBackend.OCRErrorInfo;
+import jav.correctionBackend.OcrErrorInfo;
 import java.awt.Color;
 import java.awt.Font;
 import javax.swing.JLabel;
@@ -39,11 +39,11 @@ import javax.swing.ToolTipManager;
  */
 public class OCRFehlerLabel extends JLabel {
 
-    private OCRErrorInfo errorInfo;
+    private OcrErrorInfo errorInfo;
     private OCRFehlerMode errorMode;
     private boolean isSelected = false;
 
-    public OCRFehlerLabel(String s, OCRErrorInfo p) {
+    public OCRFehlerLabel(String s, OcrErrorInfo p) {
         super();
         this.errorInfo = p;
         this.setFont(new Font("DejaVu Sans", Font.PLAIN, 13));
@@ -75,7 +75,7 @@ public class OCRFehlerLabel extends JLabel {
         return this.isSelected;
     }
 
-    public OCRErrorInfo getErrorInfo() {
+    public OcrErrorInfo getErrorInfo() {
         return this.errorInfo;
     }
 

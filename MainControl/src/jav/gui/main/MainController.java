@@ -35,6 +35,7 @@ import jav.gui.events.saved.SavedEventSlot;
 import jav.gui.events.tokenStatus.*;
 import jav.gui.filter.AbstractTokenFilter;
 import jav.gui.main.undoredo.MyUndoableEdit;
+import jav.logging.log4j.Log;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.io.*;
@@ -51,10 +52,6 @@ import javax.swing.*;
 import javax.swing.event.UndoableEditEvent;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.Constants;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
 import org.netbeans.api.progress.ProgressUtils;
@@ -98,7 +95,10 @@ import org.openide.windows.WindowManager;
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class MainController implements Lookup.Provider, TokenStatusEventSlot, SavedEventSlot {
-
+    private static final String ALPHA = 
+            "http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService";
+    private static final String DIENER = 
+            "http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService";
     private static final Cursor busyCursor = new Cursor(Cursor.WAIT_CURSOR);
     private static final Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
     private InstanceContent content;
@@ -113,22 +113,20 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private DocumentLoadedCookie docloadcookie;
     private String baseDir;
     private boolean logging;
-    private Logger logger;
-    private FileAppender appender;
     private boolean docOpened = false;
     private Document globalDocument = null;
     private Properties docproperties;
-    private String profiler_user_id = null;
     private ProfilerIDCookie profileridcookie = null;
     private boolean done;
-    private ProfilerWebServiceStub stub = null;
     private File tempFile;
     private UndoRedo.Manager manager = null;
-
+    private Thread backgroundSaverThread = null;
+    
     static {
         instance = new MainController();
     }
 
+    
     public static MainController findInstance() {
         return instance;
     }
@@ -147,19 +145,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         manager = new UndoRedo.Manager();
         manager.setLimit(-1);
 
-//        timestamper = new Timestamper();
-
-        try {
-            // create an instance of the ProfilerStub
-                stub = new ProfilerWebServiceStub("http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService");
-                //stub = new ProfilerWebServiceStub("http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService");
-            stub._getServiceClient().getOptions().setManageSession(true);
-            stub._getServiceClient().getOptions().setProperty(Constants.Configuration.ENABLE_MTOM, Constants.VALUE_TRUE);
-            stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(3600000);
-        } catch (AxisFault ex) {
-            stub = null;
-        }
-
         if (System.getProperty("user.dir").endsWith("trunk/netbeans")) {
             baseDir = "../";
         } else {
@@ -175,14 +160,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         node = NbPreferences.forModule(this.getClass());
         logging = node.getBoolean("logging", true);
         if (logging) {
-            logger = Logger.getLogger("Logger");
-            try {
-                appender = new FileAppender(new PatternLayout("%d{dd-MM-yyyy HH:mm:ss} - %m%n"), baseDir + File.separator + "log.txt", true);
-                logger.setLevel(Level.ALL);
-                logger.addAppender(appender);
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+            Log.setup();
+            Log.debug(this, "Setup logging");
         }
 
         docproperties = new Properties();
@@ -192,16 +171,37 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         content.add(csrcookie);
         this.refreshID();
 
+        backgroundSaverThread = new Thread(new BackgroundSaver());
+        backgroundSaverThread.start();
         MessageCenter.getInstance().addTokenStatusEventListener(this);
         MessageCenter.getInstance().addSavedEventListener(this);
     }
 
-    public String getProfilerUserID() {
-        return this.profiler_user_id;
+    public String getProfilerUserId() {
+        String id = NbPreferences.forModule(MainController.class)
+                .get("profiler_user_id", "");
+        Log.info(this, "profiler_user_id: '%s'", id);
+        return id;
+    }
+    public void setProfilerUserId(String id) {
+        Log.info(this, "setting profiler_user_id: '%s'", id);
+        NbPreferences.forModule(MainController.class)
+                .put("profiler_user_id", id);
+    }
+    public String getProfilerServiceUrl() {
+        String url = NbPreferences.forModule(MainController.class)
+                .get("profiler_service_url", DIENER);
+        Log.info(this, "profiler_service_url: '%s'", url);
+        return url;
+    }
+    public void setProfilerServiceUrl(String url) {
+        Log.info(this, "setting profiler_service_url: '%s'", url);
+        NbPreferences.forModule(MainController.class)
+                .put("profiler_service_url", url);
     }
 
     public void addToLog(String msg) {
-        logger.log(Level.INFO, msg);
+        Log.info(this, msg);
     }
 
     public UndoRedo getUndoRedo() {
@@ -534,7 +534,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         return this.docOpened;
     }
 
-    public HashMap<String, OCRErrorInfo> computeErrorFreqList() {
+    public HashMap<String, OcrErrorInfo> computeErrorFreqList() {
         return globalDocument.computeErrorFreqList();
     }
 
@@ -642,7 +642,19 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public ProfilerWebServiceStub getProfilerWebServiceStub() {
-        return stub;
+        try {
+            ProfilerWebServiceStub stub = 
+                    new ProfilerWebServiceStub(getProfilerServiceUrl());
+            stub._getServiceClient().getOptions().setManageSession(true);
+            stub._getServiceClient()
+                    .getOptions()
+                    .setProperty(Constants.Configuration.ENABLE_MTOM, Constants.VALUE_TRUE);
+            stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(3600000);
+            return stub;
+        } catch (AxisFault e) {
+            Log.error(this, "Could not create ProfilerWebSercice: %s", e.getMessage());
+        }
+        return null;
     }
 
     public void reloadDocument() {
@@ -650,9 +662,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void refreshID() {
-        this.profiler_user_id = node.get("profiler_user_id", "");
-        if (stub != null) {
-            if (this.profiler_user_id.equals("")) {
+        String profiler_user_id = node.get("profiler_user_id", "");
+            if (profiler_user_id.equals("")) {
                 if (profileridcookie != null) {
                     content.remove(profileridcookie);
                     profileridcookie = null;
@@ -665,7 +676,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 profileridcookie = new ProfilerIDCookie();
                 content.add(profileridcookie);
             }
-        }
     }
 
     public void updatePattern(Pattern p) {
@@ -1016,7 +1026,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         private String status;
         private int retval;
 
-        public DocumentProfiler(String c) {
+        public DocumentProfiler(String c) throws AxisFault {
             this.configuration = c;
         }
 
@@ -1032,7 +1042,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 GetProfileRequest gpr = new GetProfileRequest();
                 GetProfileRequestType gprt = new GetProfileRequestType();
                 gprt.setConfiguration(this.configuration);
-                gprt.setUserid(MainController.findInstance().getProfilerUserID());
+                gprt.setUserid(MainController.findInstance().getProfilerUserId());
 
                 AttachmentType docoutatt = new AttachmentType();
                 Base64Binary docoutbin = new Base64Binary();
@@ -1085,7 +1095,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             doc_out.close();
 
                             globalDocument.clearCandidates();
-                            new OCRXMLImporter().importCandidates(globalDocument, tempFile.getCanonicalPath());
+                            new OcrXmlImporter().importCandidates(globalDocument, tempFile.getCanonicalPath());
 
                             tempFile = File.createTempFile("profile", ".xml");
                             tempFile.deleteOnExit();
@@ -1110,7 +1120,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             prof_out.close();
 
                             globalDocument.clearPatterns();
-                            new OCRXMLImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
+                            new OcrXmlImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
 
                             retval = 0;
                             done = true;
@@ -1128,7 +1138,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                        aprt.setUserid(MainController.findInstance().getProfilerUserID());
+                        aprt.setUserid(MainController.findInstance().getProfilerUserId());
                         apr.setAbortProfilingRequest(aprt);
                         try {
                             AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
@@ -1150,7 +1160,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         Thread.sleep(3000);
                         GetProfilingStatusRequest grpq = new GetProfilingStatusRequest();
                         GetProfilingStatusRequestType grpqt = new GetProfilingStatusRequestType();
-                        grpqt.setUserid(MainController.findInstance().getProfilerUserID());
+                        grpqt.setUserid(MainController.findInstance().getProfilerUserId());
 
                         grpq.setGetProfilingStatusRequest(grpqt);
                         GetProfilingStatusResponse gprs = MainController.findInstance().getProfilerWebServiceStub().getProfilingStatus(grpq);
@@ -1176,7 +1186,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 AbortProfilingRequest apr = new AbortProfilingRequest();
                 AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                aprt.setUserid(MainController.findInstance().getProfilerUserID());
+                aprt.setUserid(MainController.findInstance().getProfilerUserId());
                 apr.setAbortProfilingRequest(aprt);
                 try {
                     AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
@@ -1276,7 +1286,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             doc_out.close();
 
                             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing_doc"));
-                            new OCRXMLImporter().simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
+                            new OcrXmlImporter().simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
                             retval = 0;
                             done = true;
                         } catch (FileNotFoundException ex) {
@@ -1293,7 +1303,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                        aprt.setUserid(MainController.findInstance().getProfilerUserID());
+                        aprt.setUserid(MainController.findInstance().getProfilerUserId());
                         apr.setAbortProfilingRequest(aprt);
                         try {
                             AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
@@ -1340,7 +1350,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 AbortProfilingRequest apr = new AbortProfilingRequest();
                 AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                aprt.setUserid(MainController.findInstance().getProfilerUserID());
+                aprt.setUserid(MainController.findInstance().getProfilerUserId());
                 apr.setAbortProfilingRequest(aprt);
                 try {
                     AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);

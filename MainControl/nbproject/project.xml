@@ -63,6 +63,14 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>jav.logging.log4j</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.0</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.netbeans.api.progress</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -204,6 +212,7 @@
             </test-dependencies>
             <public-packages>
                 <package>jav.gui.main</package>
+                <package>jav.gui.main.logging</package>
                 <package>jav.gui.main.undoredo</package>
             </public-packages>
         </data>

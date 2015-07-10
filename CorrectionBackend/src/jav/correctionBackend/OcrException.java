@@ -31,7 +31,10 @@ package jav.correctionBackend;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public interface Parser {
-    public void parse(String xml, String img, String encoding);
+public class OcrException extends Exception {
+    
+    public OcrException( String message ) {
+        super(message);
+    }
 
 }

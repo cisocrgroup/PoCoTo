@@ -1,6 +1,6 @@
 package jav.gui.actions;
 
-import jav.correctionBackend.OCRXMLImporter;
+import jav.correctionBackend.OcrXmlImporter;
 import jav.gui.filter.LevDistance_1_Filter;
 import jav.gui.main.MainController;
 import java.awt.event.ActionEvent;
@@ -46,7 +46,7 @@ public final class OCRErrorKonkordance implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (MainController.findInstance().getDocument() != null) {
-            new OCRXMLImporter().importCandidates(MainController.findInstance().getDocument(), "C:\\Users\\Scampi_Joe\\AppData\\Local\\Temp\\document38524588653394750.ocrcxml");
+            new OcrXmlImporter().importCandidates(MainController.findInstance().getDocument(), "C:\\Users\\Scampi_Joe\\AppData\\Local\\Temp\\document38524588653394750.ocrcxml");
             LevDistance_1_Filter f = new LevDistance_1_Filter("OCRErrors");
             MainController.findInstance().applyFilter(f);
         }

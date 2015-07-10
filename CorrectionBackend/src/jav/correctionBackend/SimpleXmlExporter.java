@@ -49,7 +49,7 @@ public class SimpleXmlExporter {
                 BufferedWriter out = new BufferedWriter(w);                
                 export(doc, out, exportCandidates);
         } catch (IOException ex) {
-                Logger.getLogger(OCRXMLExporter.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(OcrXmlExporter.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

@@ -7,30 +7,11 @@
             <suite-component/>
             <module-dependencies/>
             <public-packages>
-                <package>org.apache.log4j</package>
-                <package>org.apache.log4j.chainsaw</package>
-                <package>org.apache.log4j.config</package>
-                <package>org.apache.log4j.helpers</package>
-                <package>org.apache.log4j.jdbc</package>
-                <package>org.apache.log4j.jmx</package>
-                <package>org.apache.log4j.lf5</package>
-                <package>org.apache.log4j.lf5.util</package>
-                <package>org.apache.log4j.lf5.viewer</package>
-                <package>org.apache.log4j.lf5.viewer.categoryexplorer</package>
-                <package>org.apache.log4j.lf5.viewer.configure</package>
-                <package>org.apache.log4j.net</package>
-                <package>org.apache.log4j.nt</package>
-                <package>org.apache.log4j.or</package>
-                <package>org.apache.log4j.or.jms</package>
-                <package>org.apache.log4j.or.sax</package>
-                <package>org.apache.log4j.pattern</package>
-                <package>org.apache.log4j.spi</package>
-                <package>org.apache.log4j.varia</package>
-                <package>org.apache.log4j.xml</package>
+                <package>jav.logging.log4j</package>
             </public-packages>
             <class-path-extension>
-                <runtime-relative-path>ext/log4j-1.2.16.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/log4j-1.2.16.jar</binary-origin>
+                <runtime-relative-path>ext/log4j-1.2.17.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/log4j-1.2.17.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>

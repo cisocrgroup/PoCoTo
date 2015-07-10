@@ -1,6 +1,6 @@
 package jav.gui.error;
 
-import jav.correctionBackend.OCRErrorInfo;
+import jav.correctionBackend.OcrErrorInfo;
 import jav.gui.cookies.FontZoomCookie;
 import jav.gui.events.MessageCenter;
 import jav.gui.events.documentChanged.DocumentChangedEvent;
@@ -78,7 +78,7 @@ public final class OCRFehlerTopComponent extends AbstractMyTopComponent implemen
     private InstanceContent content = new InstanceContent();
     private int fontSize;
     private OCRFehlerMode olm = new OCRFehlerDefaultMode();
-    private HashMap<String, OCRErrorInfo> errormap = null;
+    private HashMap<String, OcrErrorInfo> errormap = null;
 
     public OCRFehlerTopComponent() {
 //        initComponents();
@@ -248,14 +248,14 @@ public final class OCRFehlerTopComponent extends AbstractMyTopComponent implemen
 
     public void displayErrorMap() {
 
-        SwingWorker<TreeMap<String, OCRErrorInfo>, Object> worker = new SwingWorker<TreeMap<String, OCRErrorInfo>, Object>() {
+        SwingWorker<TreeMap<String, OcrErrorInfo>, Object> worker = new SwingWorker<TreeMap<String, OcrErrorInfo>, Object>() {
 
             @Override
-            protected TreeMap<String, OCRErrorInfo> doInBackground() {
+            protected TreeMap<String, OcrErrorInfo> doInBackground() {
 
-                TreeMap<String, OCRErrorInfo> result = null;
+                TreeMap<String, OcrErrorInfo> result = null;
                 try {
-                    HashMap<String, OCRErrorInfo> errmap = MainController.findInstance().computeErrorFreqList();
+                    HashMap<String, OcrErrorInfo> errmap = MainController.findInstance().computeErrorFreqList();
                     errormap = errmap;
                     MyComparator comp = new MyComparator(errmap);
                     result = new TreeMap<>(comp);
@@ -269,7 +269,7 @@ public final class OCRFehlerTopComponent extends AbstractMyTopComponent implemen
             @Override
             protected void done() {
                 try {
-                    TreeMap<String, OCRErrorInfo> result = get();
+                    TreeMap<String, OcrErrorInfo> result = get();
 
                     if (result != null) {
                         content.remove(instance);
@@ -279,7 +279,7 @@ public final class OCRFehlerTopComponent extends AbstractMyTopComponent implemen
                         Iterator<String> i = result.keySet().iterator();
                         while (i.hasNext()) {
                             String key = i.next();
-                            OCRErrorInfo info = result.get(key);
+                            OcrErrorInfo info = result.get(key);
                             if (info.getOccurencesN() > 1) {
                                 OCRFehlerPanel panel = new OCRFehlerPanel(key, info, olm);
                                 jPanel1.add(panel);
@@ -354,7 +354,7 @@ public final class OCRFehlerTopComponent extends AbstractMyTopComponent implemen
         if (e.getType().equals(TokenStatusType.CORRECTED)) {
             CorrectedEvent ce = (CorrectedEvent) e;
             if (errormap != null && errormap.containsKey(ce.getNewText())) {
-                OCRErrorInfo info = errormap.get(ce.getNewText());
+                OcrErrorInfo info = errormap.get(ce.getNewText());
                 if (ce.getSetTo()) {
                     info.addCorrected();
                 } else {
@@ -390,7 +390,7 @@ public final class OCRFehlerTopComponent extends AbstractMyTopComponent implemen
 //                    String s = MainController.findInstance().getToken(e.getTokenIndex()).getWOCR();
 //                    if (errormap != null && s != null) {
 //                        if (errormap.containsKey(s)) {
-//                            OCRErrorInfo info = errormap.get(s);
+//                            OcrErrorInfo info = errormap.get(s);
 //                            info.addCorrected();
 //                            if (info.getCorrected() == info.getOccurencesN()) {
 //                                for (Component ca : jPanel1.getComponents()) {
@@ -424,9 +424,9 @@ public final class OCRFehlerTopComponent extends AbstractMyTopComponent implemen
 
 class MyComparator implements Comparator<String> {
 
-    HashMap<String, OCRErrorInfo> theMapToSort;
+    HashMap<String, OcrErrorInfo> theMapToSort;
 
-    public MyComparator(HashMap<String, OCRErrorInfo> theMapToSort) {
+    public MyComparator(HashMap<String, OcrErrorInfo> theMapToSort) {
         this.theMapToSort = theMapToSort;
     }
 
