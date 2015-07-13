@@ -125,6 +125,10 @@
                     <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ExportAsPageSeparatedPlainText.instance"/>
                     <attr name="position" intvalue="1300"/>
                 </file>
+                <file name="jav-gui-actions-ExportAll.shadow">
+                    <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ExportAll.instance"/>
+                    <attr name="position" intvalue="1400"/>
+                </file>
 
             </folder>
             <file name="jav-gui-actions-ImportFromDocXml.shadow">
