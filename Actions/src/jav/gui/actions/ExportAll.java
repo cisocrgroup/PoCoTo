@@ -7,6 +7,8 @@ import jav.gui.main.MainController;
 import jav.gui.main.SwingUtils;
 import java.io.File;
 import java.io.IOException;
+import static java.lang.Thread.sleep;
+import java.util.ResourceBundle;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
@@ -50,14 +52,14 @@ import org.openide.util.Utilities;
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class ExportAll extends ContextAction<DocumentLoadedCookie>{
-
     public ExportAll() {
         this(Utilities.actionsGlobalContext());
     }
     
     public ExportAll(Lookup context) {
         super(context);
-        putValue(NAME, java.util.ResourceBundle.getBundle("jav/gui/actions/Bundle").getString("exportall"));
+        putValue(NAME, java.util.ResourceBundle.getBundle("jav/gui/actions/Bundle")
+                .getString("exportall"));
     }
             
     @Override
@@ -87,13 +89,13 @@ public class ExportAll extends ContextAction<DocumentLoadedCookie>{
     private void doIt() {
         JFileChooser jfc = new JFileChooser();
         jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-//        AbstractButton button = SwingUtils.getDescendantOfType(AbstractButton.class, jfc, "Icon", UIManager.getIcon("FileChooser.detailsViewIcon"));
-//        button.doClick();
 
         if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
             try {
                 File f = jfc.getSelectedFile();
-                NativeMethodRunner runner = new NativeMethodRunner(f.getCanonicalPath());
+                NativeMethodRunner runner = new NativeMethodRunner(
+                        f.getCanonicalPath()
+                );
                 int retval = ProgressUtils.showProgressDialogAndRun(runner, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("exporting"), true);
                 if( retval == 0) {
                     new CustomErrorDialog().showDialog("Error while exporting the document!\n");
@@ -106,18 +108,30 @@ public class ExportAll extends ContextAction<DocumentLoadedCookie>{
     
     private class NativeMethodRunner implements ProgressRunnable<Integer> {
         
-        private String filename;
+        private final String fromDir, toDir, fileType;
         
-        public NativeMethodRunner(String f) {
-            this.filename = f;
+        public NativeMethodRunner(String toDir) {
+            this.toDir = toDir;
+            fromDir = MainController.findInstance()
+                .getDocumentProperties()
+                .getProperty("xmlbasepath", "");
+            fileType = MainController.findInstance()
+                .getDocumentProperties()
+                .getProperty("filetype", "");
         }
 
         @Override
         public Integer run(ProgressHandle ph) {
             try {
-                ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("exporting"));
-                ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("exporting"));
-                MainController.findInstance().getDocument().exportAsPageSeparatedPlaintext( filename );
+                ph.progress(ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("exporting"));
+                ph.setDisplayName(ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("exporting"));
+                MainController.findInstance().getDocument().exportAll(
+                        fromDir, 
+                        toDir,
+                        fileType
+                );
                 return 1;
             } catch (Exception e) {
                 e.printStackTrace();

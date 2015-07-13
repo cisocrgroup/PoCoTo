@@ -1633,6 +1633,10 @@ public abstract class Document {
             }
         }
     }
+    
+    public void exportAll(String fromDir, String toDir, String fileType) {
+        Log.info(this, "exporting %s %s %s", fromDir, toDir, fileType);
+    }
 
     public ArrayList<Integer> mergeRightward(int iD) throws SQLException {
 
