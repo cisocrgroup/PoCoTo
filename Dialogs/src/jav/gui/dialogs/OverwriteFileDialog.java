@@ -1,4 +1,10 @@
-package jav.correctionBackend;
+package jav.gui.dialogs;
+
+import jav.logging.log4j.Log;
+import java.io.File;
+import java.util.ResourceBundle;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
 
 /**
  *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
@@ -31,27 +37,35 @@ package jav.correctionBackend;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public enum FileType {
-    ABBYY_XML_DIR("ABBYY XML"), HOCR("HOCR");
-    private final String display;
-    
-    private FileType(String s) {
-        display = s;
+public class OverwriteFileDialog {
+    public enum Result {YES, NO, ALL};
+    private final NotifyDescriptor descriptor;
+    private final Object[] buttonText = {
+        ResourceBundle.getBundle("jav/gui/dialogs/Bundle").getString("overwriteyes"), 
+        ResourceBundle.getBundle("jav/gui/dialogs/Bundle").getString("overwriteno"), 
+        ResourceBundle.getBundle("jav/gui/dialogs/Bundle").getString("overwriteall"),
+    };
+
+    public OverwriteFileDialog(File file) {
+        String desc = String.format(
+                ResourceBundle.getBundle("jav/gui/dialogs/Bundle").getString("overwrite"),
+                file.getName()
+        );
+        descriptor = new NotifyDescriptor(
+                desc, 
+                "Obacht", NotifyDescriptor.YES_NO_CANCEL_OPTION, 
+                NotifyDescriptor.WARNING_MESSAGE, buttonText, null);
     }
-    
-    public static FileType fromString(String fileType) {
-        switch (fileType) {
-            case "ABBYY XML":
-                return ABBYY_XML_DIR;
-            case "HOCR":
-                return HOCR;
-            default:
-                return ABBYY_XML_DIR;
-        }
-    }
-    
-    @Override
-    public String toString() {
-        return display;
+
+    public Result showDialogAndGetResult() {
+        Object res = DialogDisplayer.getDefault().notify(descriptor);
+        if (buttonText[0].equals(res))
+            return Result.YES;
+        else if (buttonText[1].equals(res))
+            return Result.NO;
+        else if (buttonText[2].equals(res))
+            return Result.ALL;
+        else
+            return Result.NO;
     }
 }

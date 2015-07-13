@@ -1,6 +1,7 @@
 package jav.correctionBackend;
 
 import jav.gui.dialogs.CustomErrorDialog;
+import jav.gui.dialogs.OverwriteFileDialog;
 import jav.logging.log4j.Log;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -1634,8 +1635,42 @@ public abstract class Document {
         }
     }
     
-    public void exportAll(String fromDir, String toDir, String fileType) {
-        Log.info(this, "exporting %s %s %s", fromDir, toDir, fileType);
+    public void exportAll(String fromDir, String toDir, String t) {
+        FileType fileType = FileType.fromString(t);
+        Log.info(this, "exporting %s %s %s", fromDir, toDir, t);
+        String[] sources = new File(fromDir).list(
+                CorrectionSystem.getFilenameFilter(fileType)
+        );
+        OverwriteFileDialog.Result doOverwrite = OverwriteFileDialog.Result.YES;
+        for (String fileName: sources) {
+            BaseXmlExporter exporter = getXmlExporter(
+                    new File(fromDir, fileName),
+                    new File(toDir, fileName),
+                    fileType
+            );
+            if (doOverwrite != OverwriteFileDialog.Result.ALL &&
+                exporter.getDestinationFile().exists()) {
+                doOverwrite = new OverwriteFileDialog(exporter.getDestinationFile())
+                        .showDialogAndGetResult();
+            }
+            if (doOverwrite != OverwriteFileDialog.Result.NO) {
+                try {
+                    exporter.export();
+                } catch (IOException e) {
+                    Log.error(
+                            this,
+                            "could not export file %s: %s",
+                            exporter.getDestinationFile().getName(),
+                            e.getMessage()
+                    );
+                }
+            }
+                
+        }
+    }
+    
+    private BaseXmlExporter getXmlExporter(File src, File dest, FileType fileType) {
+        return new BaseXmlExporter(src, dest, this);
     }
 
     public ArrayList<Integer> mergeRightward(int iD) throws SQLException {

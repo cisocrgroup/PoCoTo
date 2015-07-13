@@ -133,30 +133,8 @@ public class CorrectionSystem {
             jcp.setMaxConnections(50);
             jcp.setLoginTimeout(0);
             
-            FilenameFilter fil = null;
+            FilenameFilter fil = getFilenameFilter(t);
             this.document = new SpreadIndexDocument(jcp);
-            if (t.equals(FileType.ABBYY_XML_DIR)) {
-                parser = new AbbyyXmlParser(this.document);
-                fil = new FilenameFilter() {
-
-                    @Override
-                    public boolean accept(File d, String name) {
-                        return name.endsWith(".xml");
-                    }
-                };
-            } else if (t.equals(FileType.HOCR)) {
-                parser = new HocrParser(this.document);
-                fil = new FilenameFilter() {
-
-                    @Override
-                    public boolean accept(File d, String name) {
-                        return name.endsWith(".html") || name.endsWith(".hocr");
-                    }
-                };
-            } else {
-                // TODO throw error
-            }
-
             File xmld = new File(xmldir);
             File imgd = new File(imagedir);
             String[] xmlfiles = xmld.list(fil);
@@ -199,6 +177,23 @@ public class CorrectionSystem {
             retval = 0;
         }
         return retval;
+    }
+    
+    public static FilenameFilter getFilenameFilter(FileType fileType) {
+        if (fileType.equals(FileType.HOCR))
+                return new FilenameFilter() {
+                    @Override
+                    public boolean accept(File d, String name) {
+                        return name.endsWith(".html") || name.endsWith(".hocr");
+                    }
+                };
+            else
+                return new FilenameFilter() {
+                    @Override
+                    public boolean accept(File d, String name) {
+                        return name.endsWith(".xml");
+                    }
+                };
     }
     
     private HashMap<String, String> getImageFileMappings(File dir) {   
