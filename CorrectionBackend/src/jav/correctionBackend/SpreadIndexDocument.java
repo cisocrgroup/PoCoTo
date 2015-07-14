@@ -197,8 +197,11 @@ public class SpreadIndexDocument extends Document {
     }
 
     @Override
-    public ArrayList<Integer> deleteToken(int iDFrom, int iDTo) throws SQLException {
-        Connection conn = null;
+    public ArrayList<Integer> deleteToken(int iDFrom, int iDTo) 
+            throws SQLException {
+        Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
+        Connection conn = jcp.getConnection();
+        ArrayList<Integer> retval = new ArrayList<>();
         PreparedStatement setIndex = null;
         PreparedStatement undo_redo = null;
 
@@ -209,23 +212,20 @@ public class SpreadIndexDocument extends Document {
         int indexTo = to.getIndexInDocument();
 
         try {
-            ArrayList<Integer> retval = new ArrayList<>();
-            if (indexTo < indexFrom) {
-                return null;
-//                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN invalid range");
-            }
 
-            if (indexFrom == indexTo) {
-                return null;
+            if (indexTo < indexFrom) {
+                Log.error(this, "cannot delete token indexTo < indexFrom");
+                return retval;
+//                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN invalid range");
             }
 
             int thisPageIndex = from.getPageIndex();
             if (thisPageIndex != to.getPageIndex()) {
-                return null;
+                Log.error(this, "thisPageIndex != to.getPageIndex()");
+                return retval;
 //                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN: cannot erase across page borders");
             }
 
-            conn = jcp.getConnection();
             conn.setAutoCommit(false);
 
             //reserve undo_redo_parts for the starting token
@@ -281,6 +281,7 @@ public class SpreadIndexDocument extends Document {
             conn.setAutoCommit(true);
             conn.close();
         }
+
     }
 
     @Override

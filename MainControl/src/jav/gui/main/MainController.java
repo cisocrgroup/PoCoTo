@@ -497,6 +497,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void deleteToken(int index) {
+        Log.info(this, "deleteToken(%d)", index);
         try {
             MessageCenter.getInstance().fireCancelEvent(new CancelEvent(this));
 
@@ -514,6 +515,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void deleteToken(int begin, int afterend) {
+        Log.info(this, "deleteToken(%d, %d)", begin, afterend);
         try {
             MessageCenter.getInstance().fireCancelEvent(new CancelEvent(this));
 
