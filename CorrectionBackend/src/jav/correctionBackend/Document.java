@@ -1533,6 +1533,7 @@ public abstract class Document {
     }
 
     public ArrayList<Integer> deleteToken(int tokenID) throws SQLException {
+        Log.info(this, "deleteToken(%d)", tokenID);
         Token thisT = this.getTokenByID(tokenID);
         Page page = this.getPage(thisT.getPageIndex());
         int index = thisT.getIndexInDocument();
