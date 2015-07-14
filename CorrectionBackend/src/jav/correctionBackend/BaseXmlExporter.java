@@ -7,13 +7,13 @@ package jav.correctionBackend;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import org.xml.sax.SAXException;
 
 /**
  *
  * @author finkf
  */
-class BaseXmlExporter {
+abstract class BaseXmlExporter {
     private final File src;
     private final File dest;
     private final Document document;
@@ -27,20 +27,18 @@ class BaseXmlExporter {
         this.document = document;
     }
     
-    public File getSourceFile() {
+    public final File getSourceFile() {
         return src;
     }
     
-    public File getDestinationFile() {
+    public final File getDestinationFile() {
         return dest;
     }
     
-    public Document getDocument() {
+    public final Document getDocument() {
         return document;
     }
 
-    void export() throws IOException {
-        Files.copy(src.toPath(), dest.toPath());
-    }
+    public abstract void export() throws IOException, Exception;
     
 }

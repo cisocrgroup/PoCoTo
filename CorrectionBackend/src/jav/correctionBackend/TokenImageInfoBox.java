@@ -120,4 +120,20 @@ public class TokenImageInfoBox {
     public void setImageFileName(String s) {
         this.imageFileName = s;
     }
+    
+    public boolean overlapsWith(TokenImageInfoBox other) {
+        if (other == null)
+            return false;
+        if (!imageFileName.equals(other.imageFileName))
+            return false;
+        if (coordinate_right < other.coordinate_left)
+            return false;
+        if (coordinate_left > other.coordinate_right)
+            return false;
+        if (coordinate_bottom < other.coordinate_top)
+            return false;
+        if (coordinate_top > other.coordinate_bottom)
+            return false;
+        return true;
+    }
 }

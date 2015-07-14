@@ -1656,7 +1656,7 @@ public abstract class Document {
             if (doOverwrite != OverwriteFileDialog.Result.NO) {
                 try {
                     exporter.export();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     Log.error(
                             this,
                             "could not export file %s: %s",
@@ -1670,7 +1670,24 @@ public abstract class Document {
     }
     
     private BaseXmlExporter getXmlExporter(File src, File dest, FileType fileType) {
-        return new BaseXmlExporter(src, dest, this);
+        switch (fileType) {
+            case ABBYY_XML_DIR:
+                return new AbbyyXmlExporter(src, dest, this);
+            case HOCR:
+                return new HocrXmlExporter(src, dest, this);
+            default:
+                return new AbbyyXmlExporter(src, dest, this);
+        }
+    }
+    
+    public TokenIterator selectTokens(PreparedStatement stmnt) 
+            throws SQLException {
+        return TokenIterator.fromStmnt(jcp.getConnection(), stmnt);
+    }
+    
+    public PreparedStatement prepareStatement(String stmnt) 
+            throws SQLException {
+        return jcp.getConnection().prepareStatement(stmnt);
     }
 
     public ArrayList<Integer> mergeRightward(int iD) throws SQLException {
@@ -2006,6 +2023,19 @@ class TokenIterator implements MyIterator<Token> {
     private Connection conn;
     private Statement s;
     private ResultSet rs = null;
+    
+    public static TokenIterator fromStmnt(Connection conn, PreparedStatement stmnt) 
+            throws SQLException {
+        TokenIterator it = new TokenIterator();
+        it.conn = conn;
+        it.s = stmnt;
+        it.rs = stmnt.executeQuery();
+        return it;
+    }
+    
+    private TokenIterator() {
+        
+    }
 
     protected TokenIterator(Connection c) {
         try {
