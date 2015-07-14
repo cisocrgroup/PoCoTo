@@ -606,12 +606,6 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                 pv.revalidate();
                 pv.repaint();
 
-//            if (this.currentTokenID == MainController.findInstance().getPage(this.currentPageIndex).getStartIndex() || (this.currentTokenID - ((DeleteEvent) e).getAffectedTokenIds().size()) < MainController.findInstance().getPage(this.currentPageIndex).getStartIndex()) {
-//                this.currentTokenID = 0;
-//            } else {
-////                this.currentTokenIndex -= ((DeleteEvent) e).getNumberOfTokensAffected();
-//            }
-
                 this.goToNextNormalToken();
 
                 if (this.multiToken != null) {
@@ -747,7 +741,9 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                 }
             }
         } else {
-            Token next = MainController.findInstance().getDocument().getNextToken(this.currentTokenID);
+            Token next = MainController.findInstance()
+                    .getDocument()
+                    .getNextToken(this.currentTokenID);
             if (next != null) {
                 if (next.getPageIndex() == this.currentPageIndex) {
                     pv.getVisualizationMode().unSelect();
