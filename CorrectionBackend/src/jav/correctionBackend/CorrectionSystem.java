@@ -135,6 +135,7 @@ public class CorrectionSystem {
             
             FilenameFilter fil = getFilenameFilter(t);
             this.document = new SpreadIndexDocument(jcp);
+            this.parser = getParser(t);
             File xmld = new File(xmldir);
             File imgd = new File(imagedir);
             String[] xmlfiles = xmld.list(fil);
@@ -155,8 +156,16 @@ public class CorrectionSystem {
 //                );
                 ph.progress("Parsing file " + xmlfile + " (" + imagefile + ")");
                 try {
+                    File f = new File(xmld, xmlfile);
+                    Log.debug(this, "xmldir %s", xmld);
+                    Log.debug(this, "xmlfile %s", xmlfile);
+                    Log.debug(this, "File %s", f);
+                    Log.debug(this, "imagefile %s", imagefile);
+                    Log.debug(this, "encoding %s", encoding);
+                    Log.debug(this, "cannon %s", f.getCanonicalPath());
+                    Log.debug(this, "parser %s", parser);
                     parser.parse(
-                            new File(xmld, xmlfile).getCanonicalPath(), 
+                            f.getCanonicalPath(), 
                             imagefile, 
                             encoding
                     );
@@ -194,6 +203,17 @@ public class CorrectionSystem {
                         return name.endsWith(".xml");
                     }
                 };
+    }
+    
+    private OcrDocumentParser getParser(FileType type) {
+        switch (type) {
+            case ABBYY_XML_DIR:
+                return new AbbyyXmlParser(this.document);
+            case HOCR:
+                return new HocrParser(this.document);
+            default:
+                return new AbbyyXmlParser(this.document);
+        }
     }
     
     private HashMap<String, String> getImageFileMappings(File dir) {   
