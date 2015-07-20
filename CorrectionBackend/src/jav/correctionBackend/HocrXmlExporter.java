@@ -32,7 +32,7 @@ class HocrXmlExporter extends BaseXmlExporter {
     private static final Pattern imgRe = 
             Pattern.compile("image\\s+\"([^\"]+)\"");
     private static final Pattern tiibRe = 
-            Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
+            Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
     private static final String tokenStmnt = 
             "SELECT * FROM token WHERE imageFile like %?%";
 
@@ -130,7 +130,19 @@ class HocrXmlExporter extends BaseXmlExporter {
         return getTokenImageInfoBox(title, img);
     }
     
-    private TokenImageInfoBox getTokenImageInfoBox(String title, String img) {
-        return new TokenImageInfoBox();
+    private TokenImageInfoBox getTokenImageInfoBox(String title, String img) 
+            throws Exception {
+        Matcher m = tiibRe.matcher(title);
+        if (!m.matches())
+            throw new Exception("invalid bounding box: " + title);
+        
+        TokenImageInfoBox tiib = new TokenImageInfoBox(
+                Integer.parseInt(m.group(1)),
+                Integer.parseInt(m.group(2)),
+                Integer.parseInt(m.group(3)),
+                Integer.parseInt(m.group(4))
+        );
+        tiib.setImageFileName(img);
+        return tiib;
     }
 }
