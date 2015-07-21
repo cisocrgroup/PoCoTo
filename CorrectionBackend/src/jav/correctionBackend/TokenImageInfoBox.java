@@ -1,5 +1,7 @@
 package jav.correctionBackend;
 
+import java.util.Arrays;
+
 /**
  *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
  *All rights reserved.
@@ -39,14 +41,19 @@ public class TokenImageInfoBox {
     private int coordinate_bottom;
     private String imageFileName;
 
-    public TokenImageInfoBox(int l, int t, int r, int b) {
+    public TokenImageInfoBox(int l, int t, int r, int b, String img) {
         coordinate_left = l;
         coordinate_top = t;
         coordinate_right = r;
-        coordinate_bottom = b;
+        coordinate_bottom = b;        
+        imageFileName = img;
+    }
+    
+    public TokenImageInfoBox(int l, int t, int r, int b) {
+        this(l, t, r, b, "");
     }
     public TokenImageInfoBox() {
-        this(0, 0, 0, 0);
+        this(0, 0, 0, 0, "");
     }
 
     public int getCoordinateLeft() {
@@ -135,6 +142,22 @@ public class TokenImageInfoBox {
         if (coordinate_top > other.coordinate_bottom)
             return false;
         return true;
+    }
+    
+    public TokenImageInfoBox calculateOverlappingBox(TokenImageInfoBox other) {
+        if (! overlapsWith(other))
+            return new TokenImageInfoBox();
+        assert(overlapsWith(other));
+        int h[] = {coordinate_left, coordinate_right, other.coordinate_left, other.coordinate_right};
+        int v[] = {coordinate_top, coordinate_bottom, other.coordinate_top, other.coordinate_bottom};
+        Arrays.sort(h);
+        Arrays.sort(v);
+        return new TokenImageInfoBox(h[1], v[1], h[2], v[2], imageFileName);
+    }
+    
+    public int getArea() {
+        return Math.abs(coordinate_left - coordinate_right) *
+                Math.abs(coordinate_top - coordinate_bottom);
     }
     
     @Override

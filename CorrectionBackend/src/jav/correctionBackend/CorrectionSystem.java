@@ -157,13 +157,6 @@ public class CorrectionSystem {
                 ph.progress("Parsing file " + xmlfile + " (" + imagefile + ")");
                 try {
                     File f = new File(xmld, xmlfile);
-                    Log.debug(this, "xmldir %s", xmld);
-                    Log.debug(this, "xmlfile %s", xmlfile);
-                    Log.debug(this, "File %s", f);
-                    Log.debug(this, "imagefile %s", imagefile);
-                    Log.debug(this, "encoding %s", encoding);
-                    Log.debug(this, "cannon %s", f.getCanonicalPath());
-                    Log.debug(this, "parser %s", parser);
                     parser.parse(
                             f.getCanonicalPath(), 
                             imagefile, 

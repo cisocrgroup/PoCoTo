@@ -5,15 +5,19 @@
  */
 package jav.correctionBackend;
 
+import jav.correctionBackend.CompoundSet.Compound;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  *
  * @author finkf
  */
-public class OverlappingNodeTokenSet {
+public class CompoundSet implements Iterable<Compound> {
 
-    public class Node {
+    static public class Node {
         private final org.w3c.dom.Node node;
         private final TokenImageInfoBox tiib;
         public Node(org.w3c.dom.Node node, TokenImageInfoBox tiib) {
@@ -27,53 +31,36 @@ public class OverlappingNodeTokenSet {
             return node;
         }
     }
-    public class Compound {
-        private final ArrayList<Node> nodes;
-        private final ArrayList<Token> tokens;
-        public Compound() {
-            nodes = new ArrayList<>();
-            tokens = new ArrayList<>();
-        }
-        public boolean overlaps(Node node) {
-            for (Token token: tokens) {
-                if (token.getTokenImageInfoBox()
-                        .overlapsWith(node.getTokenImageInfoBox())) {
-                    return true;
-                }
-            }
-            return false;
+    public class Compound implements Iterable<Token> {
+        private final Node node;
+        private final Set<Token> tokens;
+        
+        public Compound(Node node) {
+            assert(node != null);
+            this.node = node;
+            tokens = new HashSet<>();
         }
         public boolean overlaps(Token token) {
-            for (Node node: nodes) {
-                if (node.getTokenImageInfoBox()
-                        .overlapsWith(token.getTokenImageInfoBox())) {
-                    return true;
-                }
-            }
-            return false;
+            return node.getTokenImageInfoBox()
+                    .overlapsWith(token.getTokenImageInfoBox());
         }
         public int getNumberOfTokens() {
             return tokens.size();
         }
-        public int getNumberOfNodes() {
-            return nodes.size();
-        }
-        public void add(Node node) {
-            nodes.add(node);
-        }
         public void add(Token token) {
             tokens.add(token);
         }
-        public Node getNodeAt(int index) {
-            return nodes.get(index);
+        public Node getNode() {
+            return node;
         }
-        public Token getTokenAt(int index) {
-            return tokens.get(index);
+        @Override
+        public Iterator<Token> iterator() {
+            return tokens.iterator();
         }
     }
     
     private final ArrayList<Compound> compounds;
-    public OverlappingNodeTokenSet() {
+    public CompoundSet() {
         compounds = new ArrayList<>();
     }
     public Compound get(int index) {
@@ -81,6 +68,10 @@ public class OverlappingNodeTokenSet {
     }
     public int size() {
         return compounds.size();
+    }
+    @Override
+    public Iterator<Compound> iterator() {
+        return compounds.iterator();
     }
     public void add(Node node, Iterable<Token> tokens) {
         Compound x = null;
@@ -99,8 +90,9 @@ public class OverlappingNodeTokenSet {
     private void add(Compound c, Node node, Iterable<Token> tokens) {
         c.add(node);
         for (Token token: tokens) {
-            if (c.overlaps(token))
+            if (c.overlaps(token)) {
                 c.add(token);
+            }
         }
     }
 }

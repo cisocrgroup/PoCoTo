@@ -2116,7 +2116,8 @@ class TokenIterator implements MyIterator<Token> {
                 retval.setTokenImageInfoBox(null);
             } else {
                 TokenImageInfoBox tiib = new TokenImageInfoBox();
-                tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                //tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                tiib.setImageFileName(rs.getString(14));
                 tiib.setCoordinateBottom(rs.getInt(12));
                 tiib.setCoordinateTop(rs.getInt(11));
                 tiib.setCoordinateLeft(rs.getInt(9));
