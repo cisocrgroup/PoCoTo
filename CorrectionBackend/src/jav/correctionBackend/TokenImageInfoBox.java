@@ -136,4 +136,19 @@ public class TokenImageInfoBox {
             return false;
         return true;
     }
+    
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append(imageFileName)
+                .append(' ')
+                .append(coordinate_left)
+                .append(' ')                
+                .append(coordinate_top)
+                .append(' ')
+                .append(coordinate_right)
+                .append(' ')
+                .append(coordinate_bottom)
+                .toString();
+    }
 }
