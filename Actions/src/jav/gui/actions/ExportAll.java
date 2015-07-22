@@ -5,6 +5,7 @@ import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.UnsavedChangesDialog;
 import jav.gui.main.MainController;
 import jav.gui.main.SwingUtils;
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import static java.lang.Thread.sleep;
@@ -87,7 +88,7 @@ public class ExportAll extends ContextAction<DocumentLoadedCookie>{
     }
     
     private void doIt() {
-        JFileChooser jfc = new JFileChooser();
+        JFileChooser jfc = new JFileChooser(getBaseDirectory());
         jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
@@ -104,6 +105,18 @@ public class ExportAll extends ContextAction<DocumentLoadedCookie>{
                 new CustomErrorDialog().showDialog("Error while exporting the document!\n" + ex.getLocalizedMessage());
             }
         }
+    }
+    
+    private File getBaseDirectory() {
+        String dbpath = MainController.findInstance()
+                .getDocumentProperties()
+                .getProperty("databasepath", "");
+        if (!"".equals(dbpath)) {
+            File f = new File(dbpath);
+            if (f.getParent() != null)
+                return new File(f.getParent());
+        }
+        return new File(System.getProperty("user.dir", ""));
     }
     
     private class NativeMethodRunner implements ProgressRunnable<Integer> {
