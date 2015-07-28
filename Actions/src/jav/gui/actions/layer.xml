@@ -127,6 +127,10 @@
                 </file>
 
             </folder>
+            <file name="jav-gui-actions-ImportFromDocXml.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ImportFromDocXml.instance"/>
+                <attr name="position" intvalue="1400"/>
+            </file>
         </folder>
         
         <folder name="Profiler">
