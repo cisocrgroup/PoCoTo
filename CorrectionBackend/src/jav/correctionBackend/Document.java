@@ -1,5 +1,8 @@
 package jav.correctionBackend;
 
+import jav.correctionBackend.export.BaseXmlExporter;
+import jav.correctionBackend.export.AbbyyXmlExporter;
+import jav.correctionBackend.export.HocrXmlExporter;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.OverwriteFileDialog;
 import jav.logging.log4j.Log;
@@ -41,7 +44,8 @@ import org.openide.awt.UndoRedo;
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
@@ -1680,7 +1684,7 @@ public abstract class Document {
         }
     }
     
-    public TokenIterator selectTokens(PreparedStatement stmnt) 
+    public MyIterator<Token> selectTokens(PreparedStatement stmnt) 
             throws SQLException {
         return TokenIterator.fromStmnt(jcp.getConnection(), stmnt);
     }

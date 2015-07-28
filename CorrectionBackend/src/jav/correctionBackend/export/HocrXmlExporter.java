@@ -3,12 +3,20 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jav.correctionBackend;
+package jav.correctionBackend.export;
 
+import jav.correctionBackend.Document;
+import jav.correctionBackend.Token;
+import jav.correctionBackend.TokenImageInfoBox;
+import jav.correctionBackend.MyIterator;
 import jav.logging.log4j.Log;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.StringReader;
+import java.io.Writer;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -38,7 +46,7 @@ import org.xml.sax.SAXException;
  *
  * @author finkf
  */
-class HocrXmlExporter extends BaseXmlExporter {
+public class HocrXmlExporter extends BaseXmlExporter {
     private static final Pattern imgRe = 
             Pattern.compile("image\\s+\"(.*)\"");
     private static final Pattern tiibRe = 
@@ -53,62 +61,28 @@ class HocrXmlExporter extends BaseXmlExporter {
     @Override
     public void export() throws IOException, Exception {
         org.w3c.dom.Document doc = getDom();
-        HashMap<Node, String> pageIndex = getImageFileNames(doc);
-        ArrayList<Token> tokens = loadAllTokensFromDocument(pageIndex);
-        ArrayList<CompoundSet.Node> nodes = loadAllNodes(pageIndex);
-        CompoundSet set = new CompoundSet();
-        for (CompoundSet.Node node: nodes) {
-            set.add(node, tokens);
+        HashMap<Node, String> pageIndex = getPageIndex(doc);
+        CompoundSet<HocrDomNode, HocrToken> compoundSet = getCompoundSet(pageIndex);
+        export(compoundSet, doc);
+    }
+    
+    private void export(
+            CompoundSet<HocrDomNode, HocrToken> compoundSet, 
+            org.w3c.dom.Document doc
+    ) throws FileNotFoundException, IOException {
+        Writer writer;
+        writer = new OutputStreamWriter(
+                new FileOutputStream(getDestinationFile())
+        );
+        for (Compound<HocrDomNode, HocrToken> c: compoundSet.getAbs()) {
+            writer.write(c.toString());
+            writer.write("\n");
         }
-        for (CompoundSet.Compound c: set) {
-            Attr attr = doc.createAttribute("compound");
-            if (c.isOneToOne()) {
-                CompoundSet.Node tmp = c.getNodes().next();
-                attr.setNodeValue("OneToOne");
-                tmp.getNode().getAttributes().setNamedItem(attr);
-            } else if (c.isMerge()) {
-                attr.setNodeValue("Merge");
-                Iterator<CompoundSet.Node> it = c.getNodes();
-                while (it.hasNext()) {
-                    CompoundSet.Node node = it.next();
-                    node.getNode().getAttributes().setNamedItem(attr);
-                }
-            } else if (c.isSplit()) {
-                attr.setNodeValue("Split");
-                c.getNodes().next().getNode().getAttributes().setNamedItem(attr);
-            } else {
-                String x = new StringBuilder("weird stuff (")
-                        .append(c.getNumberOfTokens())
-                        .append(' ')
-                        .append(c.getNumberOfNodes())
-                        .append(')')
-                        .toString();
-                Log.debug(this, "tokenssize: %d nodessize: %d", c.getNumberOfTokens(), c.getNumberOfNodes());
-                attr.setNodeValue(x);
-                Iterator<CompoundSet.Node> it = c.getNodes();
-                while (it.hasNext()) {
-                    Node daAttr = attr.cloneNode(true);
-                    CompoundSet.Node node = it.next();
-                    Log.debug(this, "Weird: %s", node.getTokenImageInfoBox().toString());
-                    Log.debug(this, "Weird area %d", node.getTokenImageInfoBox().getArea());
-                    Iterator<Token> jt = c.getTokens();
-                    while (jt.hasNext()) {
-                        Token t = jt.next();
-                        Log.debug(this, "Token: %s", t.getTokenImageInfoBox().toString());
-                        Log.debug(this, "Token area %d", t.getTokenImageInfoBox().getArea());
-                        TokenImageInfoBox overlap = node.getTokenImageInfoBox().calculateOverlappingBox(t.getTokenImageInfoBox());
-                        Log.debug(this, "overlap: %s", overlap.toString());
-                        Log.debug(this, "overlap area %d", overlap.getArea());
-                    }
-                    node.getNode().getAttributes().setNamedItem(daAttr);                    
-                }
-            }
+        for (Compound<HocrToken, HocrDomNode> c: compoundSet.getBas()) {
+            writer.write(c.toString());
+            writer.write("\n");
         }
-        TransformerFactory tf = TransformerFactory.newInstance();
-        Transformer t = tf.newTransformer();
-        DOMSource source = new DOMSource(doc);
-        StreamResult result = new StreamResult(getDestinationFile());
-        t.transform(source, result);
+        writer.close();
     }
     
     private org.w3c.dom.Document getDom() 
@@ -125,11 +99,11 @@ class HocrXmlExporter extends BaseXmlExporter {
         return db.parse(getSourceFile());
     }
     
-    private HashMap<Node, String> getImageFileNames(org.w3c.dom.Document doc) 
+    private HashMap<Node, String> getPageIndex(org.w3c.dom.Document doc) 
             throws XPathExpressionException, Exception {
         NodeList pageNodes = (NodeList) compileXpath("//div[@class='ocr_page']")
                 .evaluate(doc, XPathConstants.NODESET);
-        HashMap<Node, String> pageIndex = new HashMap();
+        HashMap<Node, String> pageIndex = new HashMap<>();
         for (int i = 0; i < pageNodes.getLength(); ++i) {
             Node node = pageNodes.item(i);
             String path = getImagePath(getAttributeValue(node, "title"));
@@ -140,35 +114,48 @@ class HocrXmlExporter extends BaseXmlExporter {
         return pageIndex;
     }
     
-    private ArrayList<Token> loadAllTokensFromDocument(
+    private CompoundSet<HocrDomNode, HocrToken> getCompoundSet(
+            HashMap<Node, String> pageIndex
+    ) throws SQLException, Exception {
+        ArrayList<HocrToken> tokens = loadAllTokensFromDocument(pageIndex);
+        ArrayList<HocrDomNode> nodes = loadAllNodes(pageIndex);
+        Log.debug(this, "tokens: %d", tokens.size());
+        Log.debug(this, "nodes: %d", nodes.size());
+        return new CompoundSet<>(nodes, tokens);
+    }
+    
+    private ArrayList<HocrToken> loadAllTokensFromDocument(
             HashMap<Node, String> pageIndex
     ) throws SQLException {
-        ArrayList<Token> tokens = new ArrayList();
+        ArrayList<HocrToken> tokens = new ArrayList<>();
         for (Node node: pageIndex.keySet()) {
             PreparedStatement s = getDocument().prepareStatement(tokenStmnt);
             s.setString(1, pageIndex.get(node));
-            TokenIterator it = getDocument().selectTokens(s);
+            MyIterator<Token> it = getDocument().selectTokens(s);
             while (it.hasNext()) {
-                tokens.add(it.next());
+                tokens.add(new HocrToken(it.next()));
             }
         }
         return tokens;
     }
     
-    private ArrayList<CompoundSet.Node> loadAllNodes(
+    private ArrayList<HocrDomNode> loadAllNodes(
             HashMap<Node, String> pageIndex
     ) throws XPathExpressionException, Exception {
-        ArrayList<CompoundSet.Node> nodes = new ArrayList();
+        ArrayList<HocrDomNode> nodes = new ArrayList<>();
+        XPathExpression xpath = compileXpath("//span[@class='ocrx_word']");
         for (Node node: pageIndex.keySet()) {
-            NodeList tokenNodes = (NodeList) compileXpath("//span[@class='ocrx_word']")
-                    .evaluate(node, XPathConstants.NODESET);
-            for (int i = 0; i < tokenNodes.getLength(); ++i) {
-                Node tokenNode = tokenNodes.item(i);
+            NodeList words = (NodeList) xpath.evaluate(
+                    node, 
+                    XPathConstants.NODESET
+            );
+            for (int w = 0; w < words.getLength(); ++w) {
+                Node word = words.item(w);
                 TokenImageInfoBox tiib = getTokenImageInfoBox(
-                        tokenNode,
+                        word, 
                         pageIndex.get(node)
                 );
-                nodes.add(new CompoundSet.Node(tokenNode, tiib));
+                nodes.add(new HocrDomNode(word, tiib));
             }
         }
         return nodes;
@@ -197,12 +184,33 @@ class HocrXmlExporter extends BaseXmlExporter {
         return XPathFactory.newInstance().newXPath().compile(exp);
     }
 
-    private TokenImageInfoBox getTokenImageInfoBox(Node node, String img) 
+    private TokenImageInfoBox getTokenImageInfoBox(Node word, String img) 
             throws Exception {
-        String title = getAttributeValue(node, "title");
-        if (title == null)
-            throw new Exception("token without a title");
-        return getTokenImageInfoBox(title, img);
+        String wordTitle = getAttributeValue(word, "title");
+        if (wordTitle == null)
+            throw new Exception("ocr(x)_word without a title");
+        Node line = word.getParentNode();
+        if (line == null)
+            throw new Exception("ocr(x)_word without a parent ocr_line");
+        String lineTitle = getAttributeValue(line, "title");
+        if (lineTitle == null)
+            throw new Exception("ocr_line without a title");
+        TokenImageInfoBox wordTiib = getTokenImageInfoBox(wordTitle, img);
+        TokenImageInfoBox lineTiib = getTokenImageInfoBox(lineTitle, img);
+        if (word.getTextContent() != null && word.getTextContent().equals("ufum")) {
+            Log.debug(this, "word:      %s", word.getTextContent());
+            Log.debug(this, "wordTitle: %s", wordTitle);
+            Log.debug(this, "wordTiib:  %s", wordTiib);
+            Log.debug(this, "lineTitle: %s", lineTitle);
+            Log.debug(this, "lineTiib:  %s", lineTiib);
+        }
+        return new TokenImageInfoBox(
+                wordTiib.getCoordinateLeft(),
+                lineTiib.getCoordinateTop(),
+                wordTiib.getCoordinateRight(),
+                lineTiib.getCoordinateBottom(),
+                img
+        );
     }
     
     private TokenImageInfoBox getTokenImageInfoBox(String title, String img) 

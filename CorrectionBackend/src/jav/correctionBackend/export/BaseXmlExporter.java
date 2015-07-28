@@ -3,17 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jav.correctionBackend;
+package jav.correctionBackend.export;
 
+import jav.correctionBackend.Document;
 import java.io.File;
 import java.io.IOException;
-import org.xml.sax.SAXException;
 
 /**
  *
  * @author finkf
  */
-abstract class BaseXmlExporter {
+public abstract class BaseXmlExporter {
     private final File src;
     private final File dest;
     private final Document document;

@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jav.correctionBackend;
+package jav.correctionBackend.export;
 
+import jav.correctionBackend.Document;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,7 +14,7 @@ import java.nio.file.Files;
  *
  * @author finkf
  */
-class AbbyyXmlExporter extends BaseXmlExporter {
+public class AbbyyXmlExporter extends BaseXmlExporter {
 
     public AbbyyXmlExporter(File src, File dest, Document document) {
         super(src, dest, document);

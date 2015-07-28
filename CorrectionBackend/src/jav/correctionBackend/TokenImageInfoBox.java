@@ -128,6 +128,13 @@ public class TokenImageInfoBox {
         this.imageFileName = s;
     }
     
+    public void mergeWith(TokenImageInfoBox other) {
+        coordinate_left = Math.min(coordinate_left, other.coordinate_left);
+        coordinate_top = Math.min(coordinate_top, other.coordinate_top);
+        coordinate_right = Math.max(coordinate_right, other.coordinate_right);
+        coordinate_bottom = Math.max(coordinate_bottom, other.coordinate_bottom);
+    }
+    
     public boolean overlapsWith(TokenImageInfoBox other) {
         if (other == null)
             return false;
@@ -137,27 +144,23 @@ public class TokenImageInfoBox {
             return false;
         if (coordinate_left > other.coordinate_right)
             return false;
-        if (coordinate_bottom < other.coordinate_top)
+        if (coordinate_left < other.coordinate_top)
             return false;
         if (coordinate_top > other.coordinate_bottom)
             return false;
         return true;
     }
     
-    public TokenImageInfoBox calculateOverlappingBox(TokenImageInfoBox other) {
-        if (! overlapsWith(other))
-            return new TokenImageInfoBox();
-        assert(overlapsWith(other));
-        int h[] = {coordinate_left, coordinate_right, other.coordinate_left, other.coordinate_right};
-        int v[] = {coordinate_top, coordinate_bottom, other.coordinate_top, other.coordinate_bottom};
-        Arrays.sort(h);
-        Arrays.sort(v);
-        return new TokenImageInfoBox(h[1], v[1], h[2], v[2], imageFileName);
+    public int getWidth() {
+        return Math.abs(coordinate_left - coordinate_right);
+    }
+    
+    public int getHeight() {
+        return Math.abs(coordinate_top - coordinate_bottom);
     }
     
     public int getArea() {
-        return Math.abs(coordinate_left - coordinate_right) *
-                Math.abs(coordinate_top - coordinate_bottom);
+        return getHeight() * getWidth();
     }
     
     @Override
@@ -173,5 +176,21 @@ public class TokenImageInfoBox {
                 .append(' ')
                 .append(coordinate_bottom)
                 .toString();
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (this == other)
+            return true;
+        if (other == null)
+            return false;
+        if (!(other instanceof TokenImageInfoBox))
+            return false;
+        TokenImageInfoBox that = (TokenImageInfoBox) other;
+        return this.imageFileName.equals(that.imageFileName) &&
+                this.coordinate_bottom == that.coordinate_bottom &&
+                this.coordinate_left == that.coordinate_left &&
+                this.coordinate_right == that.coordinate_right &&
+                this.coordinate_top == that.coordinate_top;
     }
 }
