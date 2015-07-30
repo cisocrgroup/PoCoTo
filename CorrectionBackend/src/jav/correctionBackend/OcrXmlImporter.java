@@ -177,7 +177,6 @@ class CandidateImporter extends DefaultHandler {
                         Double.parseDouble(matcher.group(3)), 
                         Integer.parseInt(matcher.group(4))
                 );
-                Log.debug(this, "canditate: %s", tempcand.toString());
                 doc.addCandidate(tempcand);
                 if (rank == 1) {
                     doc.setTopCandDLev(tokenID, Integer.parseInt(matcher.group(4)));
