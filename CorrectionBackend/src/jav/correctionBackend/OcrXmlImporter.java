@@ -1,5 +1,6 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -168,7 +169,15 @@ class CandidateImporter extends DefaultHandler {
             Matcher matcher = pattern.matcher(content);
             if (matcher.matches()) {
                 rank++;
-                tempcand = new Candidate(tokenID, rank, matcher.group(1), matcher.group(2), Double.parseDouble(matcher.group(3)), Integer.parseInt(matcher.group(4)));
+                tempcand = new Candidate(
+                        tokenID, 
+                        rank, 
+                        matcher.group(1), 
+                        matcher.group(2), 
+                        Double.parseDouble(matcher.group(3)), 
+                        Integer.parseInt(matcher.group(4))
+                );
+                Log.debug(this, "canditate: %s", tempcand.toString());
                 doc.addCandidate(tempcand);
                 if (rank == 1) {
                     doc.setTopCandDLev(tokenID, Integer.parseInt(matcher.group(4)));

@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
 import org.netbeans.api.progress.ProgressUtils;
@@ -82,31 +84,59 @@ public class ImportFromDocXml extends ContextAction<CorrectionSystemReadyCookie>
     }
     
     private void doIt() {
-        JFileChooser jfc = new JFileChooser();
-//        AbstractButton button = SwingUtils.getDescendantOfType(AbstractButton.class, jfc, "Icon", UIManager.getIcon("FileChooser.detailsViewIcon"));
-//        button.doClick();
-
-        if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-            try {
-                File f = jfc.getSelectedFile();
-                ImportFromDocXml.NativeMethodRunner runner = new ImportFromDocXml.NativeMethodRunner(f.getCanonicalPath());
-                int retval = ProgressUtils.showProgressDialogAndRun(runner, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing"), true);
-                if( retval == 0) {
-                    new CustomErrorDialog().showDialog("Error while importing the document!\n");
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                new CustomErrorDialog().showDialog("Error while importing the document!\n" + ex.getLocalizedMessage());
+        File docfile = getDocFile(null);
+        if (docfile == null)
+            return;
+        File profilefile = getProfileFile(docfile);
+        if (profilefile == null)
+            return;
+        try {
+            ImportFromDocXml.NativeMethodRunner runner = 
+                    new ImportFromDocXml.NativeMethodRunner(
+                            docfile.getCanonicalPath(),
+                            profilefile.getCanonicalPath()
+                    );
+            int retval = ProgressUtils.showProgressDialogAndRun(runner, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing"), true);
+            if( retval == 0) {
+                new CustomErrorDialog().showDialog("Error while importing the document!\n");
             }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            new CustomErrorDialog().showDialog("Error while importing the document!\n" + ex.getLocalizedMessage());
         }
+    }
+    
+    private File getDocFile(File file) {
+        return selectFile(
+                file,
+                new FileNameExtensionFilter("ocrcxml", "ocrcxml")
+        );
+    }
+
+    private File getProfileFile(File file) {
+        return selectFile(
+                file,
+                new FileNameExtensionFilter("xml", "xml")
+        );
+    }
+    private File selectFile(File file, FileFilter filter) {
+        JFileChooser jfc = new JFileChooser();
+        if (file != null)
+            jfc.setCurrentDirectory(file);
+        jfc.setFileFilter(filter);
+        if (jfc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
+            return jfc.getSelectedFile();
+        else
+            return null;
     }
     
     private class NativeMethodRunner implements ProgressRunnable<Integer> {
         
-        private String filename;
+        private final String docname, profilename;
         
-        public NativeMethodRunner(String f) {
-            this.filename = f;
+        public NativeMethodRunner(String docname, String profilename) {
+            this.docname = docname;
+            this.profilename = profilename;
         }
 
         @Override
@@ -114,7 +144,7 @@ public class ImportFromDocXml extends ContextAction<CorrectionSystemReadyCookie>
             try {
                 ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing"));
                 ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing"));
-                MainController.findInstance().importDocument(filename);
+                MainController.findInstance().importProfile(docname, profilename);
                 return 1;
             } catch (Exception e) {
                 e.printStackTrace();

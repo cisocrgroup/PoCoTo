@@ -71,4 +71,22 @@ public class Candidate {
     public double getVoteweight() {
         return this.voteweight;
     }
+    
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("suggestion: ")
+                .append(getSuggestion())
+                .append(" interpretation: ")
+                .append(getInterpretation())
+                .append(" id: ")
+                .append(getTokenID())
+                .append(" rank: ")
+                .append(getRank())
+                .append(" getDlev: ")
+                .append(getDlev())
+                .append(" voteweight: ")
+                .append(getVoteweight())
+                .toString();
+    }
 }

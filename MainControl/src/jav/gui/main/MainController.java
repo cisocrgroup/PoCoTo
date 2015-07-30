@@ -859,8 +859,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         }
     }
     
-    public void importDocument(String docpath) {
+    public void importProfile(String docpath, String profilepath) {
         new OcrXmlImporter().importCandidates(globalDocument, docpath);
+        globalDocument.clearPatterns();
+        new OcrXmlImporter().importProfile(globalDocument, profilepath);
     }
 
     private class DocumentCreator implements ProgressRunnable<Document> {
