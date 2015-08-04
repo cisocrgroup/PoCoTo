@@ -50,8 +50,8 @@ public final class NewProjectVisualPanel3 extends JPanel implements ItemListener
         changeSupport.addChangeListener(panel);
         
         try {
-            String[] configurations = MainController.findInstance()
-                    .getProfilerWebServiceStub()
+            ProfilerWebServiceStub stub = MainController.findInstance().newProfilerWebServiceStub();
+            String[] configurations = stub
                     .getConfigurations()
                     .getGetConfigurationsResponse()
                     .getConfigurations();

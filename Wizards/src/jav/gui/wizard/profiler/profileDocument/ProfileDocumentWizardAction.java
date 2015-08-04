@@ -1,5 +1,6 @@
 package jav.gui.wizard.profiler.profileDocument;
 
+import cis.profiler.client.ProfilerWebServiceStub;
 import cis.profiler.client.ProfilerWebServiceStub.GetConfigurationsResponse;
 import jav.gui.actions.ContextAction;
 import jav.gui.cookies.DocumentLoadedCookie;
@@ -79,7 +80,8 @@ public final class ProfileDocumentWizardAction extends ContextAction<DocumentLoa
 
     private void showDialog() {
         try {
-            GetConfigurationsResponse gcr = MainController.findInstance().getProfilerWebServiceStub().getConfigurations();
+            ProfilerWebServiceStub stub = MainController.findInstance().newProfilerWebServiceStub();
+            GetConfigurationsResponse gcr = stub.getConfigurations();
             configurations = gcr.getGetConfigurationsResponse().getConfigurations();
             
             WizardDescriptor wizardDescriptor = new WizardDescriptor(getPanels(configurations));

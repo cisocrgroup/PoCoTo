@@ -372,7 +372,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void profileDocument(String configuration) {
-        try {
+        try {          
             ProgressRunnable<Integer> r = new DocumentProfiler(configuration);
             Integer retval = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"), true);
             if (retval != null) {
@@ -643,20 +643,15 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         return this.docproperties;
     }
 
-    public ProfilerWebServiceStub getProfilerWebServiceStub() {
-        try {
-            ProfilerWebServiceStub stub = 
-                    new ProfilerWebServiceStub(getProfilerServiceUrl());
-            stub._getServiceClient().getOptions().setManageSession(true);
-            stub._getServiceClient()
-                    .getOptions()
-                    .setProperty(Constants.Configuration.ENABLE_MTOM, Constants.VALUE_TRUE);
-            stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(3600000);
-            return stub;
-        } catch (AxisFault e) {
-            Log.error(this, "Could not create ProfilerWebSercice: %s", e.getMessage());
-        }
-        return null;
+    public ProfilerWebServiceStub newProfilerWebServiceStub() throws AxisFault {
+        ProfilerWebServiceStub stub = 
+                new ProfilerWebServiceStub(getProfilerServiceUrl());
+        stub._getServiceClient().getOptions().setManageSession(true);
+        stub._getServiceClient()
+                .getOptions()
+                .setProperty(Constants.Configuration.ENABLE_MTOM, Constants.VALUE_TRUE);
+        stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(3600000);
+        return stub;
     }
 
     public void reloadDocument() {
@@ -1027,9 +1022,11 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         private ProgressHandle ph;
         private String status;
         private int retval;
+        private ProfilerWebServiceStub stub;
 
         public DocumentProfiler(String c) throws AxisFault {
             this.configuration = c;
+            stub = MainController.findInstance().newProfilerWebServiceStub();
         }
 
         @Override
@@ -1125,13 +1122,16 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             new OcrXmlImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
 
                             retval = 0;
-                            done = true;
                         } catch (FileNotFoundException ex) {
                             retval = -1;
                             Exceptions.printStackTrace(ex);
+                            Log.error(this, "FileNotFoundException: %s", ex.getMessage());
                         } catch (IOException ex) {
                             retval = -1;
                             Exceptions.printStackTrace(ex);
+                            Log.error(this, "IOException: %s", ex.getMessage());                            
+                        } finally {
+                            done = true;
                         }
                     }
 
@@ -1143,7 +1143,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         aprt.setUserid(MainController.findInstance().getProfilerUserId());
                         apr.setAbortProfilingRequest(aprt);
                         try {
-                            AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
+                            AbortProfilingResponse aps = stub.abortProfiling(apr);
                             AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
 
                         } catch (RemoteException ex) {
@@ -1155,22 +1155,22 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                     }
                 };
 
-                MainController.findInstance().getProfilerWebServiceStub().startgetProfile(gpr, handler);
+                stub.startgetProfile(gpr, handler);
 
                 while (!done) {
                     try {
-                        Thread.sleep(3000);
+                        Thread.sleep(10000);
                         GetProfilingStatusRequest grpq = new GetProfilingStatusRequest();
                         GetProfilingStatusRequestType grpqt = new GetProfilingStatusRequestType();
                         grpqt.setUserid(MainController.findInstance().getProfilerUserId());
 
                         grpq.setGetProfilingStatusRequest(grpqt);
-                        GetProfilingStatusResponse gprs = MainController.findInstance().getProfilerWebServiceStub().getProfilingStatus(grpq);
+                        GetProfilingStatusResponse gprs = stub.getProfilingStatus(grpq);
                         GetProfilingStatusResponseType gprst = gprs.getGetProfilingStatusResponse();
 
                         status = gprst.getStatus();
-                        ph.setDisplayName(gprst.getStatus());
-                        ph.progress(gprst.getAdditional());
+                        ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
+                        //ph.progress(gprst.getAdditional());
                     } catch (InterruptedException ex) {
                         retval = -1;
                     }
@@ -1191,7 +1191,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 aprt.setUserid(MainController.findInstance().getProfilerUserId());
                 apr.setAbortProfilingRequest(aprt);
                 try {
-                    AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
+                    AbortProfilingResponse aps = stub.abortProfiling(apr);
                     AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
 
                     if (apst.getMessage().equals("destroyed")) {
@@ -1220,9 +1220,15 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         private ProgressHandle ph;
         private String status;
         private int retval;
+        private ProfilerWebServiceStub stub;
 
         public DocumentSimpleProfiler(String c) {
             this.configuration = c;
+            try {
+                stub = MainController.findInstance().newProfilerWebServiceStub();
+            } catch (AxisFault e) {
+                Log.error(DocumentSimpleProfiler.class, "AxisFault: %s", e.getMessage());
+            }
         }
 
         @Override
@@ -1308,7 +1314,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         aprt.setUserid(MainController.findInstance().getProfilerUserId());
                         apr.setAbortProfilingRequest(aprt);
                         try {
-                            AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
+                            AbortProfilingResponse aps = stub.abortProfiling(apr);
                             AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
                         } catch (RemoteException ex) {
                             Exceptions.printStackTrace(ex);
@@ -1319,7 +1325,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                     }
                 };
 
-                MainController.findInstance().getProfilerWebServiceStub().startsimpleEnrich(gpr, handler);
+                stub.startsimpleEnrich(gpr, handler);
 
                 while (!done) {
                     try {
@@ -1329,7 +1335,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         grpqt.setUserid("simpleEnrich");
 
                         grpq.setGetProfilingStatusRequest(grpqt);
-                        GetProfilingStatusResponse gprs = MainController.findInstance().getProfilerWebServiceStub().getProfilingStatus(grpq);
+                        GetProfilingStatusResponse gprs = stub.getProfilingStatus(grpq);
                         GetProfilingStatusResponseType gprst = gprs.getGetProfilingStatusResponse();
 
                         status = gprst.getStatus();
@@ -1355,7 +1361,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 aprt.setUserid(MainController.findInstance().getProfilerUserId());
                 apr.setAbortProfilingRequest(aprt);
                 try {
-                    AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
+                    AbortProfilingResponse aps = stub.abortProfiling(apr);
                     AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
 
                     if (apst.getMessage().equals("destroyed")) {
