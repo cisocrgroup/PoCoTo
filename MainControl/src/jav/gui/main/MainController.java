@@ -1122,6 +1122,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             prof_out.close();
 
                             ph.setDisplayName(statusApplyProfile);
+                            Log.info(this, "applying new profile to document");
                             globalDocument.clearPatterns();
                             new OcrXmlImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
 
@@ -1141,6 +1142,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
                     @Override
                     public void receiveErrorgetProfile(Exception e) {
+                        Log.error(this, "recieved error from pws: %s", e.getMessage());
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
@@ -1181,8 +1183,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         retval = -1;
                     }
                 }
+                Log.info(this, "profiling done");
                 return retval;
             } catch (Exception e) {
+                Log.error(this, "profiling error: %s", e.getMessage());
                 e.printStackTrace();
                 return -1;
             }
@@ -1314,6 +1318,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
                     @Override
                     public void receiveErrorsimpleEnrich(Exception e) {
+                        Log.info(this, "profiling error: %s", e.getMessage());
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
@@ -1326,6 +1331,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             Exceptions.printStackTrace(ex);
                             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("not_possible"));
                         }
+                        done = true;
                         retval = -1;
                         System.out.println("ReceiveError " + e.getMessage());
                     }
@@ -1351,8 +1357,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         retval = -1;
                     }
                 }
+                Log.info(this, "profiling ended");
                 return retval;
             } catch (Exception e) {
+                Log.error(this, "profiling error: %s", e.getMessage());
                 e.printStackTrace();
                 return -1;
             }
