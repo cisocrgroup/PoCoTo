@@ -175,18 +175,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         MessageCenter.getInstance().addTokenStatusEventListener(this);
         MessageCenter.getInstance().addSavedEventListener(this);
     }
-
-    public String getProfilerUserId() {
-        String id = NbPreferences.forModule(MainController.class)
-                .get("profiler_user_id", "");
-        Log.info(this, "profiler_user_id: '%s'", id);
-        return id;
-    }
-    public void setProfilerUserId(String id) {
-        Log.info(this, "setting profiler_user_id: '%s'", id);
-        NbPreferences.forModule(MainController.class)
-                .put("profiler_user_id", id);
-    }
+    
     public String getProfilerServiceUrl() {
         String url = NbPreferences.forModule(MainController.class)
                 .get("profiler_service_url", ALPHA);
@@ -1054,7 +1043,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 GetProfileRequest gpr = new GetProfileRequest();
                 GetProfileRequestType gprt = new GetProfileRequestType();
                 gprt.setConfiguration(this.configuration);
-                gprt.setUserid(MainController.findInstance().getProfilerUserId());
 
                 AttachmentType docoutatt = new AttachmentType();
                 Base64Binary docoutbin = new Base64Binary();
@@ -1154,7 +1142,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                        aprt.setUserid(MainController.findInstance().getProfilerUserId());
                         apr.setAbortProfilingRequest(aprt);
                         try {
                             AbortProfilingResponse aps = stub.abortProfiling(apr);
@@ -1204,7 +1191,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 AbortProfilingRequest apr = new AbortProfilingRequest();
                 AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                aprt.setUserid(MainController.findInstance().getProfilerUserId());
                 apr.setAbortProfilingRequest(aprt);
                 try {
                     AbortProfilingResponse aps = stub.abortProfiling(apr);
@@ -1327,7 +1313,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                        aprt.setUserid(MainController.findInstance().getProfilerUserId());
                         apr.setAbortProfilingRequest(aprt);
                         try {
                             AbortProfilingResponse aps = stub.abortProfiling(apr);
@@ -1374,7 +1359,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 AbortProfilingRequest apr = new AbortProfilingRequest();
                 AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                aprt.setUserid(MainController.findInstance().getProfilerUserId());
                 apr.setAbortProfilingRequest(aprt);
                 try {
                     AbortProfilingResponse aps = stub.abortProfiling(apr);
