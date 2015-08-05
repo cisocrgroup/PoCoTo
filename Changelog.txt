@@ -1,0 +1,2 @@
+2015-08-04 Removed profiler user-id from options panel
+2015-08-05 Improved status messages of profiling dialog
