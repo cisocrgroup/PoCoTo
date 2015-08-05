@@ -98,6 +98,7 @@ import org.openide.windows.WindowManager;
 public class MainController implements Lookup.Provider, TokenStatusEventSlot, SavedEventSlot {
     private static final String ALPHA = 
             "http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService";
+    private static final String USERID = "PoCoToUser";
     private static final Cursor busyCursor = new Cursor(Cursor.WAIT_CURSOR);
     private static final Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
     private InstanceContent content;
@@ -175,7 +176,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         MessageCenter.getInstance().addTokenStatusEventListener(this);
         MessageCenter.getInstance().addSavedEventListener(this);
     }
-    
+
     public String getProfilerServiceUrl() {
         String url = NbPreferences.forModule(MainController.class)
                 .get("profiler_service_url", ALPHA);
@@ -1043,6 +1044,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 GetProfileRequest gpr = new GetProfileRequest();
                 GetProfileRequestType gprt = new GetProfileRequestType();
                 gprt.setConfiguration(this.configuration);
+                gprt.setUserid(USERID);
 
                 AttachmentType docoutatt = new AttachmentType();
                 Base64Binary docoutbin = new Base64Binary();
@@ -1142,6 +1144,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
+                        aprt.setUserid(USERID);
                         apr.setAbortProfilingRequest(aprt);
                         try {
                             AbortProfilingResponse aps = stub.abortProfiling(apr);
@@ -1191,6 +1194,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 AbortProfilingRequest apr = new AbortProfilingRequest();
                 AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
+                aprt.setUserid(USERID);
                 apr.setAbortProfilingRequest(aprt);
                 try {
                     AbortProfilingResponse aps = stub.abortProfiling(apr);
@@ -1313,6 +1317,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
+                        aprt.setUserid(USERID);
                         apr.setAbortProfilingRequest(aprt);
                         try {
                             AbortProfilingResponse aps = stub.abortProfiling(apr);
@@ -1359,6 +1364,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 AbortProfilingRequest apr = new AbortProfilingRequest();
                 AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
+                aprt.setUserid(USERID);
                 apr.setAbortProfilingRequest(aprt);
                 try {
                     AbortProfilingResponse aps = stub.abortProfiling(apr);
