@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.prefs.Preferences;
+import java.util.ResourceBundle;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
 import javax.swing.*;
@@ -97,8 +98,6 @@ import org.openide.windows.WindowManager;
 public class MainController implements Lookup.Provider, TokenStatusEventSlot, SavedEventSlot {
     private static final String ALPHA = 
             "http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService";
-    private static final String DIENER = 
-            "http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService";
     private static final Cursor busyCursor = new Cursor(Cursor.WAIT_CURSOR);
     private static final Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
     private InstanceContent content;
@@ -190,7 +189,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
     public String getProfilerServiceUrl() {
         String url = NbPreferences.forModule(MainController.class)
-                .get("profiler_service_url", DIENER);
+                .get("profiler_service_url", ALPHA);
         Log.info(this, "profiler_service_url: '%s'", url);
         return url;
     }
@@ -1023,7 +1022,22 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         private String status;
         private int retval;
         private ProfilerWebServiceStub stub;
-
+        private final String statusProfiling = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("profiling");
+        private final String statusUploading = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("uploadprofile");
+        private final String statusDownloading = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("downloadprofile");
+        private final String statusApplyProfile = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("applyprofile");
+        private final String statusWaiting = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("waitprofile");
+        
         public DocumentProfiler(String c) throws AxisFault {
             this.configuration = c;
             stub = MainController.findInstance().newProfilerWebServiceStub();
@@ -1034,9 +1048,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             this.ph = p;
             try {
                 retval = -1;
-
-                ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-                ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
+                ph.setDisplayName(statusProfiling);
+                ph.progress(statusUploading);
 
                 GetProfileRequest gpr = new GetProfileRequest();
                 GetProfileRequestType gprt = new GetProfileRequestType();
@@ -1051,8 +1064,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
                 globalDocument.exportAsDocXML(tempFile.getCanonicalPath(), false);
 
-                ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-                ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
+                //ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
+                //ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
 
                 FileDataSource docoutds = new FileDataSource(tempFile.getCanonicalPath());
                 DataHandler docoutdh = new DataHandler(docoutds);
@@ -1072,6 +1085,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         GetProfileResponseType gprest = gpres.getGetProfileResponse();
 
                         try {
+                            ph.progress(statusDownloading);
                             DataHandler dh_doc = gprest.getDoc_out().getBinaryData().getBase64Binary();
                             FileOutputStream doc_out = new FileOutputStream(tempFile.getCanonicalPath());
                             InputStream doc_in = dh_doc.getInputStream();
@@ -1080,13 +1094,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
                             byte[] buffer = new byte[8192];
                             int bytesRead = 0;
-
-                            ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("downloading_doc"));
-
+                            
+                            Log.info(this, "writing docxml");
                             while ((bytesRead = doc_in.read(buffer, 0, 8192)) != -1) {
                                 totalBytesRead += bytesRead;
                                 doc_out.write(buffer, 0, bytesRead);
-                                ph.progress(totalBytesRead + " / " + totalBytesToRead);
+                                //ph.progress(totalBytesRead + " / " + totalBytesToRead);
                             }
 
                             doc_in.close();
@@ -1106,18 +1119,19 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             totalBytesToRead = gprest.getProfile_out_size();
                             totalBytesRead = 0;
 
-                            ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("downloading_profile"));
-
+                            //ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("downloading_profile"));
+                            Log.info(this, "writing profile out");
                             while ((bytesRead = prof_in.read(buffer, 0, 8192)) != -1) {
                                 totalBytesRead += bytesRead;
                                 prof_out.write(buffer, 0, bytesRead);
-                                ph.progress(totalBytesRead + " / " + totalBytesToRead);
+                                //ph.progress(totalBytesRead + " / " + totalBytesToRead);
                             }
 
                             prof_in.close();
                             prof_out.flush();
                             prof_out.close();
 
+                            ph.setDisplayName(statusApplyProfile);
                             globalDocument.clearPatterns();
                             new OcrXmlImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
 
@@ -1155,21 +1169,23 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                     }
                 };
 
+                ph.progress(statusProfiling);
                 stub.startgetProfile(gpr, handler);
 
                 while (!done) {
                     try {
                         Thread.sleep(10000);
-                        GetProfilingStatusRequest grpq = new GetProfilingStatusRequest();
-                        GetProfilingStatusRequestType grpqt = new GetProfilingStatusRequestType();
-                        grpqt.setUserid(MainController.findInstance().getProfilerUserId());
+                        ph.progress(statusWaiting);
+                        //GetProfilingStatusRequest grpq = new GetProfilingStatusRequest();
+                        //GetProfilingStatusRequestType grpqt = new GetProfilingStatusRequestType();
+                        //grpqt.setUserid(MainController.findInstance().getProfilerUserId());
 
-                        grpq.setGetProfilingStatusRequest(grpqt);
-                        GetProfilingStatusResponse gprs = stub.getProfilingStatus(grpq);
-                        GetProfilingStatusResponseType gprst = gprs.getGetProfilingStatusResponse();
+                        //grpq.setGetProfilingStatusRequest(grpqt);
+                        //GetProfilingStatusResponse gprs = stub.getProfilingStatus(grpq);
+                        //GetProfilingStatusResponseType gprst = gprs.getGetProfilingStatusResponse();
 
-                        status = gprst.getStatus();
-                        ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
+                        //status = gprst.getStatus();
+                        //ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
                         //ph.progress(gprst.getAdditional());
                     } catch (InterruptedException ex) {
                         retval = -1;
