@@ -39,14 +39,19 @@ import jav.logging.log4j.Log;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Random;
 import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
 import javax.swing.*;
@@ -1006,8 +1011,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private class DocumentProfiler implements ProgressRunnable<Integer>, Cancellable {
 
         private String configuration;
-        private int totalBytesRead;
-        private long totalBytesToRead;
         private ProgressHandle ph;
         private String status;
         private int retval;
@@ -1052,18 +1055,26 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 tempFile = File.createTempFile("document", ".ocrcxml");
                 tempFile.deleteOnExit();
 
+                Log.info(this, "exporting document ...");
                 globalDocument.exportAsDocXML(tempFile.getCanonicalPath(), false);
-
-                //ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-                //ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-
-                FileDataSource docoutds = new FileDataSource(tempFile.getCanonicalPath());
+                File compressedTmpFile = File.createTempFile("document", ".corcxml.gz");
+                compressedTmpFile.deleteOnExit();
+                OutputStream compressedOut = new GZIPOutputStream(
+                        new FileOutputStream(compressedTmpFile)
+                );
+                Log.info(this, "compressing document ...");
+                Files.copy(tempFile.toPath(), compressedOut);
+                compressedOut.close();
+                FileDataSource docoutds = new FileDataSource(
+                        compressedTmpFile.getCanonicalPath()
+                );
                 DataHandler docoutdh = new DataHandler(docoutds);
                 docoutbin.setBase64Binary(docoutdh);
                 docoutatt.setBinaryData(docoutbin);
                 gprt.setDoc_in(docoutatt);
                 gprt.setDoc_in_type("DOCXML");
-                gprt.setDoc_in_size(tempFile.length());
+                Log.debug(this, "compressed size: %d", compressedTmpFile.length());
+                gprt.setDoc_in_size(compressedTmpFile.length());
 
                 gpr.setGetProfileRequest(gprt);
 
@@ -1076,56 +1087,48 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
                         try {
                             ph.progress(statusDownloading);
-                            DataHandler dh_doc = gprest.getDoc_out().getBinaryData().getBase64Binary();
-                            FileOutputStream doc_out = new FileOutputStream(tempFile.getCanonicalPath());
-                            InputStream doc_in = dh_doc.getInputStream();
-
-                            totalBytesToRead = gprest.getDoc_out_size();
-
-                            byte[] buffer = new byte[8192];
-                            int bytesRead = 0;
-                            
-                            Log.info(this, "writing docxml");
-                            while ((bytesRead = doc_in.read(buffer, 0, 8192)) != -1) {
-                                totalBytesRead += bytesRead;
-                                doc_out.write(buffer, 0, bytesRead);
-                                //ph.progress(totalBytesRead + " / " + totalBytesToRead);
-                            }
-
+                            DataHandler dh_doc = gprest.getDoc_out()
+                                    .getBinaryData()
+                                    .getBase64Binary();
+                            InputStream doc_in = new GZIPInputStream(
+                                    dh_doc.getInputStream()
+                            );
+                            Log.info(this, "writing docxml ...");
+                            Files.copy(
+                                    doc_in, 
+                                    tempFile.toPath(), 
+                                    StandardCopyOption.REPLACE_EXISTING
+                            );
+                            Log.info(this, "done writing docxml");
                             doc_in.close();
-                            doc_out.flush();
-                            doc_out.close();
 
                             globalDocument.clearCandidates();
-                            new OcrXmlImporter().importCandidates(globalDocument, tempFile.getCanonicalPath());
+                            new OcrXmlImporter().importCandidates(
+                                    globalDocument, 
+                                    tempFile.getCanonicalPath()
+                            );
 
                             tempFile = File.createTempFile("profile", ".xml");
                             tempFile.deleteOnExit();
-
-                            DataHandler dh_prof = gprest.getProfile_out().getBinaryData().getBase64Binary();
-                            FileOutputStream prof_out = new FileOutputStream(tempFile.getCanonicalPath());
-                            InputStream prof_in = dh_prof.getInputStream();
-
-                            totalBytesToRead = gprest.getProfile_out_size();
-                            totalBytesRead = 0;
-
-                            //ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("downloading_profile"));
-                            Log.info(this, "writing profile out");
-                            while ((bytesRead = prof_in.read(buffer, 0, 8192)) != -1) {
-                                totalBytesRead += bytesRead;
-                                prof_out.write(buffer, 0, bytesRead);
-                                //ph.progress(totalBytesRead + " / " + totalBytesToRead);
-                            }
-
+                            DataHandler dh_prof = gprest.getProfile_out()
+                                    .getBinaryData()
+                                    .getBase64Binary();
+                            InputStream prof_in = new GZIPInputStream(
+                                    dh_prof.getInputStream()
+                            );
+                            Log.info(this, "writing profile out ...");
+                            Files.copy(
+                                    prof_in, 
+                                    tempFile.toPath(),
+                                    StandardCopyOption.REPLACE_EXISTING
+                            );
                             prof_in.close();
-                            prof_out.flush();
-                            prof_out.close();
+                            Log.info(this, "done writing profile out");
 
                             ph.setDisplayName(statusApplyProfile);
                             Log.info(this, "applying new profile to document");
                             globalDocument.clearPatterns();
                             new OcrXmlImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
-
                             retval = 0;
                         } catch (FileNotFoundException ex) {
                             retval = -1;
@@ -1157,28 +1160,30 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("not_possible"));
                         }
                         retval = -1;
-                        System.out.println("ReceiveError " + e.getMessage());
+                        Log.error(this, "ReceiveError " + e.getMessage());
+                        done = true;
                     }
                 };
 
                 ph.progress(statusProfiling);
                 stub.startgetProfile(gpr, handler);
 
+                String[] msg = new String[]{
+                    "gathering incridients ...",
+                    "grinding the beans ...",
+                    "boiling water ...",
+                    "placing a new filter ...",
+                    "adding the grounds ...",
+                    "filling the reservoir ...",
+                    "enjoying the coffee ..."
+                };
+                int i = 0;
                 while (!done) {
                     try {
                         Thread.sleep(10000);
-                        ph.progress(statusWaiting);
-                        //GetProfilingStatusRequest grpq = new GetProfilingStatusRequest();
-                        //GetProfilingStatusRequestType grpqt = new GetProfilingStatusRequestType();
-                        //grpqt.setUserid(MainController.findInstance().getProfilerUserId());
-
-                        //grpq.setGetProfilingStatusRequest(grpqt);
-                        //GetProfilingStatusResponse gprs = stub.getProfilingStatus(grpq);
-                        //GetProfilingStatusResponseType gprst = gprs.getGetProfilingStatusResponse();
-
-                        //status = gprst.getStatus();
-                        //ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-                        //ph.progress(gprst.getAdditional());
+                        ph.progress(msg[i++]);
+                        if (i == msg.length)
+                            i = 0;
                     } catch (InterruptedException ex) {
                         retval = -1;
                     }
