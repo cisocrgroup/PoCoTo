@@ -1054,9 +1054,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
                 globalDocument.exportAsDocXML(tempFile.getCanonicalPath(), false);
 
-                //ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-                //ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-
                 FileDataSource docoutds = new FileDataSource(tempFile.getCanonicalPath());
                 DataHandler docoutdh = new DataHandler(docoutds);
                 docoutbin.setBase64Binary(docoutdh);
@@ -1082,7 +1079,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             InputStream doc_in = new GZIPInputStream(
                                     dh_doc.getInputStream()
                             );
-
                             Log.info(this, "writing docxml ...");
                             Files.copy(doc_in, tempFile.toPath());
                             Log.info(this, "done writing docxml");
