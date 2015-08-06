@@ -40,15 +40,18 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Random;
 import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
 import javax.swing.*;
@@ -1052,15 +1055,26 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 tempFile = File.createTempFile("document", ".ocrcxml");
                 tempFile.deleteOnExit();
 
+                Log.info(this, "exporting document ...");
                 globalDocument.exportAsDocXML(tempFile.getCanonicalPath(), false);
-
-                FileDataSource docoutds = new FileDataSource(tempFile.getCanonicalPath());
+                File compressedTmpFile = File.createTempFile("document", ".corcxml.gz");
+                compressedTmpFile.deleteOnExit();
+                OutputStream compressedOut = new GZIPOutputStream(
+                        new FileOutputStream(compressedTmpFile)
+                );
+                Log.info(this, "compressing document ...");
+                Files.copy(tempFile.toPath(), compressedOut);
+                compressedOut.close();
+                FileDataSource docoutds = new FileDataSource(
+                        compressedTmpFile.getCanonicalPath()
+                );
                 DataHandler docoutdh = new DataHandler(docoutds);
                 docoutbin.setBase64Binary(docoutdh);
                 docoutatt.setBinaryData(docoutbin);
                 gprt.setDoc_in(docoutatt);
                 gprt.setDoc_in_type("DOCXML");
-                gprt.setDoc_in_size(tempFile.length());
+                Log.debug(this, "compressed size: %d", compressedTmpFile.length());
+                gprt.setDoc_in_size(compressedTmpFile.length());
 
                 gpr.setGetProfileRequest(gprt);
 
@@ -1080,12 +1094,19 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                                     dh_doc.getInputStream()
                             );
                             Log.info(this, "writing docxml ...");
-                            Files.copy(doc_in, tempFile.toPath());
+                            Files.copy(
+                                    doc_in, 
+                                    tempFile.toPath(), 
+                                    StandardCopyOption.REPLACE_EXISTING
+                            );
                             Log.info(this, "done writing docxml");
                             doc_in.close();
 
                             globalDocument.clearCandidates();
-                            new OcrXmlImporter().importCandidates(globalDocument, tempFile.getCanonicalPath());
+                            new OcrXmlImporter().importCandidates(
+                                    globalDocument, 
+                                    tempFile.getCanonicalPath()
+                            );
 
                             tempFile = File.createTempFile("profile", ".xml");
                             tempFile.deleteOnExit();
@@ -1096,7 +1117,11 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                                     dh_prof.getInputStream()
                             );
                             Log.info(this, "writing profile out ...");
-                            Files.copy(prof_in, tempFile.toPath());
+                            Files.copy(
+                                    prof_in, 
+                                    tempFile.toPath(),
+                                    StandardCopyOption.REPLACE_EXISTING
+                            );
                             prof_in.close();
                             Log.info(this, "done writing profile out");
 
@@ -1135,17 +1160,30 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("not_possible"));
                         }
                         retval = -1;
-                        System.out.println("ReceiveError " + e.getMessage());
+                        Log.error(this, "ReceiveError " + e.getMessage());
+                        done = true;
                     }
                 };
 
                 ph.progress(statusProfiling);
                 stub.startgetProfile(gpr, handler);
 
+                String[] msg = new String[]{
+                    "gathering incridients ...",
+                    "grinding the beans ...",
+                    "boiling water ...",
+                    "placing a new filter ...",
+                    "adding the grounds ...",
+                    "filling the reservoir ...",
+                    "enjoying the coffee ..."
+                };
+                int i = 0;
                 while (!done) {
                     try {
                         Thread.sleep(10000);
-                        ph.progress(statusWaiting);
+                        ph.progress(msg[i++]);
+                        if (i == msg.length)
+                            i = 0;
                     } catch (InterruptedException ex) {
                         retval = -1;
                     }
