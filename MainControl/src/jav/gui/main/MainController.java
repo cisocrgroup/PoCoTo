@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.Random;
 import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
 import java.util.zip.GZIPInputStream;
@@ -101,8 +100,8 @@ import org.openide.windows.WindowManager;
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class MainController implements Lookup.Provider, TokenStatusEventSlot, SavedEventSlot {
-    private static final String ALPHA = 
-            "http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService";
+    private static final String DEFAULT_PROFILER_SERVICE_URL = 
+            "http://marmolata.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService";
     private static final String USERID = "PoCoToUser";
     private static final Cursor busyCursor = new Cursor(Cursor.WAIT_CURSOR);
     private static final Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
@@ -184,7 +183,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public String getProfilerServiceUrl() {
         String url = NbPreferences.forModule(MainController.class)
-                .get("profiler_service_url", ALPHA);
+                .get("profiler_service_url", DEFAULT_PROFILER_SERVICE_URL);
         Log.info(this, "profiler_service_url: '%s'", url);
         return url;
     }
@@ -1175,6 +1174,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                     "placing a new filter ...",
                     "adding the grounds ...",
                     "filling the reservoir ...",
+                    "waiting ...",
                     "enjoying the coffee ..."
                 };
                 int i = 0;
