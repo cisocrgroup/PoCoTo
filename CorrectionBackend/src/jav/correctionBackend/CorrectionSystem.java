@@ -169,12 +169,12 @@ public class CorrectionSystem {
                 String imagefile = "";
                 if (mappings.containsKey(basename))
                     imagefile = mappings.get(basename);
-                Log.debug(
-                        this, 
-                        "found image file: %s for file: %s", 
-                        imagefile,
-                        xmlfile
-                );
+//                Log.debug(
+//                        this, 
+//                        "found image file: %s for file: %s", 
+//                        imagefile,
+//                        xmlfile
+//                );
                 ph.progress("Parsing file " + xmlfile + " (" + imagefile + ")");
                 try {
                     parser.parse(
