@@ -1663,6 +1663,7 @@ public abstract class Document {
                     // delete whitespace at end of document (token after whitespace == null)
                     this.deleteToken(next.getID());
                 } catch (SQLException ex) {
+                    Log.error(this, "could not merge rightward: %s", ex.getMessage());
                 }
                 return null;
             }
