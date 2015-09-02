@@ -66,6 +66,12 @@
                 <attr name="surviveFocusChange" boolvalue="false"/>
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
+            <file name="jav-gui-actions-ImportFromDocXml.instance">
+                <attr name="delegate" newvalue="jav.gui.actions.ImportFromDocXml"/>
+                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#importdocxml"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
 
         </folder>
         <folder name="Tools">

@@ -173,7 +173,14 @@ class CandidateImporter extends OcrXmlImporter {
             Matcher matcher = pattern.matcher(content);
             if (matcher.matches()) {
                 rank++;
-                tempcand = new Candidate(tokenID, rank, matcher.group(1), matcher.group(2), Double.parseDouble(matcher.group(3)), Integer.parseInt(matcher.group(4)));
+                tempcand = new Candidate(
+                        tokenID, 
+                        rank, 
+                        matcher.group(1), 
+                        matcher.group(2), 
+                        Double.parseDouble(matcher.group(3)), 
+                        Integer.parseInt(matcher.group(4))
+                );
                 doc.addCandidate(tempcand);
                 if (rank == 1) {
                     doc.setTopCandDLev(tokenID, Integer.parseInt(matcher.group(4)));
