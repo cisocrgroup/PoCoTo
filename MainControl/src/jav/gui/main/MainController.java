@@ -40,7 +40,6 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -66,6 +65,7 @@ import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import org.xml.sax.SAXException;
 
 /**
  * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
@@ -121,7 +121,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private Document globalDocument = null;
     private Properties docproperties;
     private ProfilerIDCookie profileridcookie = null;
-    private boolean done;
+    private boolean done, recieve;
     private File tempFile;
     private UndoRedo.Manager manager = null;
     private Thread backgroundSaverThread = null;
@@ -175,8 +175,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         content.add(csrcookie);
         this.refreshID();
 
-        backgroundSaverThread = new Thread(new BackgroundSaver());
-        backgroundSaverThread.start();
+        //backgroundSaverThread = new Thread(new BackgroundSaver());
+        //backgroundSaverThread.start();
         MessageCenter.getInstance().addTokenStatusEventListener(this);
         MessageCenter.getInstance().addSavedEventListener(this);
     }
@@ -1017,15 +1017,18 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         private final String statusProfiling = 
                 ResourceBundle.getBundle("jav/gui/main/Bundle")
                         .getString("profiling");
+        private final String statusApplyProfile = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("applyprofile"); 
+        private final String statusImportCandidates = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("importcandidates");         
         private final String statusUploading = 
                 ResourceBundle.getBundle("jav/gui/main/Bundle")
                         .getString("uploadprofile");
         private final String statusDownloading = 
                 ResourceBundle.getBundle("jav/gui/main/Bundle")
                         .getString("downloadprofile");
-        private final String statusApplyProfile = 
-                ResourceBundle.getBundle("jav/gui/main/Bundle")
-                        .getString("applyprofile");
         private final String statusWaiting = 
                 ResourceBundle.getBundle("jav/gui/main/Bundle")
                         .getString("waitprofile");
@@ -1078,6 +1081,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 gpr.setGetProfileRequest(gprt);
 
                 done = false;
+                recieve = false;
 
                 ProfilerWebServiceCallbackHandler handler = new ProfilerWebServiceCallbackHandler() {
                     @Override
@@ -1085,58 +1089,39 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         GetProfileResponseType gprest = gpres.getGetProfileResponse();
 
                         try {
+                            recieve = true;
                             ph.progress(statusDownloading);
                             DataHandler dh_doc = gprest.getDoc_out()
                                     .getBinaryData()
                                     .getBase64Binary();
                             InputStream doc_in = new GZIPInputStream(
                                     dh_doc.getInputStream()
-                            );
-                            Log.info(this, "writing docxml ...");
-                            Files.copy(
-                                    doc_in, 
-                                    tempFile.toPath(), 
-                                    StandardCopyOption.REPLACE_EXISTING
-                            );
-                            Log.info(this, "done writing docxml");
-                            doc_in.close();
-
+                            );                         
+                            ph.progress(statusImportCandidates);
+                            Log.info(this, "importing candidates");
                             globalDocument.clearCandidates();
-                            new OcrXmlImporter().importCandidates(
+                            OcrXmlImporter.importCandidates(
                                     globalDocument, 
-                                    tempFile.getCanonicalPath()
+                                    doc_in
                             );
-
-                            tempFile = File.createTempFile("profile", ".xml");
-                            tempFile.deleteOnExit();
+                            Log.info(this, "done importing candidates");
                             DataHandler dh_prof = gprest.getProfile_out()
                                     .getBinaryData()
                                     .getBase64Binary();
                             InputStream prof_in = new GZIPInputStream(
                                     dh_prof.getInputStream()
                             );
-                            Log.info(this, "writing profile out ...");
-                            Files.copy(
-                                    prof_in, 
-                                    tempFile.toPath(),
-                                    StandardCopyOption.REPLACE_EXISTING
-                            );
-                            prof_in.close();
-                            Log.info(this, "done writing profile out");
 
                             ph.setDisplayName(statusApplyProfile);
                             Log.info(this, "applying new profile to document");
                             globalDocument.clearPatterns();
-                            new OcrXmlImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
+                            OcrXmlImporter.importProfile(globalDocument, prof_in);
+                            Log.info(this, "done applying new profile to document");
                             retval = 0;
-                        } catch (FileNotFoundException ex) {
+                        } catch (IOException|SAXException ex) {
                             retval = -1;
                             Exceptions.printStackTrace(ex);
-                            Log.error(this, "FileNotFoundException: %s", ex.getMessage());
-                        } catch (IOException ex) {
-                            retval = -1;
-                            Exceptions.printStackTrace(ex);
-                            Log.error(this, "IOException: %s", ex.getMessage());                            
+                            Log.error(this, "Could not profile document: %s", ex.getMessage());                           
                         } finally {
                             done = true;
                         }
@@ -1164,26 +1149,11 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                     }
                 };
 
-                ph.progress(statusProfiling);
                 stub.startgetProfile(gpr, handler);
-
-                String[] msg = new String[]{
-                    "gathering incridients ...",
-                    "grinding the beans ...",
-                    "boiling water ...",
-                    "placing a new filter ...",
-                    "adding the grounds ...",
-                    "filling the reservoir ...",
-                    "waiting ...",
-                    "enjoying the coffee ..."
-                };
-                int i = 0;
+                ph.progress(statusWaiting);
                 while (!done) {
                     try {
                         Thread.sleep(10000);
-                        ph.progress(msg[i++]);
-                        if (i == msg.length)
-                            i = 0;
                     } catch (InterruptedException ex) {
                         retval = -1;
                     }
@@ -1309,13 +1279,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             doc_out.close();
 
                             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing_doc"));
-                            new OcrXmlImporter().simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
+                            OcrXmlImporter.simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
                             retval = 0;
                             done = true;
-                        } catch (FileNotFoundException ex) {
-                            retval = -1;
-                            Exceptions.printStackTrace(ex);
-                        } catch (IOException ex) {
+                        } catch (IOException|SAXException ex) {
                             retval = -1;
                             Exceptions.printStackTrace(ex);
                         }
@@ -1443,8 +1410,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             cs.newDocumentFromOCRCXML(projectpath + File.separator + projectname, doc, img, ph);
             document = cs.getDocument();
 
-            if (profilename != null) {
-                cs.importProfile(document, profilename);
+            try {
+                if (profilename != null) {
+                    cs.importProfile(document, profilename);
+                } 
+            } catch (IOException|SAXException e) {
+                Log.error("Could not import new project: %s", e.getMessage());
             }
 
             if (document != null) {
