@@ -1426,25 +1426,6 @@ public abstract class Document {
         return page;
     }
 
-//    public Page getPage(int index) {
-//        Page retval = null;
-//        try {
-//            Connection conn = jcp.getConnection();
-//            Statement s = conn.createStatement();
-//            ResultSet rs = s.executeQuery("SELECT * FROM PAGE WHERE INDEX=" + index);
-//            while (rs.next()) {
-//                retval = new Page(rs.getInt(1));
-//                retval.setStartIndex(rs.getInt(2));
-//                retval.setEndIndex(rs.getInt(3));
-//                retval.setImageFilename(this.baseImagePath + File.separator + rs.getString(4));
-//            }
-//            s.close();
-//            conn.close();
-//        } catch (SQLException ex) {
-//            ex.printStackTrace();
-//        }
-//        return retval;
-//    }
     public int getNumberOfTokens() {
         if (this.numTokens == 0) {
             this.loadNumberOfTokensFromDB();
@@ -1473,6 +1454,7 @@ public abstract class Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
+            Log.error(this, "SQLError: %s", ex.getMessage());
         }
     }
 
@@ -1480,6 +1462,7 @@ public abstract class Document {
         try {
             return new PatternIterator(jcp.getConnection());
         } catch (SQLException ex) {
+            Log.error(this, "SQLError: %s", ex.getMessage());
             return null;
         }
     }
@@ -1488,6 +1471,7 @@ public abstract class Document {
         try {
             return new PatternOccurrenceIterator(jcp.getConnection(), patternID);
         } catch (SQLException ex) {
+            Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
             return null;
         }
@@ -1497,6 +1481,7 @@ public abstract class Document {
         try {
             return new PageIterator(jcp.getConnection(), this, this.baseImagePath);
         } catch (SQLException ex) {
+            Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
             return null;
         }
@@ -1506,6 +1491,7 @@ public abstract class Document {
         try {
             return new TokenIterator(jcp.getConnection());
         } catch (SQLException ex) {
+            Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
             return null;
         }
@@ -1518,6 +1504,7 @@ public abstract class Document {
         try {
             return new TokenIterator(jcp.getConnection(), baseImagePath);
         } catch (SQLException ex) {
+            Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
             return null;
         }
@@ -1531,6 +1518,7 @@ public abstract class Document {
         try {
             return new TokenIterator(jcp.getConnection(), page, baseImagePath);
         } catch (SQLException ex) {
+            Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
             return null;
         }
@@ -1540,6 +1528,7 @@ public abstract class Document {
         try {
             return new CandidateIterator(jcp.getConnection(), tokenID);
         } catch (SQLException ex) {
+            Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
             return null;
         }
