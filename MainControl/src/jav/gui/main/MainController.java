@@ -848,9 +848,14 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
     
     public void importProfile(String docpath, String profilepath) {
-        new OcrXmlImporter().importCandidates(globalDocument, docpath);
-        globalDocument.clearPatterns();
-        new OcrXmlImporter().importProfile(globalDocument, profilepath);
+        try {
+            globalDocument.clearCandidates();
+            OcrXmlImporter.importCandidates(globalDocument, docpath);
+            globalDocument.clearPatterns();
+            OcrXmlImporter.importProfile(globalDocument, profilepath);
+        } catch (IOException|SAXException e) {
+            Log.error(this, "could not import profile: %s", e.getMessage());
+        }
     }
 
     private class DocumentCreator implements ProgressRunnable<Document> {
