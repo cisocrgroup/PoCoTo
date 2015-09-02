@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.netbeans.api.progress.ProgressHandle;
+import org.xml.sax.SAXException;
 
 /**
  *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
@@ -116,7 +117,7 @@ public class CorrectionSystem {
             jcp.setLoginTimeout(0);
             
             this.document = new SpreadIndexDocument(jcp);
-            new OcrXmlImporter().importDocument(document, ocrcxmlfile, imagedir);
+            OcrXmlImporter.importDocument(document, ocrcxmlfile, imagedir);
             document.loadNumberOfPagesFromDB();
             document.loadNumberOfTokensFromDB();
             retval = 0;
@@ -227,8 +228,8 @@ public class CorrectionSystem {
     }
 
     
-    public void importProfile( Document doc, String filename) {
-        new ProfileImporter().parse(doc, filename);
+    public void importProfile( Document doc, String filename) throws IOException, SAXException {
+        new ProfileImporter(doc).parse(filename);
     }
 
     public void closeDocument() {

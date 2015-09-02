@@ -1,11 +1,15 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
@@ -41,50 +45,62 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * 
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class OcrXmlImporter {
-
-    public OcrXmlImporter() {
+public class OcrXmlImporter extends DefaultHandler {
+    public static void simpleUpdateDocument(Document doc, String documentfile) throws IOException, SAXException {
+        new SimpleImporter(doc).parse(documentfile);
     }
 
-    public void simpleUpdateDocument(Document doc, String documentfile) {
-        new SimpleImporter().parse(doc, documentfile);
-    }
-
-    public void importDocument(Document doc, String documentfile, String imgdir) {
+    public static void importDocument(Document doc, String documentfile, String imgdir) {
         new OCRCXMLImporter().parse(doc, documentfile, imgdir);
     }
 
-    public void importCandidates(Document doc, String documentfile) {
-        new CandidateImporter().parse(doc, documentfile);
+    public static void importCandidates(Document doc, String documentfile) throws IOException, SAXException {
+        new CandidateImporter(doc).parse(documentfile);
     }
 
-    public void importProfile(Document doc, String profilefile) {
-        new ProfileImporter().parse(doc, profilefile);
+    public static void importCandidates(Document doc, InputStream is) throws IOException, SAXException {
+        new CandidateImporter(doc).parse(is);
+    }    
+
+    public static void importProfile(Document doc, String profilefile) throws IOException, SAXException {
+        new ProfileImporter(doc).parse(profilefile);
+    }
+    
+    public static void importProfile(Document doc, InputStream is) throws IOException, SAXException {
+        new ProfileImporter(doc).parse(is);
+    }
+    
+    protected final Document doc;
+    protected OcrXmlImporter(Document doc) {
+        assert(doc != null);
+        this.doc = doc;
+    }
+    
+    private XMLReader setupXMLReader() throws SAXException {
+        XMLReader xr = XMLReaderFactory.createXMLReader();
+        xr.setContentHandler(this);
+        xr.setErrorHandler(this);
+        return xr;
+    }
+    
+    public final void parse(String filename) throws IOException, SAXException {
+        XMLReader xr = setupXMLReader();
+        xr.parse(filename);
+    }
+    
+    public final void parse(InputStream is) throws IOException, SAXException {
+        XMLReader xr = setupXMLReader();
+        xr.parse(new InputSource(is));
     }
 }
 
-class SimpleImporter extends DefaultHandler {
-
-    private Document doc;
+class SimpleImporter extends OcrXmlImporter {
     private int tokenID;
     private String susp;
     private String norm;
 
-    public void parse(Document d, String f) {
-        if (d != null) {
-            this.doc = d;
-            XMLReader xr;
-            try {
-                xr = XMLReaderFactory.createXMLReader();
-                xr.setContentHandler(this);
-                xr.setErrorHandler(this);
-                xr.parse(f);
-            } catch (SAXException ex) {
-            } catch (IOException e) {
-            }
-        } else {
-            throw new NullPointerException();
-        }
+    public SimpleImporter(Document doc) {
+        super(doc);
     }
 
     @Override
@@ -114,34 +130,18 @@ class SimpleImporter extends DefaultHandler {
     }
 }
 
-class CandidateImporter extends DefaultHandler {
+class CandidateImporter extends OcrXmlImporter {
 
     private String content = "";
-    private Document doc;
     private int rank;
     private int tokenID;
     private String susp;
-    private java.util.regex.Pattern pattern;
+    private final java.util.regex.Pattern pattern = 
+            java.util.regex.Pattern.compile("(.*):\\{(.*),voteWeight=(.*),levDistance=(.*)");
     private Candidate tempcand;
-
-    public void parse(Document d, String f) {
-        pattern = java.util.regex.Pattern.compile("(.*):\\{(.*),voteWeight=(.*),levDistance=(.*)");
-
-        if (d != null) {
-            this.doc = d;
-            this.doc.clearCandidates();
-            XMLReader xr;
-            try {
-                xr = XMLReaderFactory.createXMLReader();
-                xr.setContentHandler(this);
-                xr.setErrorHandler(this);
-                xr.parse(f);
-            } catch (SAXException ex) {
-            } catch (IOException e) {
-            }
-        } else {
-            throw new NullPointerException();
-        }
+    
+    public CandidateImporter(Document doc) {
+        super(doc);
     }
 
     @Override
@@ -154,10 +154,15 @@ class CandidateImporter extends DefaultHandler {
 
     @Override
     public void startElement(String uri, String nname, String qname, Attributes atts) {
-        if (nname.equals("token")) {
-            rank = 0;
-        } else if (nname.equals("abbyy_suspicious")) {
-            susp = atts.getValue("value");
+        switch (nname) {
+            case "token":
+                rank = 0;
+                break;
+            case "abbyy_suspicious":
+                susp = atts.getValue("value");
+                break;
+            default:
+                break;
         }
         content = "";
     }
@@ -192,33 +197,19 @@ class CandidateImporter extends DefaultHandler {
     }
 }
 
-class ProfileImporter extends DefaultHandler {
+class ProfileImporter extends OcrXmlImporter {
 
-    private Document doc;
     private int patternid;
     private int part;
     private Pattern temppattern;
     private PatternOccurrence tempocc;
     private boolean begin;
 
-    public void parse(Document d, String f) {
+    public ProfileImporter(Document doc) {
+        super(doc);
         patternid = 0;
-        if (d != null) {
-            this.doc = d;
-            XMLReader xr;
-            try {
-                xr = XMLReaderFactory.createXMLReader();
-                xr.setContentHandler(this);
-                xr.setErrorHandler(this);
-                xr.parse(f);
-            } catch (SAXException ex) {
-            } catch (IOException e) {
-            }
-        } else {
-            throw new NullPointerException();
-        }
     }
-
+    
     @Override
     public void startDocument() {
     }
