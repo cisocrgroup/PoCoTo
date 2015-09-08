@@ -433,12 +433,12 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                     currentTokenID = -1;
                     Page page = MainController.findInstance().getPage(p);
                     long time = System.currentTimeMillis();
-                    Log.debug(
-                            this, 
-                            "gotoPage page number %d (%s)", 
-                            page.getIndex(), 
-                            page.getImageCanonical()
-                    );
+//                    Log.debug(
+//                            this, 
+//                            "gotoPage page number %d (%s)", 
+//                            page.getIndex(), 
+//                            page.getImageCanonical()
+//                    );
                     if (page.hasImage()) {
                         pv = new PageView(getDefault(), MainController.findInstance().getDocument().tokenIterator(page), page.getImageCanonical(), fontSize, imgScale);
                     } else {
