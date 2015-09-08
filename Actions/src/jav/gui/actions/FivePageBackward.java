@@ -1,6 +1,7 @@
 package jav.gui.actions;
 
 import jav.gui.cookies.PageCookie;
+import jav.logging.log4j.Log;
 import javax.swing.Action;
 import org.openide.util.Lookup;
 import org.openide.util.Utilities;
@@ -56,7 +57,11 @@ public final class FivePageBackward extends ContextAction<PageCookie> {
 
     @Override
     public void performAction(PageCookie context) {
-        context.gotoPage(context.getPageN()-4);
+        int n = context.getPageN();
+        int i = 0;
+        if (n > 5) 
+            i = n - 6;
+        context.gotoPage(i);
     }
 
     @Override
@@ -66,7 +71,7 @@ public final class FivePageBackward extends ContextAction<PageCookie> {
 
     @Override
     public boolean enable(PageCookie context) {
-        if(context.isReady() && context.getPageN() > 4) {
+        if(context.isReady() && context.getPageN() > 5) {
             return true;
         } else {
             return false;
