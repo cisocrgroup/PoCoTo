@@ -100,8 +100,10 @@ import org.xml.sax.SAXException;
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class MainController implements Lookup.Provider, TokenStatusEventSlot, SavedEventSlot {
+    
     private static final String DEFAULT_PROFILER_SERVICE_URL = 
-            "http://marmolata.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService";
+            java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").
+                    getString("defaultProfilerUrl");
     private static final String USERID = "PoCoToUser";
     private static final Cursor busyCursor = new Cursor(Cursor.WAIT_CURSOR);
     private static final Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
