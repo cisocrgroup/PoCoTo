@@ -162,12 +162,11 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 Exceptions.printStackTrace(ex);
             }
         }
-
         node = NbPreferences.forModule(this.getClass());
         logging = node.getBoolean("logging", true);
         if (logging) {
-            Log.setup();
-            Log.debug(this, "Setup logging");
+            Log.setup(new File(baseDir));
+            Log.info(this, "Setup logging base dir '%s'", baseDir);
         }
 
         docproperties = new Properties();

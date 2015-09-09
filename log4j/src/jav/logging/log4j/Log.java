@@ -5,11 +5,13 @@
  */
 package jav.logging.log4j;
 
+import java.io.File;
 import java.io.IOException;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.apache.log4j.RollingFileAppender;
 
 /**
  *
@@ -17,11 +19,13 @@ import org.apache.log4j.PatternLayout;
  */
 public class Log {
     private static final String LOG_FORMAT = "[%p] %d{ISO8601} - %m%n";
+    private static final int LOG_FILE_MAX_SIZE = 104857600;
     private static Logger logger = null;
+    
     private Log() {}
-    public static synchronized void setup() {
+    public static synchronized void setup(File basedir) {
         if (logger == null) 
-            init();
+            init(basedir);
     }
     public static synchronized void setLevel(Level level) {
         if (logger != null) 
@@ -29,7 +33,7 @@ public class Log {
     }
     public static Logger getLogger() {
         if (logger == null)
-            init();
+            init(new File(""));
         return logger;
     }
     public static void log(Object o, Level level, String fmt, Object...objs) {
@@ -55,13 +59,15 @@ public class Log {
                 String.format(fmt, objs)
         );
     }
-    private static void init() {
+    private static void init(File basedir) {
         try {
             logger = Logger.getLogger(Log.class);
-            FileAppender fileAppender = new FileAppender(
+            RollingFileAppender fileAppender = new RollingFileAppender(
                     new PatternLayout(LOG_FORMAT), 
-                    "pocoto.log"
+                    new File(basedir, "pocoto.log").getCanonicalPath()
             );
+            fileAppender.setMaxBackupIndex(0); // no backup files
+            fileAppender.setMaxBackupIndex(LOG_FILE_MAX_SIZE); // maximum log file size
             logger.addAppender(fileAppender);
             logger.setLevel(Level.ALL);
         } catch (IOException ex) {
