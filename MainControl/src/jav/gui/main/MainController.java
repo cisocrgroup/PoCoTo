@@ -165,8 +165,9 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         node = NbPreferences.forModule(this.getClass());
         logging = node.getBoolean("logging", true);
         if (logging) {
-            Log.setup(new File(baseDir));
-            Log.info(this, "Setup logging base dir '%s'", baseDir);
+            File logdir = new File(System.getProperty("netbeans.user"));
+            Log.setup(logdir);
+            Log.info(MainController.class, "Setup logging base dir '%s'", logdir.getAbsolutePath());
         }
 
         docproperties = new Properties();
