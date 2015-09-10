@@ -167,6 +167,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         if (logging) {
             File logdir = new File(System.getProperty("netbeans.user"));
             Log.setup(logdir);
+            Log.info(MainController.class, "PoCoTo version: %s", java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("pocotoVersion"));
             Log.info(MainController.class, "Setup logging base dir '%s'", logdir.getAbsolutePath());
         }
 
