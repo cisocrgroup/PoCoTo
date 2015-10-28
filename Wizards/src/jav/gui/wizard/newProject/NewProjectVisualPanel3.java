@@ -2,6 +2,7 @@ package jav.gui.wizard.newProject;
 
 import cis.profiler.client.ProfilerWebServiceStub;
 import jav.gui.main.MainController;
+import jav.logging.log4j.Log;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.rmi.RemoteException;
@@ -48,10 +49,12 @@ public final class NewProjectVisualPanel3 extends JPanel implements ItemListener
         initComponents();
         changeSupport.addChangeListener(panel);
         
-        ProfilerWebServiceStub.GetSimpleConfigurationsResponse gcr;
         try {
-            gcr = MainController.findInstance().getProfilerWebServiceStub().getSimpleConfigurations();
-            String[] configurations = gcr.getGetSimpleConfigurationsResponse().getConfigurations();
+            ProfilerWebServiceStub stub = MainController.findInstance().newProfilerWebServiceStub();
+            String[] configurations = stub
+                    .getConfigurations()
+                    .getGetConfigurationsResponse()
+                    .getConfigurations();
             jComboBox1.setModel(new DefaultComboBoxModel(configurations));
             jComboBox1.setSelectedItem(null);
             jComboBox1.addItemListener(this);

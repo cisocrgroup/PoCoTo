@@ -56,7 +56,11 @@ public final class TenPageBackward extends ContextAction<PageCookie> {
 
     @Override
     public void performAction(PageCookie context) {
-        context.gotoPage(context.getPageN()-9);
+        int n = context.getPageN();
+        int i = 0;
+        if (n > 10)
+            i = n - 11;
+        context.gotoPage(i);
     }
 
     @Override
@@ -66,7 +70,7 @@ public final class TenPageBackward extends ContextAction<PageCookie> {
 
     @Override
     public boolean enable(PageCookie context) {
-        if(context.isReady() && context.getPageN() > 9) {
+        if(context.isReady() && context.getPageN() > 10) {
             return true;
         } else {
             return false;

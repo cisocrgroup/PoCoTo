@@ -45,8 +45,6 @@ final class UserIDPanel extends javax.swing.JPanel implements DocumentListener {
     UserIDPanel(UserIDOptionsPanelController controller) {
         this.controller = controller;
         initComponents();
-        userId.setDocument(new JTextFieldLimit(36));
-        userId.getDocument().addDocumentListener(this);
     }
 
     /** This method is called from within the constructor to
@@ -57,12 +55,7 @@ final class UserIDPanel extends javax.swing.JPanel implements DocumentListener {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        userId = new javax.swing.JTextField();
         profilerUrl = new javax.swing.JTextField();
-
-        userId.setColumns(30);
-        userId.setText(org.openide.util.NbBundle.getMessage(UserIDPanel.class, "UserIDPanel.userId.text")); // NOI18N
-        userId.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(UserIDPanel.class, "UserIDPanel.userId.border.title"))); // NOI18N
 
         profilerUrl.setColumns(30);
         profilerUrl.setText(org.openide.util.NbBundle.getMessage(UserIDPanel.class, "UserIDPanel.profilerUrl.text")); // NOI18N
@@ -74,44 +67,32 @@ final class UserIDPanel extends javax.swing.JPanel implements DocumentListener {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(userId, javax.swing.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE)
-                    .addComponent(profilerUrl, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE))
+                .addComponent(profilerUrl, javax.swing.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(userId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
                 .addComponent(profilerUrl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(58, Short.MAX_VALUE))
+                .addContainerGap(111, Short.MAX_VALUE))
         );
 
         profilerUrl.getAccessibleContext().setAccessibleName(org.openide.util.NbBundle.getMessage(UserIDPanel.class, "UserIDPanel.profilerUrl.AccessibleContext.accessibleName")); // NOI18N
     }// </editor-fold>//GEN-END:initComponents
 
     void load() {
-        userId.setText(MainController.findInstance().getProfilerUserId());
         profilerUrl.setText(MainController.findInstance().getProfilerServiceUrl());
-        Log.debug(this, "load() profiler_user_id: '%s'", userId.getText());
         Log.debug(this, "load() profiler_service_url: '%s'", profilerUrl.getText());
     }
 
     void store() {
-        Log.debug(this, "store() profiler_user_id: '%s'", userId.getText());
-        Log.debug(this, "store() profiler_service_url: '%s'", userId.getText());
-        MainController.findInstance().setProfilerUserId(userId.getText());
+        Log.debug(this, "store() profiler_service_url: '%s'", profilerUrl.getText());
         MainController.findInstance().setProfilerServiceUrl(profilerUrl.getText());
     }
 
     boolean valid() {
-        return userIdIsValid() && profilerUrlIsValid();
-    }
-    private boolean userIdIsValid() {
-        return userId.getText().equals("") || 
-            userId.getText().matches(".{8}-.{4}-.{4}-.{4}-.{12}");
+        return  profilerUrlIsValid();
     }
     private boolean profilerUrlIsValid() {
         return profilerUrl.getText().equals("") ||
@@ -120,7 +101,6 @@ final class UserIDPanel extends javax.swing.JPanel implements DocumentListener {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField profilerUrl;
-    private javax.swing.JTextField userId;
     // End of variables declaration//GEN-END:variables
 
     @Override

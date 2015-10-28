@@ -39,6 +39,7 @@ import jav.logging.log4j.Log;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.io.*;
+import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -46,6 +47,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.prefs.Preferences;
+import java.util.ResourceBundle;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
 import javax.swing.*;
@@ -61,6 +65,7 @@ import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import org.xml.sax.SAXException;
 
 /**
  * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
@@ -95,10 +100,11 @@ import org.openide.windows.WindowManager;
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class MainController implements Lookup.Provider, TokenStatusEventSlot, SavedEventSlot {
-    private static final String ALPHA = 
-            "http://alpha.cis.uni-muenchen.de:9080/axis2/services/ProfilerWebService";
-    private static final String DIENER = 
-            "http://diener.cis.uni-muenchen.de:8080/axis2/services/ProfilerWebService";
+    
+    private static final String DEFAULT_PROFILER_SERVICE_URL = 
+            java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").
+                    getString("defaultProfilerUrl");
+    private static final String USERID = "PoCoToUser";
     private static final Cursor busyCursor = new Cursor(Cursor.WAIT_CURSOR);
     private static final Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
     private InstanceContent content;
@@ -117,7 +123,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private Document globalDocument = null;
     private Properties docproperties;
     private ProfilerIDCookie profileridcookie = null;
-    private boolean done;
+    private boolean done, recieve;
     private File tempFile;
     private UndoRedo.Manager manager = null;
     private Thread backgroundSaverThread = null;
@@ -156,12 +162,13 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 Exceptions.printStackTrace(ex);
             }
         }
-
         node = NbPreferences.forModule(this.getClass());
         logging = node.getBoolean("logging", true);
         if (logging) {
-            Log.setup();
-            Log.debug(this, "Setup logging");
+            File logdir = new File(System.getProperty("netbeans.user"));
+            Log.setup(logdir);
+            Log.info(MainController.class, "PoCoTo version: %s", java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("pocotoVersion"));
+            Log.info(MainController.class, "Setup logging base dir '%s'", logdir.getAbsolutePath());
         }
 
         docproperties = new Properties();
@@ -171,26 +178,15 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         content.add(csrcookie);
         this.refreshID();
 
-        backgroundSaverThread = new Thread(new BackgroundSaver());
-        backgroundSaverThread.start();
+        //backgroundSaverThread = new Thread(new BackgroundSaver());
+        //backgroundSaverThread.start();
         MessageCenter.getInstance().addTokenStatusEventListener(this);
         MessageCenter.getInstance().addSavedEventListener(this);
     }
 
-    public String getProfilerUserId() {
-        String id = NbPreferences.forModule(MainController.class)
-                .get("profiler_user_id", "");
-        Log.info(this, "profiler_user_id: '%s'", id);
-        return id;
-    }
-    public void setProfilerUserId(String id) {
-        Log.info(this, "setting profiler_user_id: '%s'", id);
-        NbPreferences.forModule(MainController.class)
-                .put("profiler_user_id", id);
-    }
     public String getProfilerServiceUrl() {
         String url = NbPreferences.forModule(MainController.class)
-                .get("profiler_service_url", DIENER);
+                .get("profiler_service_url", DEFAULT_PROFILER_SERVICE_URL);
         Log.info(this, "profiler_service_url: '%s'", url);
         return url;
     }
@@ -372,7 +368,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void profileDocument(String configuration) {
-        try {
+        try {          
             ProgressRunnable<Integer> r = new DocumentProfiler(configuration);
             Integer retval = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"), true);
             if (retval != null) {
@@ -497,6 +493,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void deleteToken(int index) {
+        Log.info(this, "deleteToken(%d)", index);
         try {
             MessageCenter.getInstance().fireCancelEvent(new CancelEvent(this));
 
@@ -514,6 +511,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void deleteToken(int begin, int afterend) {
+        Log.info(this, "deleteToken(%d, %d)", begin, afterend);
         try {
             MessageCenter.getInstance().fireCancelEvent(new CancelEvent(this));
 
@@ -641,20 +639,15 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         return this.docproperties;
     }
 
-    public ProfilerWebServiceStub getProfilerWebServiceStub() {
-        try {
-            ProfilerWebServiceStub stub = 
-                    new ProfilerWebServiceStub(getProfilerServiceUrl());
-            stub._getServiceClient().getOptions().setManageSession(true);
-            stub._getServiceClient()
-                    .getOptions()
-                    .setProperty(Constants.Configuration.ENABLE_MTOM, Constants.VALUE_TRUE);
-            stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(3600000);
-            return stub;
-        } catch (AxisFault e) {
-            Log.error(this, "Could not create ProfilerWebSercice: %s", e.getMessage());
-        }
-        return null;
+    public ProfilerWebServiceStub newProfilerWebServiceStub() throws AxisFault {
+        ProfilerWebServiceStub stub = 
+                new ProfilerWebServiceStub(getProfilerServiceUrl());
+        stub._getServiceClient().getOptions().setManageSession(true);
+        stub._getServiceClient()
+                .getOptions()
+                .setProperty(Constants.Configuration.ENABLE_MTOM, Constants.VALUE_TRUE);
+        stub._getServiceClient().getOptions().setTimeOutInMilliSeconds(3600000);
+        return stub;
     }
 
     public void reloadDocument() {
@@ -856,6 +849,17 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             Exceptions.printStackTrace(ex);
         }
     }
+    
+    public void importProfile(String docpath, String profilepath) {
+        try {
+            globalDocument.clearCandidates();
+            OcrXmlImporter.importCandidates(globalDocument, docpath);
+            globalDocument.clearPatterns();
+            OcrXmlImporter.importProfile(globalDocument, profilepath);
+        } catch (IOException|SAXException e) {
+            Log.error(this, "could not import profile: %s", e.getMessage());
+        }
+    }
 
     private class DocumentCreator implements ProgressRunnable<Document> {
 
@@ -1020,14 +1024,32 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private class DocumentProfiler implements ProgressRunnable<Integer>, Cancellable {
 
         private String configuration;
-        private int totalBytesRead;
-        private long totalBytesToRead;
         private ProgressHandle ph;
         private String status;
         private int retval;
-
+        private ProfilerWebServiceStub stub;
+        private final String statusProfiling = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("profiling");
+        private final String statusApplyProfile = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("applyprofile"); 
+        private final String statusImportCandidates = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("importcandidates");         
+        private final String statusUploading = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("uploadprofile");
+        private final String statusDownloading = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("downloadprofile");
+        private final String statusWaiting = 
+                ResourceBundle.getBundle("jav/gui/main/Bundle")
+                        .getString("waitprofile");
+        
         public DocumentProfiler(String c) throws AxisFault {
             this.configuration = c;
+            stub = MainController.findInstance().newProfilerWebServiceStub();
         }
 
         @Override
@@ -1035,14 +1057,13 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             this.ph = p;
             try {
                 retval = -1;
-
-                ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-                ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
+                ph.setDisplayName(statusProfiling);
+                ph.progress(statusUploading);
 
                 GetProfileRequest gpr = new GetProfileRequest();
                 GetProfileRequestType gprt = new GetProfileRequestType();
                 gprt.setConfiguration(this.configuration);
-                gprt.setUserid(MainController.findInstance().getProfilerUserId());
+                gprt.setUserid(USERID);
 
                 AttachmentType docoutatt = new AttachmentType();
                 Base64Binary docoutbin = new Base64Binary();
@@ -1050,22 +1071,31 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 tempFile = File.createTempFile("document", ".ocrcxml");
                 tempFile.deleteOnExit();
 
+                Log.info(this, "exporting document ...");
                 globalDocument.exportAsDocXML(tempFile.getCanonicalPath(), false);
-
-                ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-                ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"));
-
-                FileDataSource docoutds = new FileDataSource(tempFile.getCanonicalPath());
+                File compressedTmpFile = File.createTempFile("document", ".corcxml.gz");
+                compressedTmpFile.deleteOnExit();
+                OutputStream compressedOut = new GZIPOutputStream(
+                        new FileOutputStream(compressedTmpFile)
+                );
+                Log.info(this, "compressing document ...");
+                Files.copy(tempFile.toPath(), compressedOut);
+                compressedOut.close();
+                FileDataSource docoutds = new FileDataSource(
+                        compressedTmpFile.getCanonicalPath()
+                );
                 DataHandler docoutdh = new DataHandler(docoutds);
                 docoutbin.setBase64Binary(docoutdh);
                 docoutatt.setBinaryData(docoutbin);
                 gprt.setDoc_in(docoutatt);
                 gprt.setDoc_in_type("DOCXML");
-                gprt.setDoc_in_size(tempFile.length());
+                Log.debug(this, "compressed size: %d", compressedTmpFile.length());
+                gprt.setDoc_in_size(compressedTmpFile.length());
 
                 gpr.setGetProfileRequest(gprt);
 
                 done = false;
+                recieve = false;
 
                 ProfilerWebServiceCallbackHandler handler = new ProfilerWebServiceCallbackHandler() {
                     @Override
@@ -1073,75 +1103,54 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         GetProfileResponseType gprest = gpres.getGetProfileResponse();
 
                         try {
-                            DataHandler dh_doc = gprest.getDoc_out().getBinaryData().getBase64Binary();
-                            FileOutputStream doc_out = new FileOutputStream(tempFile.getCanonicalPath());
-                            InputStream doc_in = dh_doc.getInputStream();
-
-                            totalBytesToRead = gprest.getDoc_out_size();
-
-                            byte[] buffer = new byte[8192];
-                            int bytesRead = 0;
-
-                            ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("downloading_doc"));
-
-                            while ((bytesRead = doc_in.read(buffer, 0, 8192)) != -1) {
-                                totalBytesRead += bytesRead;
-                                doc_out.write(buffer, 0, bytesRead);
-                                ph.progress(totalBytesRead + " / " + totalBytesToRead);
-                            }
-
-                            doc_in.close();
-                            doc_out.flush();
-                            doc_out.close();
-
+                            recieve = true;
+                            ph.progress(statusDownloading);
+                            DataHandler dh_doc = gprest.getDoc_out()
+                                    .getBinaryData()
+                                    .getBase64Binary();
+                            InputStream doc_in = new GZIPInputStream(
+                                    dh_doc.getInputStream()
+                            );                         
+                            ph.progress(statusImportCandidates);
+                            Log.info(this, "importing candidates");
                             globalDocument.clearCandidates();
-                            new OcrXmlImporter().importCandidates(globalDocument, tempFile.getCanonicalPath());
+                            OcrXmlImporter.importCandidates(
+                                    globalDocument, 
+                                    doc_in
+                            );
+                            Log.info(this, "done importing candidates");
+                            DataHandler dh_prof = gprest.getProfile_out()
+                                    .getBinaryData()
+                                    .getBase64Binary();
+                            InputStream prof_in = new GZIPInputStream(
+                                    dh_prof.getInputStream()
+                            );
 
-                            tempFile = File.createTempFile("profile", ".xml");
-                            tempFile.deleteOnExit();
-
-                            DataHandler dh_prof = gprest.getProfile_out().getBinaryData().getBase64Binary();
-                            FileOutputStream prof_out = new FileOutputStream(tempFile.getCanonicalPath());
-                            InputStream prof_in = dh_prof.getInputStream();
-
-                            totalBytesToRead = gprest.getProfile_out_size();
-                            totalBytesRead = 0;
-
-                            ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("downloading_profile"));
-
-                            while ((bytesRead = prof_in.read(buffer, 0, 8192)) != -1) {
-                                totalBytesRead += bytesRead;
-                                prof_out.write(buffer, 0, bytesRead);
-                                ph.progress(totalBytesRead + " / " + totalBytesToRead);
-                            }
-
-                            prof_in.close();
-                            prof_out.flush();
-                            prof_out.close();
-
+                            ph.setDisplayName(statusApplyProfile);
+                            Log.info(this, "applying new profile to document");
                             globalDocument.clearPatterns();
-                            new OcrXmlImporter().importProfile(globalDocument, tempFile.getCanonicalPath());
-
+                            OcrXmlImporter.importProfile(globalDocument, prof_in);
+                            Log.info(this, "done applying new profile to document");
                             retval = 0;
+                        } catch (IOException|SAXException ex) {
+                            retval = -1;
+                            Exceptions.printStackTrace(ex);
+                            Log.error(this, "Could not profile document: %s", ex.getMessage());                           
+                        } finally {
                             done = true;
-                        } catch (FileNotFoundException ex) {
-                            retval = -1;
-                            Exceptions.printStackTrace(ex);
-                        } catch (IOException ex) {
-                            retval = -1;
-                            Exceptions.printStackTrace(ex);
                         }
                     }
 
                     @Override
                     public void receiveErrorgetProfile(Exception e) {
+                        Log.error(this, "recieved error from pws: %s", e.getMessage());
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                        aprt.setUserid(MainController.findInstance().getProfilerUserId());
+                        aprt.setUserid(USERID);
                         apr.setAbortProfilingRequest(aprt);
                         try {
-                            AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
+                            AbortProfilingResponse aps = stub.abortProfiling(apr);
                             AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
 
                         } catch (RemoteException ex) {
@@ -1149,32 +1158,24 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("not_possible"));
                         }
                         retval = -1;
-                        System.out.println("ReceiveError " + e.getMessage());
+                        Log.error(this, "ReceiveError " + e.getMessage());
+                        done = true;
                     }
                 };
 
-                MainController.findInstance().getProfilerWebServiceStub().startgetProfile(gpr, handler);
-
+                stub.startgetProfile(gpr, handler);
+                ph.progress(statusWaiting);
                 while (!done) {
                     try {
-                        Thread.sleep(3000);
-                        GetProfilingStatusRequest grpq = new GetProfilingStatusRequest();
-                        GetProfilingStatusRequestType grpqt = new GetProfilingStatusRequestType();
-                        grpqt.setUserid(MainController.findInstance().getProfilerUserId());
-
-                        grpq.setGetProfilingStatusRequest(grpqt);
-                        GetProfilingStatusResponse gprs = MainController.findInstance().getProfilerWebServiceStub().getProfilingStatus(grpq);
-                        GetProfilingStatusResponseType gprst = gprs.getGetProfilingStatusResponse();
-
-                        status = gprst.getStatus();
-                        ph.setDisplayName(gprst.getStatus());
-                        ph.progress(gprst.getAdditional());
+                        Thread.sleep(10000);
                     } catch (InterruptedException ex) {
                         retval = -1;
                     }
                 }
+                Log.info(this, "profiling done");
                 return retval;
             } catch (Exception e) {
+                Log.error(this, "profiling error: %s", e.getMessage());
                 e.printStackTrace();
                 return -1;
             }
@@ -1186,10 +1187,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 AbortProfilingRequest apr = new AbortProfilingRequest();
                 AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                aprt.setUserid(MainController.findInstance().getProfilerUserId());
+                aprt.setUserid(USERID);
                 apr.setAbortProfilingRequest(aprt);
                 try {
-                    AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
+                    AbortProfilingResponse aps = stub.abortProfiling(apr);
                     AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
 
                     if (apst.getMessage().equals("destroyed")) {
@@ -1218,9 +1219,15 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         private ProgressHandle ph;
         private String status;
         private int retval;
+        private ProfilerWebServiceStub stub;
 
         public DocumentSimpleProfiler(String c) {
             this.configuration = c;
+            try {
+                stub = MainController.findInstance().newProfilerWebServiceStub();
+            } catch (AxisFault e) {
+                Log.error(DocumentSimpleProfiler.class, "AxisFault: %s", e.getMessage());
+            }
         }
 
         @Override
@@ -1286,13 +1293,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             doc_out.close();
 
                             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing_doc"));
-                            new OcrXmlImporter().simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
+                            OcrXmlImporter.simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
                             retval = 0;
                             done = true;
-                        } catch (FileNotFoundException ex) {
-                            retval = -1;
-                            Exceptions.printStackTrace(ex);
-                        } catch (IOException ex) {
+                        } catch (IOException|SAXException ex) {
                             retval = -1;
                             Exceptions.printStackTrace(ex);
                         }
@@ -1300,24 +1304,26 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
                     @Override
                     public void receiveErrorsimpleEnrich(Exception e) {
+                        Log.info(this, "profiling error: %s", e.getMessage());
                         AbortProfilingRequest apr = new AbortProfilingRequest();
                         AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                        aprt.setUserid(MainController.findInstance().getProfilerUserId());
+                        aprt.setUserid(USERID);
                         apr.setAbortProfilingRequest(aprt);
                         try {
-                            AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
+                            AbortProfilingResponse aps = stub.abortProfiling(apr);
                             AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
                         } catch (RemoteException ex) {
                             Exceptions.printStackTrace(ex);
                             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("not_possible"));
                         }
+                        done = true;
                         retval = -1;
                         System.out.println("ReceiveError " + e.getMessage());
                     }
                 };
 
-                MainController.findInstance().getProfilerWebServiceStub().startsimpleEnrich(gpr, handler);
+                stub.startsimpleEnrich(gpr, handler);
 
                 while (!done) {
                     try {
@@ -1327,7 +1333,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         grpqt.setUserid("simpleEnrich");
 
                         grpq.setGetProfilingStatusRequest(grpqt);
-                        GetProfilingStatusResponse gprs = MainController.findInstance().getProfilerWebServiceStub().getProfilingStatus(grpq);
+                        GetProfilingStatusResponse gprs = stub.getProfilingStatus(grpq);
                         GetProfilingStatusResponseType gprst = gprs.getGetProfilingStatusResponse();
 
                         status = gprst.getStatus();
@@ -1337,8 +1343,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         retval = -1;
                     }
                 }
+                Log.info(this, "profiling ended");
                 return retval;
             } catch (Exception e) {
+                Log.error(this, "profiling error: %s", e.getMessage());
                 e.printStackTrace();
                 return -1;
             }
@@ -1350,10 +1358,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 AbortProfilingRequest apr = new AbortProfilingRequest();
                 AbortProfilingRequestType aprt = new AbortProfilingRequestType();
 
-                aprt.setUserid(MainController.findInstance().getProfilerUserId());
+                aprt.setUserid(USERID);
                 apr.setAbortProfilingRequest(aprt);
                 try {
-                    AbortProfilingResponse aps = MainController.findInstance().getProfilerWebServiceStub().abortProfiling(apr);
+                    AbortProfilingResponse aps = stub.abortProfiling(apr);
                     AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
 
                     if (apst.getMessage().equals("destroyed")) {
@@ -1416,8 +1424,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             cs.newDocumentFromOCRCXML(projectpath + File.separator + projectname, doc, img, ph);
             document = cs.getDocument();
 
-            if (profilename != null) {
-                cs.importProfile(document, profilename);
+            try {
+                if (profilename != null) {
+                    cs.importProfile(document, profilename);
+                } 
+            } catch (IOException|SAXException e) {
+                Log.error("Could not import new project: %s", e.getMessage());
             }
 
             if (document != null) {

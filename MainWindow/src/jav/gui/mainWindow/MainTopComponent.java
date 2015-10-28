@@ -32,6 +32,8 @@ import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
@@ -431,12 +433,12 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                     currentTokenID = -1;
                     Page page = MainController.findInstance().getPage(p);
                     long time = System.currentTimeMillis();
-                    Log.debug(
-                            this, 
-                            "gotoPage page number %d (%s)", 
-                            page.getIndex(), 
-                            page.getImageCanonical()
-                    );
+//                    Log.debug(
+//                            this, 
+//                            "gotoPage page number %d (%s)", 
+//                            page.getIndex(), 
+//                            page.getImageCanonical()
+//                    );
                     if (page.hasImage()) {
                         pv = new PageView(getDefault(), MainController.findInstance().getDocument().tokenIterator(page), page.getImageCanonical(), fontSize, imgScale);
                     } else {
@@ -601,17 +603,13 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                         pv.getLayoutConstraints().put(newtv, "br");
                     }
                 }
-
+                
                 pv.update(TokenStatusType.DELETE, de.getPOIID(), de.getAffectedTokenIds());
                 pv.revalidate();
                 pv.repaint();
 
-//            if (this.currentTokenID == MainController.findInstance().getPage(this.currentPageIndex).getStartIndex() || (this.currentTokenID - ((DeleteEvent) e).getAffectedTokenIds().size()) < MainController.findInstance().getPage(this.currentPageIndex).getStartIndex()) {
-//                this.currentTokenID = 0;
-//            } else {
-////                this.currentTokenIndex -= ((DeleteEvent) e).getNumberOfTokensAffected();
-//            }
-
+                //@TODO: imporve this
+                currentTokenID = -1; //force goToNextNormalToken to jump to first token on page
                 this.goToNextNormalToken();
 
                 if (this.multiToken != null) {
@@ -691,41 +689,6 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
 
             }
         }
-//        if (this.currentTokenID < MainController.findInstance().getDocument().getNumberOfTokens() - 1) {
-//            if (this.currentTokenID != -1 || this.multiToken != null) {
-//
-//                int indextotest = this.currentTokenID;
-//
-//                if (indextotest + 1 < MainController.findInstance().getDocument().getNumberOfTokens()) {
-//                    Token t = MainController.findInstance().getDocument().getTokenByID(indextotest + 1);
-//                    if (t.getPageIndex() == this.currentPageIndex) {
-//                        pv.getVisualizationMode().unSelect();
-//                        TokenVisualization toselect = (TokenVisualization) this.tokenRegistry.getTokenVisualization(t);
-//                        this.selectToken(toselect, TokenSelectionType.NORMAL);
-//                    } else {
-//                        EndOfPageDialog d = new EndOfPageDialog();
-//                        Object retval = d.showDialog();
-//                        if (retval.equals(NotifyDescriptor.OK_OPTION)) {
-//                            final Token tok = t;
-//                            this.gotoPage(t.getPageIndex(), new PropertyChangeListener() {
-//                                @Override
-//                                public void propertyChange(PropertyChangeEvent pce) {
-//                                    if (pce.getNewValue().equals(SwingWorker.StateValue.DONE)) {
-//                                        TokenVisualization toselect = (TokenVisualization) tokenRegistry.getTokenVisualization(tok);
-//                                        selectToken(toselect, TokenSelectionType.NORMAL);
-//                                    }
-//                                }
-//                            });
-//                        }
-//
-//                    }
-//                }
-//                // no token selected
-//            } else {
-//                TokenVisualization tv = (TokenVisualization) tokenRegistry.getTokenVisualization(MainController.findInstance().getPage(this.currentPageIndex).getStartIndex());
-//                this.selectToken(tv, TokenSelectionType.NORMAL);
-//            }
-//        }
     }
 
     public void goToNextNormalToken() {
@@ -747,7 +710,10 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                 }
             }
         } else {
-            Token next = MainController.findInstance().getDocument().getNextToken(this.currentTokenID);
+            Token next = MainController
+                    .findInstance()
+                    .getDocument()
+                    .getNextToken(this.currentTokenID);
             if (next != null) {
                 if (next.getPageIndex() == this.currentPageIndex) {
                     pv.getVisualizationMode().unSelect();
@@ -1150,6 +1116,8 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
     }
 
     public void selectToken(TokenVisualization tvToSelect, TokenSelectionType tst) {
+        if (tvToSelect == null)
+            return;
         tvToSelect.setSelected(true);
         tvToSelect.grabFocus();
         Rectangle rect = tvToSelect.getBounds();

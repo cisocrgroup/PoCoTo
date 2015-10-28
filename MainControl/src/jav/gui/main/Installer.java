@@ -54,7 +54,7 @@ public class Installer extends ModuleInstall {
                     public void run() {
                         MainController.findInstance().addToLog("Programmstart");
                         JFrame f = (JFrame) WindowManager.getDefault().getMainWindow();
-                        f.setTitle("");
+                        f.setTitle("PoCoTo");
 //                        MainController.findInstance().getCorrectionSystem().getProjectFilename();
 //                        MainController.findInstance().initCorrectionSystem();
                     }

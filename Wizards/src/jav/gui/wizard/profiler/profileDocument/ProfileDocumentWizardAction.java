@@ -1,11 +1,9 @@
 package jav.gui.wizard.profiler.profileDocument;
 
-import cis.profiler.client.ProfilerWebServiceStub.CheckQuotaRequest;
-import cis.profiler.client.ProfilerWebServiceStub.CheckQuotaRequestType;
-import cis.profiler.client.ProfilerWebServiceStub.CheckQuotaResponse;
-import cis.profiler.client.ProfilerWebServiceStub.CheckQuotaResponseType;
+import cis.profiler.client.ProfilerWebServiceStub;
 import cis.profiler.client.ProfilerWebServiceStub.GetConfigurationsResponse;
 import jav.gui.actions.ContextAction;
+import jav.gui.cookies.DocumentLoadedCookie;
 import jav.gui.cookies.ProfilerIDCookie;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.UnsavedChangesDialog;
@@ -17,7 +15,6 @@ import java.rmi.RemoteException;
 import java.text.MessageFormat;
 import javax.swing.Action;
 import javax.swing.JComponent;
-import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
 import org.netbeans.api.progress.ProgressUtils;
 import org.openide.DialogDisplayer;
@@ -68,7 +65,7 @@ id = "jav.gui.wizard.profiler.ProfileDocument")
 @ActionReferences({
     @ActionReference(path = "Menu/Profiler", position = 1011, separatorBefore = 1010)
 })
-public final class ProfileDocumentWizardAction extends ContextAction<ProfilerIDCookie> {
+public final class ProfileDocumentWizardAction extends ContextAction<DocumentLoadedCookie> {
 
     public ProfileDocumentWizardAction() {
         this(Utilities.actionsGlobalContext());
@@ -82,32 +79,27 @@ public final class ProfileDocumentWizardAction extends ContextAction<ProfilerIDC
     private WizardDescriptor.Panel[] panels;
 
     private void showDialog() {
-        // check if the account used has sufficient quota
-        ProgressRunnable<Integer> r = new QuotaChecker();
-        int retval = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/wizard/profiler/profileDocument/Bundle").getString("checking_quota"), true);
-        if (retval > 0) {
-            try {
-                GetConfigurationsResponse gcr = MainController.findInstance().getProfilerWebServiceStub().getConfigurations();
-                configurations = gcr.getGetConfigurationsResponse().getConfigurations();
-
-                WizardDescriptor wizardDescriptor = new WizardDescriptor(getPanels(configurations));
-                wizardDescriptor.setOptions(new Object[] {WizardDescriptor.FINISH_OPTION,WizardDescriptor.CANCEL_OPTION});
-                wizardDescriptor.setTitleFormat(new MessageFormat("{0}"));
-                wizardDescriptor.setTitle("Your wizard dialog title here");
-                Dialog dialog = DialogDisplayer.getDefault().createDialog(wizardDescriptor);
-                dialog.setVisible(true);
-                dialog.toFront();
-                boolean cancelled = wizardDescriptor.getValue() != WizardDescriptor.FINISH_OPTION;
-                if (!cancelled) {
-                    MainController.findInstance().profileDocument(wizardDescriptor.getProperty("config").toString());
-                }
-            } catch (RemoteException ex) {
-                new CustomErrorDialog().showDialog(ex.getMessage());
+        try {
+            ProfilerWebServiceStub stub = MainController.findInstance().newProfilerWebServiceStub();
+            GetConfigurationsResponse gcr = stub.getConfigurations();
+            configurations = gcr.getGetConfigurationsResponse().getConfigurations();
+            
+            WizardDescriptor wizardDescriptor = new WizardDescriptor(getPanels(configurations));
+            wizardDescriptor.setOptions(new Object[] {WizardDescriptor.FINISH_OPTION,WizardDescriptor.CANCEL_OPTION});
+            wizardDescriptor.setTitleFormat(new MessageFormat("{0}"));
+            wizardDescriptor.setTitle("Your wizard dialog title here");
+            Dialog dialog = DialogDisplayer.getDefault().createDialog(wizardDescriptor);
+            dialog.setVisible(true);
+            dialog.toFront();
+            boolean cancelled = wizardDescriptor.getValue() != WizardDescriptor.FINISH_OPTION;
+            if (!cancelled) {
+                MainController.findInstance().profileDocument(wizardDescriptor.getProperty("config").toString());
             }
-        } else if (retval == 0) {
-            new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/gui/wizard/profiler/profileDocument/Bundle").getString("no_quota"));
+        } catch (RemoteException ex) {
+            new CustomErrorDialog().showDialog(ex.getMessage());
         }
     }
+
 
     /**
      * Initialize panels representing individual wizard's steps and sets
@@ -128,7 +120,7 @@ public final class ProfileDocumentWizardAction extends ContextAction<ProfilerIDC
                 JComponent jc = (JComponent) c;
                 // Sets step number of a component
                 // TODO if using org.openide.dialogs >= 7.8, can use WizardDescriptor.PROP_*:                
-                jc.putClientProperty("WizardPanel_contentSelectedIndex", new Integer(i));
+                jc.putClientProperty("WizardPanel_contentSelectedIndex", i);
                 // Sets steps names for a panel
                 jc.putClientProperty("WizardPanel_contentData", steps);
                 // Turn on subtitle creation on each step
@@ -143,17 +135,13 @@ public final class ProfileDocumentWizardAction extends ContextAction<ProfilerIDC
     }
 
     @Override
-    public Class<ProfilerIDCookie> contextClass() {
-        return ProfilerIDCookie.class;
+    public Class<DocumentLoadedCookie> contextClass() {
+        return DocumentLoadedCookie.class;
     }
 
     @Override
-    public boolean enable(ProfilerIDCookie context) {
-        if (MainController.findInstance().getDocOpen()) {
-            return true;
-        } else {
-            return false;
-        }
+    public boolean enable(DocumentLoadedCookie context) {
+        return true;
     }
 
     @Override
@@ -162,7 +150,7 @@ public final class ProfileDocumentWizardAction extends ContextAction<ProfilerIDC
     }
 
     @Override
-    public void performAction(ProfilerIDCookie context) {
+    public void performAction(DocumentLoadedCookie context) {
         NotifyDescriptor d = new NotifyDescriptor.Confirmation(java.util.ResourceBundle.getBundle("jav/gui/dialogs/Bundle").getString("profile_obacht"), "Obacht",
                 NotifyDescriptor.YES_NO_OPTION);
         if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.YES_OPTION) {
@@ -180,40 +168,6 @@ public final class ProfileDocumentWizardAction extends ContextAction<ProfilerIDC
                 }
             } else {
                 showDialog();
-            }
-        }
-    }
-
-    private class QuotaChecker implements ProgressRunnable<Integer> {
-
-        public QuotaChecker() {
-        }
-
-        @Override
-        public Integer run(ProgressHandle ph) {
-            try {
-                ph.progress(java.util.ResourceBundle.getBundle("jav/gui/actions/Bundle").getString("checking_quota"));
-                ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/actions/Bundle").getString("checking_quota"));
-
-                CheckQuotaRequest req = new CheckQuotaRequest();
-                CheckQuotaRequestType reqt = new CheckQuotaRequestType();
-                reqt.setUserid(MainController.findInstance().getProfilerUserId());
-                req.setCheckQuotaRequest(reqt);
-                try {
-                    CheckQuotaResponse resp = MainController.findInstance().getProfilerWebServiceStub().checkQuota(req);
-                    CheckQuotaResponseType rst = resp.getCheckQuotaResponse();
-                    if (rst.getReturncode() == 0) {
-                        return rst.getQuota();
-                    } else {
-                        new CustomErrorDialog().showDialog(rst.getMessage());
-                        return -1;
-                    }
-                } catch (RemoteException ex) {
-                    new CustomErrorDialog().showDialog(ex.getMessage());
-                    return -1;
-                }
-            } catch (Exception e) {
-                return -1;
             }
         }
     }
