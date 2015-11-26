@@ -9,7 +9,7 @@ package jav.correctionBackend.export;
  *
  * @author finkf
  */
-public interface CorrectedDocument {
+public interface LineReadeable {
 
     public abstract int getNumberOfLines();
 

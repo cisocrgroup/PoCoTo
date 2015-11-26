@@ -12,17 +12,17 @@ import java.io.IOException;
  *
  * @author finkf
  */
-public abstract class DocumentCorrector {
+public abstract class DocumentCorrector implements LineReadeable {
 
-    public void correctThisDocumentWith(CorrectedDocument correct) {
-        final int n = Math.min(getNumberOfLines(), correct.getNumberOfLines());
+    public void correctThisDocumentWith(LineReadeable corrections) {
+        final int n = Math.min(getNumberOfLines(), corrections.getNumberOfLines());
         for (int i = 0; i < n; ++i) {
-            doCorrectLine(i, correct);
+            doCorrectLine(i, corrections);
         }
     }
 
-    private void doCorrectLine(int i, CorrectedDocument correct) {
-        final String truth = correct.getLineAt(i);
+    private void doCorrectLine(int i, LineReadeable corrections) {
+        final String truth = corrections.getLineAt(i);
         final WagnerFischer wf = new WagnerFischer(truth, getLineAt(i));
         for (int j = 0; j < wf.getTrace().size(); ++j) {
             switch (wf.getTrace().get(j)) {
@@ -42,10 +42,6 @@ public abstract class DocumentCorrector {
     }
 
     // interface
-    public abstract int getNumberOfLines();
-
-    public abstract String getLineAt(int i);
-
     public abstract void substitute(int i, int j, char c);
 
     public abstract void insert(int i, int j, char c);
