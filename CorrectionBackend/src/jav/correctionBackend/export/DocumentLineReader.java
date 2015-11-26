@@ -22,7 +22,7 @@ public class DocumentLineReader implements LineReadeable {
 
     public DocumentLineReader(Page page, Document doc) {
         lines = new ArrayList<>();
-        readLines(page, doc);
+        readLines(doc.tokenIterator(page));
     }
 
     @Override
@@ -35,8 +35,7 @@ public class DocumentLineReader implements LineReadeable {
         return lines.get(i);
     }
 
-    private void readLines(Page page, Document doc) {
-        MyIterator<Token> tokens = doc.tokenIterator(page);
+    private void readLines(MyIterator<Token> tokens) {
         StringBuilder line = new StringBuilder();
         while (tokens.hasNext()) {
             Token token = tokens.next();
