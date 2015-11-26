@@ -22,10 +22,10 @@ class HocrChar {
     }
 
     public void substitute(char c) {
-
+        token.token.setCharAt(i, c);
     }
 
     public char getChar() {
-        return token.toString().charAt(i);
+        return token.token.charAt(i);
     }
 }

@@ -1,8 +1,7 @@
 package jav.correctionBackend;
 
-import jav.correctionBackend.export.BaseXmlExporter;
 import jav.correctionBackend.export.AbbyyXmlExporter;
-import jav.correctionBackend.export.HocrXmlExporter;
+import jav.correctionBackend.export.BaseXmlExporter;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.OverwriteFileDialog;
 import jav.logging.log4j.Log;
@@ -44,8 +43,7 @@ import org.openide.awt.UndoRedo;
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
@@ -259,7 +257,7 @@ public abstract class Document {
             conn.commit();
             return true;
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());            
+            Log.error(this, "SQLException: %s", ex.getMessage());
             if (conn != null) {
                 conn.rollback();
             }
@@ -348,7 +346,7 @@ public abstract class Document {
             conn.commit();
             return true;
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());            
+            Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
             if (conn != null) {
                 conn.rollback();
@@ -381,7 +379,7 @@ public abstract class Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());            
+            Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -399,7 +397,7 @@ public abstract class Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());            
+            Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -412,7 +410,7 @@ public abstract class Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());            
+            Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -427,7 +425,7 @@ public abstract class Document {
             manager.discardAllEdits();
             undo_redo_id = 0;
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());            
+            Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -444,7 +442,7 @@ public abstract class Document {
             prep.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());            
+            Log.error(this, "SQLException: %s", ex.getMessage());
             Logger.getLogger(DefaultDocument.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -462,7 +460,7 @@ public abstract class Document {
             prep.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());            
+            Log.error(this, "SQLException: %s", ex.getMessage());
             Logger.getLogger(DefaultDocument.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -542,7 +540,7 @@ public abstract class Document {
                         t.execute(rs.getString(5));
                     }
                     Log.info(
-                            this, 
+                            this,
                             "undo finished. Time taken = %d",
                             (System.currentTimeMillis() - time)
                     );
@@ -1343,7 +1341,7 @@ public abstract class Document {
             Statement s = conn.createStatement();
             ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument);
             while (rs.next()) {
-                
+
                 token = new Token(rs.getString(4));
                 token.setId(rs.getInt(1));
                 token.setIndexInDocument(rs.getInt(2));
@@ -1392,16 +1390,17 @@ public abstract class Document {
         }
         return str;
     }
+
     public Page getPage(int index) {
         Page page = null;
         try {
             Connection conn = jcp.getConnection();
             Statement s = conn.createStatement();
             ResultSet rs = s.executeQuery(
-                    "SELECT MIN(indexInDocument) as min, " +
-                    "MAX(indexInDocument) as max from token WHERE pageIndex = " + 
-                    index + 
-                    "AND indexInDocument <> -1"
+                    "SELECT MIN(indexInDocument) as min, "
+                    + "MAX(indexInDocument) as max from token WHERE pageIndex = "
+                    + index
+                    + "AND indexInDocument <> -1"
             );
             if (rs.next()) {
                 page = new Page(index);
@@ -1411,8 +1410,8 @@ public abstract class Document {
                 page.setEndIndex(endIndex);
                 String path = this.getTokenByIndex(startIndex).getImageFilename();
                 Log.debug(
-                        this, 
-                        "getPage index %d startIndex %d endIndex %d filename %s", 
+                        this,
+                        "getPage index %d startIndex %d endIndex %d filename %s",
                         index,
                         startIndex,
                         endIndex,
@@ -1610,14 +1609,14 @@ public abstract class Document {
             while (page_iter.hasNext()) {
                 Page seite = page_iter.next();
 
-                writer.write("#### Seite " + ((int) seite.getIndex()+1) + " von " + this.numPages + " ###");
+                writer.write("#### Seite " + ((int) seite.getIndex() + 1) + " von " + this.numPages + " ###");
                 writer.newLine();
                 writer.newLine();
 
                 MyIterator<Token> token_it = this.tokenIterator(seite);
                 while (token_it.hasNext()) {
                     Token t = token_it.next();
-                    if( (t.getWDisplay().equals("\n")) || (t.getWDisplay().equals(("\r\n")) || (t.getWDisplay().equals("\r")))) {
+                    if ((t.getWDisplay().equals("\n")) || (t.getWDisplay().equals(("\r\n")) || (t.getWDisplay().equals("\r")))) {
                         writer.newLine();
                     } else {
                         writer.write(t.getWDisplay());
@@ -1638,7 +1637,7 @@ public abstract class Document {
             }
         }
     }
-    
+
     public void exportAll(String fromDir, String toDir, String t) {
         FileType fileType = FileType.fromString(t);
         Log.info(this, "exporting %s %s %s", fromDir, toDir, t);
@@ -1646,14 +1645,14 @@ public abstract class Document {
                 CorrectionSystem.getFilenameFilter(fileType)
         );
         OverwriteFileDialog.Result doOverwrite = OverwriteFileDialog.Result.YES;
-        for (String fileName: sources) {
+        for (String fileName : sources) {
             BaseXmlExporter exporter = getXmlExporter(
                     new File(fromDir, fileName),
                     new File(toDir, fileName),
                     fileType
             );
-            if (doOverwrite != OverwriteFileDialog.Result.ALL &&
-                exporter.getDestinationFile().exists()) {
+            if (doOverwrite != OverwriteFileDialog.Result.ALL
+                    && exporter.getDestinationFile().exists()) {
                 doOverwrite = new OverwriteFileDialog(exporter.getDestinationFile())
                         .showDialogAndGetResult();
             }
@@ -1669,27 +1668,25 @@ public abstract class Document {
                     );
                 }
             }
-                
+
         }
     }
-    
+
     private BaseXmlExporter getXmlExporter(File src, File dest, FileType fileType) {
         switch (fileType) {
             case ABBYY_XML_DIR:
                 return new AbbyyXmlExporter(src, dest, this);
-            case HOCR:
-                return new HocrXmlExporter(src, dest, this);
             default:
                 return new AbbyyXmlExporter(src, dest, this);
         }
     }
-    
-    public MyIterator<Token> selectTokens(PreparedStatement stmnt) 
+
+    public MyIterator<Token> selectTokens(PreparedStatement stmnt)
             throws SQLException {
         return TokenIterator.fromStmnt(jcp.getConnection(), stmnt);
     }
-    
-    public PreparedStatement prepareStatement(String stmnt) 
+
+    public PreparedStatement prepareStatement(String stmnt)
             throws SQLException {
         return jcp.getConnection().prepareStatement(stmnt);
     }
@@ -1735,7 +1732,7 @@ public abstract class Document {
             prep.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "Could not set suspicious: %s",ex.getMessage());                        
+            Log.error(this, "Could not set suspicious: %s", ex.getMessage());
         }
     }
 
@@ -1750,7 +1747,7 @@ public abstract class Document {
             prep.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "Could not set normal: %s",ex.getMessage());            
+            Log.error(this, "Could not set normal: %s", ex.getMessage());
         }
     }
 
@@ -1765,7 +1762,7 @@ public abstract class Document {
             prep.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "Could not set top suggestion: %s",ex.getMessage());
+            Log.error(this, "Could not set top suggestion: %s", ex.getMessage());
         }
     }
 
@@ -1780,7 +1777,7 @@ public abstract class Document {
             prep.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "Could not set top level candidate: %s",ex.getMessage());
+            Log.error(this, "Could not set top level candidate: %s", ex.getMessage());
         }
     }
 
@@ -1795,7 +1792,7 @@ public abstract class Document {
             prep.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "Could not set number of candidates: %s",ex.getMessage());
+            Log.error(this, "Could not set number of candidates: %s", ex.getMessage());
         }
     }
 
@@ -2027,8 +2024,8 @@ class TokenIterator implements MyIterator<Token> {
     private Connection conn;
     private Statement s;
     private ResultSet rs = null;
-    
-    public static TokenIterator fromStmnt(Connection conn, PreparedStatement stmnt) 
+
+    public static TokenIterator fromStmnt(Connection conn, PreparedStatement stmnt)
             throws SQLException {
         TokenIterator it = new TokenIterator();
         it.conn = conn;
@@ -2036,9 +2033,9 @@ class TokenIterator implements MyIterator<Token> {
         it.rs = stmnt.executeQuery();
         return it;
     }
-    
+
     private TokenIterator() {
-        
+
     }
 
     protected TokenIterator(Connection c) {
@@ -2092,7 +2089,7 @@ class TokenIterator implements MyIterator<Token> {
                     return false;
                 }
             } catch (SQLException ex) {
-                Log.error(this, "iterator has next: %s", ex.getMessage());                
+                Log.error(this, "iterator has next: %s", ex.getMessage());
                 return false;
             }
         }
@@ -2129,7 +2126,7 @@ class TokenIterator implements MyIterator<Token> {
                 retval.setTokenImageInfoBox(tiib);
             }
         } catch (SQLException ex) {
-            Log.error(this, "iterator next: %s", ex.getMessage());                            
+            Log.error(this, "iterator next: %s", ex.getMessage());
             retval = null;
         }
         return retval;
@@ -2174,7 +2171,7 @@ class CandidateIterator implements MyIterator<Candidate> {
             s = conn.createStatement();
             rs = s.executeQuery("SELECT * FROM candidate WHERE tokenID=" + tokenID + " ORDER BY rank ASC");
         } catch (SQLException ex) {
-            Log.error(this, "candidate iterator cancel: %s", ex.getMessage());            
+            Log.error(this, "candidate iterator cancel: %s", ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -2281,7 +2278,7 @@ class PageIterator implements MyIterator<Page> {
             retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
             retval.setImageCanonical(path);
         } catch (SQLException ex) {
-            Log.error(this, "sql error: %s", ex.getMessage());            
+            Log.error(this, "sql error: %s", ex.getMessage());
         }
         return retval;
     }
@@ -2347,7 +2344,7 @@ class PatternIterator implements MyIterator<Pattern> {
         try {
             retval = new Pattern(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getInt(4), rs.getInt(5));
         } catch (SQLException ex) {
-            Log.error(this, "sql error: %s", ex.getMessage());            
+            Log.error(this, "sql error: %s", ex.getMessage());
             retval = null;
         }
         return retval;
@@ -2403,7 +2400,7 @@ class PatternOccurrenceIterator implements MyIterator<PatternOccurrence> {
                     return false;
                 }
             } catch (SQLException ex) {
-                Log.error(this, "sql error: %s", ex.getMessage());                
+                Log.error(this, "sql error: %s", ex.getMessage());
                 return false;
             }
         }

@@ -5,32 +5,21 @@
  */
 package jav.correctionBackend.export;
 
-import jav.correctionBackend.Token;
-import jav.correctionBackend.TokenImageInfoBox;
+import org.w3c.dom.Node;
 
 /**
  *
  * @author finkf
  */
-public class HocrToken implements HasTokenImageInfoBox {
-    private final Token token;
-    HocrToken(Token token) {
-        this.token = token;
-    }
-    
-    @Override
-    public TokenImageInfoBox getTokenImageInfoBox() {
-        return token.getTokenImageInfoBox();
-    }
-    public Token getToken() {
-        return token;
-    }
-    @Override 
-    public String toString() {
-        return new StringBuilder(token.getWOCR())
-                .append('(')
-                .append(token.getWCOR())
-                .append(')')
-                .toString();
+public class HocrToken {
+
+    public final StringBuilder token;
+    public final Node node;
+    public HocrToken next;
+
+    public HocrToken(String token, Node node) {
+        this.token = new StringBuilder(token);
+        this.node = node;
+        next = null;
     }
 }
