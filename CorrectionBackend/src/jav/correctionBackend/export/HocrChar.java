@@ -11,15 +11,21 @@ package jav.correctionBackend.export;
  */
 class HocrChar {
 
-    private final HocrToken token;
+    private HocrToken token;
     private final HocrLine line;
+    private int i;
 
-    public HocrChar(HocrToken token, HocrLine line) {
+    public HocrChar(HocrToken token, HocrLine line, int i) {
         this.token = token;
         this.line = line;
+        this.i = i;
     }
 
     public void substitute(char c) {
 
+    }
+
+    public char getChar() {
+        return token.toString().charAt(i);
     }
 }

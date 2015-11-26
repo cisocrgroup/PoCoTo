@@ -5,14 +5,26 @@
  */
 package jav.correctionBackend.export;
 
+import java.util.ArrayList;
+import org.w3c.dom.Node;
+
 /**
  *
  * @author finkf
  */
 class HocrLine {
 
-    public void substitute(int i, char c) {
+    private final Node node;
+    private final ArrayList<HocrChar> chars;
 
+    public HocrLine(Node node) {
+        this.node = node;
+        this.chars = new ArrayList<>();
+        readChars();
+    }
+
+    public void substitute(int i, char c) {
+        chars.get(i).substitute(c);
     }
 
     public void delete(int i) {
@@ -25,6 +37,14 @@ class HocrLine {
 
     @Override
     public String toString() {
-        return "";
+        StringBuilder builder = new StringBuilder();
+        for (HocrChar c : chars) {
+            builder.append(c.getChar());
+        }
+        return builder.toString();
+    }
+
+    private void readChars() {
+
     }
 }
