@@ -152,6 +152,10 @@ public class PageView extends JPanel {
                     }
                 }
 
+                TokenVisualization tv = TokenVisualization.fromToken(tok, imgScale, fontSize, lineheight, ip);
+                if (tv instanceof ImageTokenVisualization) {
+                    lineheight = ((ImageTokenVisualization) tv).getImageHeight();
+                }
                 tv.setMode(tvMode, tok);
                 tv.setAlignmentY(Component.BOTTOM_ALIGNMENT);
 
@@ -269,7 +273,7 @@ public class PageView extends JPanel {
                     this.remove(todelete);
                 }
             }
-            
+
             this.tvMode.unSelect();
             affectedTv.setSelected(true);
             affectedTv.grabFocus();
@@ -281,7 +285,7 @@ public class PageView extends JPanel {
             TokenVisualization affectedTv = (TokenVisualization) parent.getTokenVisualizationRegistry().getTokenVisualization(affectedID);
             if (affectedTv != null) {
                 affectedTv.setSelected(false);
-//                MessageCenter.getInstance().fireTokenDeselectionEvent(new TokenDeselectionEvent(test, test.getTokenIndex()));                
+//                MessageCenter.getInstance().fireTokenDeselectionEvent(new TokenDeselectionEvent(test, test.getTokenIndex()));
                 Token tok = MainController.findInstance().getDocument().getTokenByID(affectedTokens.get(0));
                 affectedTv.setTokenID(tok.getID());
                 if (affectedTv.hasImage() && parent.getShowImages()) {
