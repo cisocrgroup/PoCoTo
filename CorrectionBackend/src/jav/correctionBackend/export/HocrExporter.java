@@ -20,6 +20,7 @@ public class HocrExporter extends Exporter {
 
     @Override
     protected DocumentCorrector getCorrector() throws Exception {
-        return new AbbyyXmlCorrector(getSourceFile(), getDestinationFile());
+        throw new RuntimeException("Not implemented yet");
+        //return new AbbyyXmlCorrector(getSourceFile(), getDestinationFile());
     }
 }
