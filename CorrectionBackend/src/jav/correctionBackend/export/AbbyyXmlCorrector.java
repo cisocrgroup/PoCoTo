@@ -34,18 +34,17 @@ import org.xml.sax.SAXException;
  */
 public class AbbyyXmlCorrector extends DocumentCorrector {
 
-    private final String path, outputpath;
+    private final File input, output;
     private final org.w3c.dom.Document xmlDoc;
     private final ArrayList<ArrayList<AbbyyXmlChar>> lines;
 
-    public AbbyyXmlCorrector(String input, String output)
+    public AbbyyXmlCorrector(File input, File output)
             throws IOException, SAXException, XPathExpressionException,
             ParserConfigurationException {
-        this.path = input;
-        this.outputpath = output;
+        this.input = input;
+        this.output = output;
         xmlDoc = parseXml();
         lines = parseLines();
-
     }
 
     @Override
@@ -106,7 +105,7 @@ public class AbbyyXmlCorrector extends DocumentCorrector {
                     = TransformerFactory.newInstance().newTransformer();
             DOMSource domSource = new DOMSource(xmlDoc);
             StreamResult out
-                    = new StreamResult(new FileOutputStream(new File(outputpath)));
+                    = new StreamResult(new FileOutputStream(output));
             transformer.transform(domSource, out);
         } catch (TransformerException e) {
             throw new IOException(e);
@@ -124,7 +123,7 @@ public class AbbyyXmlCorrector extends DocumentCorrector {
                 return new InputSource(new StringReader(""));
             }
         });
-        return db.parse(new File(path));
+        return db.parse(input);
     }
 
     private ArrayList<ArrayList<AbbyyXmlChar>> parseLines()

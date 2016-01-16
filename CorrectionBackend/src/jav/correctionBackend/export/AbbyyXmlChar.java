@@ -17,14 +17,13 @@ public class AbbyyXmlChar {
     private String letter;
 
     public AbbyyXmlChar(char c, Node node) {
-        this.node = node;
-        letter = "";
-        substitute(c);
+        this(node);
+        setChar(c);
     }
 
     public AbbyyXmlChar(Node node) {
         this.node = node;
-        this.letter = parseLetter();
+        this.letter = node.getFirstChild().getNodeValue();
     }
 
     public char getChar() {
@@ -32,8 +31,7 @@ public class AbbyyXmlChar {
     }
 
     public void substitute(char c) {
-        letter = "" + c;
-        node.getFirstChild().setNodeValue(letter);
+        setChar(c);
     }
 
     public void delete() {
@@ -44,8 +42,9 @@ public class AbbyyXmlChar {
         return node;
     }
 
-    private String parseLetter() {
-        return node.getFirstChild().getNodeValue();
+    private void setChar(char c) {
+        char tmp[] = {c};
+        letter = new String(tmp);
+        node.getFirstChild().setNodeValue(letter);
     }
-
 }

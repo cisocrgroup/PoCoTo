@@ -1,7 +1,6 @@
 package jav.correctionBackend;
 
-import jav.correctionBackend.export.AbbyyXmlExporter;
-import jav.correctionBackend.export.BaseXmlExporter;
+import jav.correctionBackend.export.Exporter;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.OverwriteFileDialog;
 import jav.logging.log4j.Log;
@@ -1391,6 +1390,36 @@ public abstract class Document {
         return str;
     }
 
+    /**
+     * Search for the page that corresponds to a given OCR file
+     *
+     * @param ocrfile The OCR file
+     * @return the page or null if no page could be found
+     */
+    public Page getPage(File ocrfile) {
+        Page page = null;
+        String name = ocrfile.getName();
+        int idx = name.indexOf(".");
+        if (idx != -1) {
+            name = name.substring(0, idx);
+        }
+        try {
+            Connection c = jcp.getConnection();
+            Statement s = c.createStatement();
+            ResultSet rs = s.executeQuery(
+                    "SELECT pageIndex from token WHERE imageFile like %" + name + "%"
+            );
+            if (rs.next()) {
+                page = getPage(rs.getInt(1));
+            }
+            s.close();
+            c.close();
+        } catch (SQLException e) {
+            Log.error(this, "SQLError: %s", e.getMessage());
+        }
+        return page;
+    }
+
     public Page getPage(int index) {
         Page page = null;
         try {
@@ -1641,16 +1670,15 @@ public abstract class Document {
     public void exportAll(String fromDir, String toDir, String t) {
         FileType fileType = FileType.fromString(t);
         Log.info(this, "exporting %s %s %s", fromDir, toDir, t);
-        String[] sources = new File(fromDir).list(
-                CorrectionSystem.getFilenameFilter(fileType)
-        );
+        String[] sources = new File(fromDir).list(fileType.getFilenameFilter());
         OverwriteFileDialog.Result doOverwrite = OverwriteFileDialog.Result.YES;
         for (String fileName : sources) {
-            BaseXmlExporter exporter = getXmlExporter(
+            Exporter exporter = fileType.getExporter(
                     new File(fromDir, fileName),
                     new File(toDir, fileName),
-                    fileType
+                    this
             );
+
             if (doOverwrite != OverwriteFileDialog.Result.ALL
                     && exporter.getDestinationFile().exists()) {
                 doOverwrite = new OverwriteFileDialog(exporter.getDestinationFile())
@@ -1669,15 +1697,6 @@ public abstract class Document {
                 }
             }
 
-        }
-    }
-
-    private BaseXmlExporter getXmlExporter(File src, File dest, FileType fileType) {
-        switch (fileType) {
-            case ABBYY_XML_DIR:
-                return new AbbyyXmlExporter(src, dest, this);
-            default:
-                return new AbbyyXmlExporter(src, dest, this);
         }
     }
 

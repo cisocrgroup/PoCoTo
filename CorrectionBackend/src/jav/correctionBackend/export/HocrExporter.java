@@ -12,9 +12,9 @@ import java.io.File;
  *
  * @author finkf
  */
-public class AbbyyXmlExporter extends Exporter {
+public class HocrExporter extends Exporter {
 
-    public AbbyyXmlExporter(File src, File dest, Document document) {
+    public HocrExporter(File src, File dest, Document document) {
         super(src, dest, document);
     }
 

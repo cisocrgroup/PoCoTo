@@ -6,6 +6,7 @@
 package jav.correctionBackend.export;
 
 import jav.correctionBackend.Document;
+import jav.correctionBackend.Page;
 import java.io.File;
 import java.io.IOException;
 
@@ -13,32 +14,41 @@ import java.io.IOException;
  *
  * @author finkf
  */
-public abstract class BaseXmlExporter {
+public abstract class Exporter {
+
     private final File src;
     private final File dest;
     private final Document document;
 
-    public BaseXmlExporter(File src, File dest, Document document) {
-        assert(src != null);
-        assert(dest != null);
-        assert(document != null);
+    public Exporter(File src, File dest, Document document) {
+        assert (src != null);
+        assert (dest != null);
+        assert (document != null);
         this.src = src;
         this.dest = dest;
         this.document = document;
     }
-    
+
     public final File getSourceFile() {
         return src;
     }
-    
+
     public final File getDestinationFile() {
         return dest;
     }
-    
+
     public final Document getDocument() {
         return document;
     }
 
-    public abstract void export() throws IOException, Exception;
-    
+    public void export() throws IOException, Exception {
+        Page page = document.getPage(src);
+        DocumentCorrector corrector = getCorrector();
+        DocumentLineReader lineReader = new DocumentLineReader(page, document);
+        corrector.correctThisDocumentWith(lineReader);
+        corrector.write();
+    }
+
+    protected abstract DocumentCorrector getCorrector() throws Exception;
+
 }

@@ -36,14 +36,14 @@ public class DocumentLineReader implements LineReadeable {
     }
 
     private void readLines(MyIterator<Token> tokens) {
-        StringBuilder line = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         while (tokens.hasNext()) {
             Token token = tokens.next();
             if (token.getSpecialSeq() == SpecialSequenceType.NEWLINE) {
-                lines.add(line.toString());
-                lines.clear();
+                lines.add(builder.toString());
+                builder.setLength(0);
             } else {
-                line.append(token.getWOCR());
+                builder.append(token.getWOCR());
             }
         }
     }
