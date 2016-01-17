@@ -92,10 +92,10 @@ public enum FileType {
     public Exporter getExporter(File source, File dest, Document document) {
         switch (this) {
             case HOCR:
-                return new AbbyyXmlExporter(source, dest, document);
+                return new HocrExporter(source, dest, document);
             case ABBYY_XML_DIR:
             default:
-                return new HocrExporter(source, dest, document);
+                return new AbbyyXmlExporter(source, dest, document);
         }
     }
 }
