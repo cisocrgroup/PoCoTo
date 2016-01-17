@@ -1407,7 +1407,8 @@ public abstract class Document {
             Connection c = jcp.getConnection();
             Statement s = c.createStatement();
             ResultSet rs = s.executeQuery(
-                    "SELECT pageIndex from token WHERE imageFile like %" + name + "%"
+                    "SELECT pageIndex FROM token WHERE imageFile like '%"
+                    + name + "%'"
             );
             if (rs.next()) {
                 page = getPage(rs.getInt(1));
