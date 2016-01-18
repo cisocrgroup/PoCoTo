@@ -18,7 +18,7 @@ public class WagnerFischer {
 
     private final String truth, test;
     private final int[][] matrix;
-    private final ArrayList<EditOperations> trace;
+    private final Trace trace;
 
     public enum EditOperations {
 
@@ -28,11 +28,37 @@ public class WagnerFischer {
         Insertion
     };
 
+    public class Trace extends ArrayList<EditOperations> {
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            for (EditOperations e : this) {
+                switch (e) {
+                    case Deletion:
+                        builder.append('-');
+                        break;
+                    case Insertion:
+                        builder.append('+');
+                        break;
+                    case Substitution:
+                        builder.append('#');
+                        break;
+                    case Noop: // fall through
+                    default:
+                        builder.append('|');
+                        break;
+                }
+            }
+            return builder.toString();
+        }
+    };
+
     public WagnerFischer(String truth, String test) {
         this.truth = truth;
         this.test = test;
         matrix = new int[test.length() + 1][truth.length() + 1];
-        trace = new ArrayList<>();
+        trace = new Trace();
     }
 
     public String getTest() {
@@ -43,8 +69,12 @@ public class WagnerFischer {
         return truth;
     }
 
-    public ArrayList<EditOperations> getTrace() {
+    public Trace getTrace() {
         return trace;
+    }
+
+    public int[][] getMatrix() {
+        return matrix;
     }
 
     public int calculate() {
@@ -54,18 +84,31 @@ public class WagnerFischer {
         for (int i = 0; i < matrix[0].length; ++i) {
             matrix[0][i] = i;
         }
-        for (int i = 1; i < matrix[0].length; ++i) {
+        for (int i = 1; i < matrix.length; ++i) {
             for (int j = 1; j < matrix[i].length; ++j) {
-                setMatrix(i, j);
+                matrix[i][j] = getMin(i, j);
             }
         }
         backtrack();
         return matrix[test.length()][truth.length()];
     }
 
-    private void setMatrix(int i, int j) {
-        MinArg minArg = getMinArg(i, j);
-        matrix[i][j] = matrix[minArg.i][minArg.j];
+    private int getMin(int i, int j) {
+        assert (i > 0);
+        assert (j > 0);
+        assert ((i - 1) < test.length());
+        assert ((j - 1) < truth.length());
+
+        if (test.charAt(i - 1) == truth.charAt(j - 1)) {
+            return matrix[i][j];
+        } else {
+            int[] tmp = {
+                matrix[i - 1][j - 1] + 1,
+                matrix[i - 1][j] + 1,
+                matrix[i][j - 1] + 1
+            };
+            return Collections.min(Arrays.asList(ArrayUtils.toObject(tmp)));
+        }
     }
 
     private void backtrack() {
@@ -79,10 +122,12 @@ public class WagnerFischer {
 
     private MinArg setTrace(int i, int j) {
         MinArg minArg = getMinArg(i, j);
-        if (matrix[i][j] == matrix[minArg.i][minArg.j]) {
-            trace.add(EditOperations.Noop);
-        } else if (minArg.i == i - 1 && minArg.j == j - 1) {
-            trace.add(EditOperations.Substitution);
+        if (minArg.i == i - 1 && minArg.j == j - 1) {
+            if (matrix[i - 1][j - 1] == matrix[i][j]) {
+                trace.add(EditOperations.Noop);
+            } else {
+                trace.add(EditOperations.Substitution);
+            }
         } else if (minArg.i == i && minArg.j == j - 1) {
             trace.add(EditOperations.Deletion);
         } else {
@@ -105,18 +150,17 @@ public class WagnerFischer {
             case 2:
                 return new MinArg(i, j - 1);
             default:
-                break;
-
+                throw new IllegalArgumentException("Index out of bounds: " + index);
         }
-        throw new IllegalArgumentException("Index out of bounds: " + index);
     }
 
     private class MinArg {
+
+        private final int i, j;
 
         public MinArg(int i, int j) {
             this.i = i;
             this.j = j;
         }
-        public final int i, j;
     }
 }
