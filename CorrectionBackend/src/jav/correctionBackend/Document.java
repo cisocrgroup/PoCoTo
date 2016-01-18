@@ -1674,10 +1674,10 @@ public abstract class Document {
         String[] sources = new File(fromDir).list(fileType.getFilenameFilter());
         OverwriteFileDialog.Result doOverwrite = OverwriteFileDialog.Result.YES;
         for (String fileName : sources) {
-            Exporter exporter = fileType.getExporter(
+            Exporter exporter = new Exporter(
                     new File(fromDir, fileName),
                     new File(toDir, fileName),
-                    this
+                    fileType.getPageParser()
             );
 
             if (doOverwrite != OverwriteFileDialog.Result.ALL
@@ -1687,7 +1687,7 @@ public abstract class Document {
             }
             if (doOverwrite != OverwriteFileDialog.Result.NO) {
                 try {
-                    exporter.export();
+                    exporter.export(this);
                 } catch (Exception e) {
                     Log.error(
                             this,

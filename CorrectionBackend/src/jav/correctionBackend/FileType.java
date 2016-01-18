@@ -1,8 +1,8 @@
 package jav.correctionBackend;
 
-import jav.correctionBackend.export.AbbyyXmlExporter;
-import jav.correctionBackend.export.Exporter;
-import jav.correctionBackend.export.HocrExporter;
+import jav.correctionBackend.export.AbbyyXmlPageParser;
+import jav.correctionBackend.export.HocrPageParser;
+import jav.correctionBackend.export.PageParser;
 import java.io.File;
 import java.io.FilenameFilter;
 
@@ -89,13 +89,13 @@ public enum FileType {
         }
     }
 
-    public Exporter getExporter(File source, File dest, Document document) {
+    public PageParser getPageParser() {
         switch (this) {
             case HOCR:
-                return new HocrExporter(source, dest, document);
+                return new HocrPageParser();
             case ABBYY_XML_DIR:
             default:
-                return new AbbyyXmlExporter(source, dest, document);
+                return new AbbyyXmlPageParser();
         }
     }
 }
