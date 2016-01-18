@@ -68,7 +68,7 @@ public class AbbyyXmlChar implements Char {
 
     @Override
     public void substitute(String c) {
-        setAttribute("pocotoSubstitute", letter);
+        setAttribute("pocotoSubstitution", letter);
         letter = c;
         node.getFirstChild().setNodeValue(letter);
     }
@@ -89,9 +89,11 @@ public class AbbyyXmlChar implements Char {
         Node clone = node.cloneNode(true);
         node.getParentNode().insertBefore(clone, node.getNextSibling());
         AbbyyXmlChar nc = new AbbyyXmlChar(clone);
+        nc.setAttribute("pocotoInsertion", letter);
         nc.next = this.next;
         nc.prev = this;
         this.next = nc;
+        nc.node.getFirstChild().setNodeValue(str);
         return nc;
     }
 
@@ -100,9 +102,11 @@ public class AbbyyXmlChar implements Char {
         Node clone = node.cloneNode(true);
         node.getParentNode().insertBefore(clone, node);
         AbbyyXmlChar nc = new AbbyyXmlChar(clone);
+        nc.setAttribute("pocotoInsertion", letter);
         nc.prev = this.prev;
         nc.next = this;
         this.prev = nc;
+        nc.node.getFirstChild().setNodeValue(str);
         return nc;
     }
 
