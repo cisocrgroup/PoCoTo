@@ -11,7 +11,7 @@ package jav.correctionBackend.export;
  */
 public class BoundingBox {
 
-    private final int l, t, r, b;
+    private int l, t, r, b;
 
     public BoundingBox(int l, int t, int r, int b) {
         this.l = l;
@@ -51,6 +51,23 @@ public class BoundingBox {
     @Override
     public String toString() {
         return String.format("bbox %d %d %d %d", l, t, r, b);
+    }
+
+    /**
+     * Combines this bounding box with another one. The bounding box growths
+     * accordingly.
+     *
+     * @param other the other bounding box
+     * @return this
+     */
+    public BoundingBox combineWith(BoundingBox other) {
+        if (other != null) {
+            l = Math.min(l, other.l);
+            t = Math.min(t, other.t);
+            r = Math.max(r, other.r);
+            b = Math.max(b, other.b);
+        }
+        return this;
     }
 
     /**
