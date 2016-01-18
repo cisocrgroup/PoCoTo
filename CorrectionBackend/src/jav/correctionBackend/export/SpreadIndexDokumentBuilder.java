@@ -6,12 +6,18 @@
 package jav.correctionBackend.export;
 
 import jav.correctionBackend.SpreadIndexDocument;
+import jav.correctionBackend.Token;
+import jav.correctionBackend.TokenImageInfoBox;
 
 /**
  *
  * @author finkf
  */
 public class SpreadIndexDokumentBuilder implements DocumentBuilder {
+
+    private BoundingBox linebb;
+    private int tokenIndex, pageIndex;
+    private String imagefile, ocrfile;
 
     @Override
     public void append(Page page) {
@@ -42,6 +48,29 @@ public class SpreadIndexDokumentBuilder implements DocumentBuilder {
     @Override
     public SpreadIndexDocument build() {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    private void adjust(TokenImageInfoBox tiib) {
+        if (tiib != null) {
+            tiib.setImageFileName(imagefile);
+            if (linebb != null) {
+                tiib.setCoordinateTop(
+                        Math.min(linebb.getTop(), tiib.getCoordinateTop())
+                );
+                tiib.setCoordinateBottom(
+                        Math.max(linebb.getBottom(), tiib.getCoordinateBottom())
+                );
+            }
+        }
+    }
+
+    private Token adjust(Token token) {
+        if (token != null) {
+            token.setIndexInDocument(++tokenIndex);
+            token.setPageIndex(pageIndex);
+            adjust(token.getTokenImageInfoBox());
+        }
+        return token;
     }
 
 }
