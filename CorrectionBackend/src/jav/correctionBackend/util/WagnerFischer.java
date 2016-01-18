@@ -100,7 +100,7 @@ public class WagnerFischer {
         assert ((j - 1) < truth.length());
 
         if (test.charAt(i - 1) == truth.charAt(j - 1)) {
-            return matrix[i][j];
+            return matrix[i - 1][j - 1];
         } else {
             int[] tmp = {
                 matrix[i - 1][j - 1] + 1,
@@ -129,9 +129,9 @@ public class WagnerFischer {
                 trace.add(EditOperations.Substitution);
             }
         } else if (minArg.i == i && minArg.j == j - 1) {
-            trace.add(EditOperations.Deletion);
-        } else {
             trace.add(EditOperations.Insertion);
+        } else {
+            trace.add(EditOperations.Deletion);
         }
         return minArg;
     }
