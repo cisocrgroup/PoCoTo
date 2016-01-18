@@ -52,4 +52,27 @@ public class BoundingBox {
     public String toString() {
         return String.format("bbox %d %d %d %d", l, t, r, b);
     }
+
+    /**
+     * Creates an array of horizontally split bounding boxes
+     *
+     * @param n number of bounding boxes
+     * @return array that contains the bounding boxes
+     */
+    public BoundingBox[] getHorizontalSplits(int n) {
+        BoundingBox res[] = new BoundingBox[n];
+        final int width = getWidth() / n;
+        final int ratio = getWidth() % n;
+        int x0 = l;
+        for (int i = 0; i < n; ++i) {
+            int w = width;
+            if (i < ratio) {
+                w += 1;
+            }
+            res[i] = new BoundingBox(x0, t, x0 + w, b);
+            x0 += w;
+        }
+        return res;
+    }
+
 }

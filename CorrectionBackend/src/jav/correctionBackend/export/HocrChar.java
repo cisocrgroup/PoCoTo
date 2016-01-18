@@ -9,23 +9,70 @@ package jav.correctionBackend.export;
  *
  * @author finkf
  */
-class HocrChar {
+public class HocrChar implements Char {
 
-    private HocrToken token;
-    private final HocrLine line;
     private int i;
+    private BoundingBox bb;
+    private HocrToken token;
+    private HocrChar prev, next;
 
-    public HocrChar(HocrToken token, HocrLine line, int i) {
+    public HocrChar(HocrToken token, BoundingBox bb, int i) {
         this.token = token;
-        this.line = line;
         this.i = i;
+        this.bb = bb;
+        prev = next = null;
     }
 
-    public void substitute(char c) {
-        token.token.setCharAt(i, c);
+    public boolean isWhiteSpace() {
+        return false;
     }
 
-    public char getChar() {
-        return token.token.charAt(i);
+    @Override
+    public BoundingBox getBoundingBox() {
+        return bb;
     }
+
+    @Override
+    public Char getPrev() {
+        return prev;
+    }
+
+    public void setPrev(HocrChar prev) {
+        this.prev = prev;
+    }
+
+    @Override
+    public Char getNext() {
+        return next;
+    }
+
+    public void setNext(HocrChar next) {
+        this.next = next;
+    }
+
+    @Override
+    public void delete() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void substitute(String c) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getChar() {
+        return token.charAt(i);
+    }
+
+    @Override
+    public Char append(String c) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Char prepend(String c) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }
