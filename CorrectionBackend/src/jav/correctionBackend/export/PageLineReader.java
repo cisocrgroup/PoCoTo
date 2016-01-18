@@ -16,11 +16,11 @@ import java.util.ArrayList;
  *
  * @author finkf
  */
-public class DocumentLineReader implements LineReadeable {
+public class PageLineReader implements LineReadeable {
 
     private final ArrayList<String> lines;
 
-    public DocumentLineReader(Page page, Document doc) {
+    public PageLineReader(Page page, Document doc) {
         lines = new ArrayList<>();
         readLines(doc.tokenIterator(page));
     }
@@ -42,6 +42,8 @@ public class DocumentLineReader implements LineReadeable {
             if (token.getSpecialSeq() == SpecialSequenceType.NEWLINE) {
                 lines.add(builder.toString());
                 builder.setLength(0);
+            } else if (token.isCorrected()) {
+                builder.append(token.getWCOR());
             } else {
                 builder.append(token.getWOCR());
             }

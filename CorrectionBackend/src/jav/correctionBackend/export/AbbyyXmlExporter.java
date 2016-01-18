@@ -20,6 +20,10 @@ public class AbbyyXmlExporter extends Exporter {
 
     @Override
     protected DocumentCorrector getCorrector() throws Exception {
-        return new AbbyyXmlCorrector(getSourceFile(), getDestinationFile());
+        return new DocumentCorrectorImpl(
+                getSourceFile(),
+                getDestinationFile(),
+                new AbbyyXmlPageParser()
+        );
     }
 }

@@ -44,7 +44,7 @@ public abstract class Exporter {
     public void export() throws IOException, Exception {
         Page page = document.getPage(src);
         DocumentCorrector corrector = getCorrector();
-        DocumentLineReader lineReader = new DocumentLineReader(page, document);
+        PageLineReader lineReader = new PageLineReader(page, document);
         corrector.correctThisDocumentWith(lineReader);
         corrector.write();
     }

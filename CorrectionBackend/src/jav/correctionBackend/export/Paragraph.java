@@ -5,13 +5,12 @@
  */
 package jav.correctionBackend.export;
 
-import jav.correctionBackend.TokenImageInfoBox;
+import java.util.ArrayList;
 
 /**
  *
  * @author flo
  */
-public interface HasTokenImageInfoBox {
+public class Paragraph extends ArrayList<Line> {
 
-    TokenImageInfoBox getTokenImageInfoBox();
 }

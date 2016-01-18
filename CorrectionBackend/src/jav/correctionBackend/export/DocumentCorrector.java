@@ -6,6 +6,7 @@
 package jav.correctionBackend.export;
 
 import jav.correctionBackend.util.WagnerFischer;
+import jav.logging.log4j.Log;
 import java.io.IOException;
 
 /**
@@ -23,6 +24,9 @@ public abstract class DocumentCorrector implements LineReadeable {
 
     private void doCorrectLine(int i, String truth) {
         final WagnerFischer wf = new WagnerFischer(truth, getLineAt(i));
+        wf.calculate();
+        info(i, wf);
+
         for (int j = 0; j < wf.getTrace().size(); ++j) {
             switch (wf.getTrace().get(j)) {
                 case Deletion:
@@ -38,6 +42,33 @@ public abstract class DocumentCorrector implements LineReadeable {
                     break;
             }
         }
+
+    }
+
+    /**
+     * Inform about the edit operations (for debugging purposes).
+     *
+     * @param i index of the line
+     * @param wf the resulting Wagner-Fischer structure
+     */
+    public void info(int i, WagnerFischer wf) {
+        Log.debug(this, "i:     %d", i);
+        Log.debug(this, "truth: %s", wf.getTruth());
+        Log.debug(this, "trace: %s", wf.getTrace());
+        Log.debug(this, "test:  %s", wf.getTest());
+        StringBuilder builder = new StringBuilder();
+        builder.append('\n');
+        int[][] matrix = wf.getMatrix();
+        for (i = 0; i < matrix.length; ++i) {
+            for (int j = 0; j < matrix[i].length; ++j) {
+                builder.append(matrix[i][j]).append(' ');
+                if (matrix[i][j] < 10) {
+                    builder.append(' ');
+                }
+            }
+            builder.append('\n');
+        }
+        Log.debug(this, "wf %s", builder.toString());
     }
 
     /**
