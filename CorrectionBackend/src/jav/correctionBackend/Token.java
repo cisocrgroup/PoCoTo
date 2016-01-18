@@ -1,34 +1,35 @@
 package jav.correctionBackend;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class Token {
@@ -48,68 +49,68 @@ public class Token {
     private int topcandDLev = -1;
     private String topSuggestion = "";
 
-    protected Token(String wocr) {
+    public Token(String wocr) {
         this.orig_id = -1;
         this.tokenID = -1;
         this.wOCR = wocr;
     }
 
-    protected void setPageIndex(int i) {
+    public void setPageIndex(int i) {
         this.pageIndex = i;
     }
 
-    protected void setNumberOfCandidates(int i) {
+    public void setNumberOfCandidates(int i) {
         this.numCands = i;
     }
 
-    protected void setIndexInDocument(int index) {
+    public void setIndexInDocument(int index) {
         this.indexInDocument = index;
     }
 
-    protected void setWOCR(String s) {
+    public void setWOCR(String s) {
         this.wOCR = s;
     }
 
-    protected void setWCOR(String s) {
+    public void setWCOR(String s) {
         this.wCOR = s;
     }
 
-    protected void setTopCandDLev(int i) {
+    public void setTopCandDLev(int i) {
         this.topcandDLev = i;
     }
 
-    protected void setIsNormal(boolean b) {
+    public void setIsNormal(boolean b) {
         this.isNormal = b;
     }
 
-    protected void setIsCorrected(boolean b) {
+    public void setIsCorrected(boolean b) {
         this.isCorrected = b;
     }
 
-    protected void setIsSuspicious(boolean b) {
+    public void setIsSuspicious(boolean b) {
         this.isSuspicious = b;
     }
 
-    protected void setSpecialSeq(SpecialSequenceType s) {
+    public void setSpecialSeq(SpecialSequenceType s) {
         this.special_seq = s;
     }
 
-    protected void setTokenImageInfoBox(TokenImageInfoBox b) {
+    public void setTokenImageInfoBox(TokenImageInfoBox b) {
         this.tiib = b;
     }
 
-    protected void setTopSuggestion(String s) {
+    public void setTopSuggestion(String s) {
         this.topSuggestion = s;
     }
-    
-    protected void setId( int i ) {
+
+    public void setId(int i) {
         this.tokenID = i;
     }
-    
-    protected void setOrigID( int i ) {
+
+    public void setOrigID(int i) {
         this.orig_id = i;
     }
-    
+
     public int getOrigID() {
         return this.orig_id;
     }
@@ -168,7 +169,7 @@ public class Token {
             return this.topcandDLev > 0;
         }
     }
-    
+
 //    bool Token::isSuspicious() const {
 //        if( getWOCR().length() <=3 ) { // rely on abbyy's judgment
 //            return getAbbyySpecifics().isSuspicious();
@@ -179,8 +180,7 @@ public class Token {
 //        else {
 //            return getTopCandidate().getLevDistance() > 0;
 //        }
-//    }  
-
+//    }
     public int getNumberOfCandidates() {
         return this.numCands;
     }
@@ -216,12 +216,13 @@ public class Token {
             return this.wCOR;
         }
     }
+
     @Override
     public String toString() {
         return getWCOR() + " " + getID() + " " + getIndexInDocument();
     }
-    
-@Override
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
