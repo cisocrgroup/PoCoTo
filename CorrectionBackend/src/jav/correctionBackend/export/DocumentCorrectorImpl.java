@@ -15,16 +15,15 @@ import java.util.ArrayList;
  */
 public class DocumentCorrectorImpl extends DocumentCorrector {
 
-    private final File input, output;
     private final ArrayList<ArrayList<Char>> lines;
     private final PageParser pageParser;
+    private final File input;
 
-    public DocumentCorrectorImpl(File input, File output, PageParser pageParser)
+    public DocumentCorrectorImpl(File input, PageParser pageParser)
             throws IOException, Exception {
-        this.input = input;
-        this.output = output;
         this.pageParser = pageParser;
         lines = new ArrayList<>();
+        this.input = input;
         parseLines();
     }
 
@@ -67,7 +66,7 @@ public class DocumentCorrectorImpl extends DocumentCorrector {
     }
 
     @Override
-    public void write() throws IOException {
+    public void write(File output) throws IOException {
         try {
             pageParser.write(output);
         } catch (Exception e) {

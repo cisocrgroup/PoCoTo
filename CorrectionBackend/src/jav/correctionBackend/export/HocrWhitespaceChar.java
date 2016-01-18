@@ -9,21 +9,22 @@ package jav.correctionBackend.export;
  *
  * @author finkf
  */
-public class HocrChar extends AbstractHocrChar {
+public class HocrWhitespaceChar extends AbstractHocrChar {
 
-    private final int i;
-    private final BoundingBox bb;
-    private final HocrToken token;
+    private static final String WS = " ";
 
-    public HocrChar(HocrToken token, BoundingBox bb, int i) {
-        this.token = token;
-        this.i = i;
-        this.bb = bb;
+    private final HocrToken prev, next;
+
+    public HocrWhitespaceChar(HocrToken prev, HocrToken next) {
+        assert (prev != null);
+        assert (next != null);
+        this.prev = prev;
+        this.next = next;
     }
 
     @Override
     public BoundingBox getBoundingBox() {
-        return bb;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -38,17 +39,16 @@ public class HocrChar extends AbstractHocrChar {
 
     @Override
     public String getChar() {
-        return token.charAt(i);
+        return WS;
     }
 
     @Override
     public Char append(String c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return next.get(0).prepend(c);
     }
 
     @Override
     public Char prepend(String c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return prev.get(prev.size() - 1).append(c);
     }
-
 }

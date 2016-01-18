@@ -14,41 +14,34 @@ import java.io.IOException;
  *
  * @author finkf
  */
-public abstract class Exporter {
+public class Exporter {
 
-    private final File src;
-    private final File dest;
-    private final Document document;
+    private final File dest, src;
+    private final PageParser pageParser;
 
-    public Exporter(File src, File dest, Document document) {
-        assert (src != null);
+    public Exporter(File src, File dest, PageParser pageParser) {
         assert (dest != null);
-        assert (document != null);
+        assert (src != null);
+        assert (pageParser != null);
         this.src = src;
         this.dest = dest;
-        this.document = document;
-    }
-
-    public final File getSourceFile() {
-        return src;
+        this.pageParser = pageParser;
     }
 
     public final File getDestinationFile() {
         return dest;
     }
 
-    public final Document getDocument() {
-        return document;
+    public final File getSourceFile() {
+        return src;
     }
 
-    public void export() throws IOException, Exception {
+    public void export(Document document) throws IOException, Exception {
         Page page = document.getPage(src);
-        DocumentCorrector corrector = getCorrector();
         PageLineReader lineReader = new PageLineReader(page, document);
+        DocumentCorrector corrector = new DocumentCorrectorImpl(src, pageParser);
         corrector.correctThisDocumentWith(lineReader);
-        corrector.write();
+        corrector.write(dest);
     }
-
-    protected abstract DocumentCorrector getCorrector() throws Exception;
 
 }

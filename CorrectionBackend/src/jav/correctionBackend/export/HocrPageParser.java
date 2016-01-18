@@ -28,7 +28,7 @@ import org.xml.sax.InputSource;
  *
  * @author flo
  */
-public class AbbyyXmlPageParser implements PageParser {
+public class HocrPageParser implements PageParser {
 
     private org.w3c.dom.Document xml;
 
@@ -51,7 +51,8 @@ public class AbbyyXmlPageParser implements PageParser {
     private Page parsePage(File input) throws IOException, Exception {
         parseXml(input);
         Page page = new Page();
-        XPathExpression xpage = makeXpath("//page");
+        // <div class='ocr_page' id='page_1' title='image "0018.tif"; bbox 0 0 1156 1782; ppageno 0'>
+        XPathExpression xpage = makeXpath("//div[@class=\"ocr_page\"]");
         Node pagenode = (Node) xpage.evaluate(xml, XPathConstants.NODE);
         if (pagenode != null) {
             appendParagraphs(pagenode, page);
@@ -60,7 +61,8 @@ public class AbbyyXmlPageParser implements PageParser {
     }
 
     private void appendParagraphs(Node pagenode, Page page) throws Exception {
-        XPathExpression xpar = makeXpath(".//par");
+        // <p class='ocr_par' dir='ltr' id='par_1_1' title="bbox 574 59 612 83">
+        XPathExpression xpar = makeXpath(".//p[@class=\"ocr_par\"]");
         NodeList ps = (NodeList) xpar.evaluate(pagenode, XPathConstants.NODESET);
         if (ps != null) {
             for (int i = 0; i < ps.getLength(); ++i) {
@@ -72,29 +74,35 @@ public class AbbyyXmlPageParser implements PageParser {
     }
 
     private void appendLines(Node pnode, Paragraph p) throws Exception {
-        XPathExpression xline = makeXpath(".//line");
+        // <span class='ocr_line' id='line_1_1' title="bbox 574 59 612 83; baseline -0.053 0">
+        XPathExpression xline = makeXpath(".//span[@class=\"ocr_line\"]");
         NodeList ls = (NodeList) xline.evaluate(pnode, XPathConstants.NODESET);
         if (ls != null) {
             for (int i = 0; i < ls.getLength(); ++i) {
                 Line line = new Line();
-                appendChars(ls.item(i), line);
+                appendTokens(ls.item(i), line);
                 p.add(line);
             }
         }
     }
 
-    private void appendChars(Node linenode, Line line) throws Exception {
-        XPathExpression xchar = makeXpath(".//charParams");
+    private void appendTokens(Node linenode, Line line) throws Exception {
+        // <span class='ocr(x)_word' id='word_1_2' title='bbox 211 141 322 176;
+        //      x_wconf 72' lang='deu-frak' dir='ltr'>zuuns
+        //  </span>
+        XPathExpression xchar = makeXpath(".//span[@class=\"ocrx_word\" or @class=\"ocr_word\"]");
         NodeList cs = (NodeList) xchar.evaluate(linenode, XPathConstants.NODESET);
         if (cs != null) {
+            HocrToken prevToken = null;
             for (int i = 0; i < cs.getLength(); ++i) {
-                AbbyyXmlChar newChar = new AbbyyXmlChar(cs.item(i));
-                if (!line.isEmpty()) {
-                    AbbyyXmlChar prev = (AbbyyXmlChar) line.get(line.size() - 1);
-                    prev.setNext(newChar);
-                    newChar.setPrev(prev);
+                HocrToken newToken = new HocrToken(cs.item(i));
+                if (prevToken != null) {
+                    line.add(new HocrWhitespaceChar(prevToken, newToken));
                 }
-                line.add(newChar);
+                for (HocrChar c : newToken) {
+                    line.add(c);
+                }
+                prevToken = newToken;
             }
         }
     }

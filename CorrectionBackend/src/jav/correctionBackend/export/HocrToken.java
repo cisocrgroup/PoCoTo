@@ -20,8 +20,8 @@ public class HocrToken implements Iterable<HocrChar> {
     static Pattern BBRE
             = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
 
-    private Node node;
-    private ArrayList<HocrChar> triples;
+    private Node node, title;
+    private ArrayList<HocrChar> chars;
     private String token;
     private BoundingBox bb;
 
@@ -31,21 +31,36 @@ public class HocrToken implements Iterable<HocrChar> {
     }
 
     public HocrChar get(int i) {
-        return triples.get(i);
+        return chars.get(i);
+    }
+
+    public int size() {
+        return chars.size();
     }
 
     @Override
     public Iterator<HocrChar> iterator() {
-        return triples.iterator();
+        return chars.iterator();
     }
 
     public String charAt(int i) {
         return token.substring(i, i + 1);
     }
 
+    public void update() {
+        BoundingBox newBoundingBox = chars.get(0).getBoundingBox();
+        for (int i = 1; i < size(); ++i) {
+            newBoundingBox.combineWith(chars.get(i).getBoundingBox());
+        }
+        Matcher m = BBRE.matcher(title.getNodeValue());
+        String res = m.replaceFirst("bbox $1 $2 $3 $4");
+        title.setNodeValue(res);
+        node.getFirstChild().setNodeValue(token);
+    }
+
     private void parse() throws Exception {
-        String title = getTitleNode(this.node).getNodeValue();
-        Matcher m = BBRE.matcher(title);
+        title = getTitleNode(this.node);
+        Matcher m = BBRE.matcher(title.getNodeValue());
         if (!m.find()) {
             throw new Exception("Invalid ocr(x)_word: missing bbox entry in title");
         }
@@ -56,15 +71,15 @@ public class HocrToken implements Iterable<HocrChar> {
                 Integer.parseInt(m.group(4))
         );
         token = node.getFirstChild().getNodeValue();
-        triples = new ArrayList<>();
+        chars = new ArrayList<>();
         BoundingBox splits[] = bb.getHorizontalSplits(token.length());
         for (int i = 0; i < token.length(); ++i) {
             HocrChar newChar = new HocrChar(this, splits[i], i);
             if (i > 0) {
-                newChar.setPrev(triples.get(i - 1));
-                triples.get(i - 1).setNext(newChar);
+                newChar.setPrev(chars.get(i - 1));
+                chars.get(i - 1).setNext(newChar);
             }
-            triples.add(newChar);
+            chars.add(newChar);
         }
     }
 
