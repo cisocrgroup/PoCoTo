@@ -11,6 +11,8 @@ package jav.correctionBackend.export;
  */
 public class HocrChar extends AbstractHocrChar {
 
+    private static final int CONFIDENCE_THRESHOLD = 30;
+
     private final int i;
     private final BoundingBox bb;
     private final HocrToken token;
@@ -33,8 +35,7 @@ public class HocrChar extends AbstractHocrChar {
 
     @Override
     public boolean isSuspicious() {
-        // Check for x_wconf in title
-        return false;
+        return token.getConfidence() <= CONFIDENCE_THRESHOLD;
     }
 
     @Override

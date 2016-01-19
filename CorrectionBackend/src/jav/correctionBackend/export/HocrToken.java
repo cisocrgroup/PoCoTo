@@ -19,6 +19,7 @@ public class HocrToken implements Iterable<HocrChar> {
 
     static Pattern BBRE
             = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
+    private static final Pattern WCONF = Pattern.compile("x?_wconfg\\s+(\\d+)");
 
     private Node node, title;
     private ArrayList<HocrChar> chars;
@@ -45,6 +46,15 @@ public class HocrToken implements Iterable<HocrChar> {
 
     public String charAt(int i) {
         return token.substring(i, i + 1);
+    }
+
+    public int getConfidence() {
+        Matcher m = WCONF.matcher(title.getNodeValue());
+        if (m.find()) {
+            return Integer.parseInt(m.group(1));
+        } else {
+            return 0;
+        }
     }
 
     public void update() {
