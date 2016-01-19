@@ -12,6 +12,8 @@ import java.util.regex.Pattern;
 import org.w3c.dom.Node;
 
 /**
+ * This class represents an non empty HOCR token. It is an error to create an
+ * instance that points to an empty HOCR token.
  *
  * @author finkf
  */

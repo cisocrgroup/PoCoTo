@@ -6,6 +6,8 @@
 package jav.correctionBackend.export;
 
 /**
+ * This class represents HOCR Whitespace chars (which are not explicitly in the
+ * file). Any instance of this class *must* lie between two token.
  *
  * @author finkf
  */
@@ -15,6 +17,12 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
 
     private final HocrToken prevToken, nextToken;
 
+    /**
+     * Construct an instance.
+     *
+     * @param prev the previous token. Not null.
+     * @param next the next token. Not null
+     */
     public HocrWhitespaceChar(HocrToken prev, HocrToken next) {
         assert (prev != null);
         assert (next != null);

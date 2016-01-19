@@ -6,6 +6,7 @@
 package jav.correctionBackend.export;
 
 /**
+ * This class represents a non whitespace HOCR Character.
  *
  * @author finkf
  */
