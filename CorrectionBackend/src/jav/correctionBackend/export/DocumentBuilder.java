@@ -28,7 +28,7 @@ interface DocumentBuilder {
      * @param ocrfile the OCR file
      * @param imagefile the image file that correspons to the ocrfile
      */
-    public void append(Page page, File ocrfile, File imagefile);
+    public void append(Page page, File imagefile, File ocrfile);
 
     /**
      * Finish building the document and return it.

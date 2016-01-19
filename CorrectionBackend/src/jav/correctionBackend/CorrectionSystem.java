@@ -1,13 +1,13 @@
 package jav.correctionBackend;
 
+import jav.correctionBackend.export.DocumentParser;
+import jav.correctionBackend.export.FileType;
 import jav.logging.log4j.Log;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.netbeans.api.progress.ProgressHandle;
 import org.xml.sax.SAXException;
@@ -129,92 +129,27 @@ public class CorrectionSystem {
             jcp = JdbcConnectionPool.create("jdbc:h2:" + dbPath + ";AUTO_RECONNECT=TRUE;MVCC=true", "SA", "");
             jcp.setMaxConnections(50);
             jcp.setLoginTimeout(0);
-
-            FilenameFilter fil = t.getFilenameFilter();
-            this.document = new SpreadIndexDocument(jcp);
-            this.parser = getParser(t);
-            File xmld = new File(xmldir);
-            File imgd = new File(imagedir);
-            String[] xmlfiles = xmld.list(fil);
-            java.util.Arrays.sort(xmlfiles);
-            HashMap<String, String> mappings = getImageFileMappings(imgd);
-
-            long time_start = System.currentTimeMillis();
-            for (String xmlfile : xmlfiles) {
-                String basename = getBaseName(xmlfile);
-                String imagefile = "";
-                if (mappings.containsKey(basename)) {
-                    imagefile = mappings.get(basename);
-                }
-//                Log.debug(
-//                        this,
-//                        "found image file: %s for file: %s",
-//                        imagefile,
-//                        xmlfile
-//                );
-                ph.progress("Parsing file " + xmlfile + " (" + imagefile + ")");
-                try {
-                    File f = new File(xmld, xmlfile);
-                    parser.parse(
-                            f.getCanonicalPath(),
-                            imagefile,
-                            encoding
-                    );
-                } catch (IOException ex) {
-                    Log.error(
-                            this, "could not parse %s: invalid image file: %s",
-                            xmlfile,
-                            ex.getMessage()
-                    );
-                }
+            try {
+                long time_start = System.currentTimeMillis();
+                DocumentParser p = new DocumentParser(
+                        new File(xmldir),
+                        new File(imagedir),
+                        t,
+                        ph,
+                        jcp
+                );
+                this.document = p.parse();
+                long duration = System.currentTimeMillis() - time_start;
+                ph.progress("Done parsing. Time elapsed " + duration);
+                document.loadNumberOfPagesFromDB();
+                document.loadNumberOfTokensFromDB();
+                retval = 0;
+            } catch (IOException e) {
+                Log.error(this, "%s", e.getMessage());
             }
-            long duration = System.currentTimeMillis() - time_start;
 
-            ph.progress("Done parsing. Time elapsed " + duration);
-
-            document.loadNumberOfPagesFromDB();
-            document.loadNumberOfTokensFromDB();
-            retval = 0;
         }
         return retval;
-    }
-
-    private OcrDocumentParser getParser(FileType type) {
-        switch (type) {
-            case ABBYY_XML_DIR:
-                return new AbbyyXmlParser(this.document);
-            case HOCR:
-                return new HocrParser(this.document);
-            default:
-                return new AbbyyXmlParser(this.document);
-        }
-    }
-
-    private HashMap<String, String> getImageFileMappings(File dir) {
-        HashMap<String, String> mappings = new HashMap<>();
-        String[] images = getAllImageFiles(dir);
-        for (String image : images) {
-            mappings.put(getBaseName(image), image);
-        }
-        return mappings;
-    }
-
-    private String[] getAllImageFiles(File dir) {
-        if (dir == null) {
-            return new String[0];
-        }
-        return dir.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File d, String name) {
-                return name.endsWith(".tif")
-                        || name.endsWith(".jpg")
-                        || name.endsWith(".jpeg");
-            }
-        });
-    }
-
-    private static String getBaseName(String filename) {
-        return filename.substring(0, filename.indexOf('.') + 1);
     }
 
     public void importProfile(Document doc, String filename) throws IOException, SAXException {
