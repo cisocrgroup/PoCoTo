@@ -96,7 +96,7 @@ public abstract class Document {
 
     protected abstract int addToken(Token t, Connection conn);
 
-    protected abstract int addToken(Token t);
+    public abstract int addToken(Token t);
 
     /**
      * Adds a correction candidate. Linked to a token via the tokenid. Used when

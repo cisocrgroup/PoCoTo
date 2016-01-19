@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
 import org.h2.jdbcx.JdbcConnectionPool;
 
 /**
@@ -50,7 +49,7 @@ public class DefaultDocument extends Document {
     }
 
     @Override
-    protected int addToken(Token t) {
+    public int addToken(Token t) {
         try {
             Connection conn = jcp.getConnection();
             return this.addToken(t, conn);
@@ -142,7 +141,7 @@ public class DefaultDocument extends Document {
         PreparedStatement setIndex = null;
         PreparedStatement moveIndex = null;
         PreparedStatement undo_redo = null;
-        
+
         Token from = this.getTokenByID(iDFrom);
         Token to = this.getTokenByID(iDTo);
 
@@ -160,7 +159,7 @@ public class DefaultDocument extends Document {
                 return null;
             }
 
-            if ( from.getPageIndex() != to.getPageIndex()) {
+            if (from.getPageIndex() != to.getPageIndex()) {
                 return null;
 //                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN: cannot erase across page borders");
             }
@@ -169,7 +168,6 @@ public class DefaultDocument extends Document {
             conn.setAutoCommit(false);
 
             //reserve undo_redo_parts for the starting token
-
             setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=-1 WHERE tokenID=?");
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
 
@@ -196,7 +194,6 @@ public class DefaultDocument extends Document {
                 undo_redo.addBatch();
                 undo_redo_part++;
             }
-
 
             // move token index and prepare undoredo
             moveIndex = conn.prepareStatement("UPDATE token SET indexInDocument=indexInDocument-? WHERE indexInDocument>?");
@@ -254,11 +251,11 @@ public class DefaultDocument extends Document {
         PreparedStatement undo_redo = null;
         PreparedStatement moveIndex = null;
 
-        try {            
+        try {
             editString = editString.replaceAll("\\s{2,}", " ");
             editString = editString.replaceAll("^ ", "");
             editString = editString.replaceAll(" $", "");
-            
+
             ArrayList<Integer> retval = new ArrayList<>();
 
             conn = jcp.getConnection();
