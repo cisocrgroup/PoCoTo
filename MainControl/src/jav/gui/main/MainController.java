@@ -1,5 +1,6 @@
 package jav.gui.main;
 
+import jav.correctionBackend.FileType;
 import cis.profiler.client.ProfilerWebServiceCallbackHandler;
 import cis.profiler.client.ProfilerWebServiceStub;
 import cis.profiler.client.ProfilerWebServiceStub.AbortProfilingRequest;
