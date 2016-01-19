@@ -15,6 +15,7 @@ import jav.gui.token.display.OnlyTextTokenVisualization;
 import jav.gui.token.display.PseudoImageTokenVisualization;
 import jav.gui.token.display.TokenVisualization;
 import jav.gui.token.tools.ImageProcessor;
+import jav.logging.log4j.Log;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
@@ -129,27 +130,8 @@ public class PageView extends JPanel {
             while (it.hasNext()) {
                 Token tok = it.next();
                 if (tok == null) {
-                    System.out.println("NULL");
-                }
-                TokenImageInfoBox tiib = tok.getTokenImageInfoBox();
-                TokenVisualization tv;
-                if (tiib != null) {
-                    int left = tiib.getCoordinateLeft();
-                    int right = tiib.getCoordinateRight();
-                    int top = tiib.getCoordinateTop();
-                    int bottom = tiib.getCoordinateBottom();
-                    int width = right - left;
-                    int height = bottom - top;
-
-                    BufferedImage bi = ip.getTokenImage(left, top, width, height, imgScale);
-                    tv = new ImageTokenVisualization(bi, tok, fontSize);
-                    lineheight = ((ImageTokenVisualization) tv).getImageHeight();
-                } else {
-                    if (tok.isNormal()) {
-                        tv = new PseudoImageTokenVisualization(tok, fontSize, lineheight);
-                    } else {
-                        tv = new OnlyTextTokenVisualization(tok, fontSize);
-                    }
+                    Log.error(this, "Null token in token iterator");
+                    continue;
                 }
 
                 TokenVisualization tv = TokenVisualization.fromToken(tok, imgScale, fontSize, lineheight, ip);
