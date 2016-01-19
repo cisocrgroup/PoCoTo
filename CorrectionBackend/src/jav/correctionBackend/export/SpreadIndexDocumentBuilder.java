@@ -66,9 +66,8 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
 
     public void append(Char c) {
         String str = c.getChar();
-        int n = str.codePointCount(0, str.length());
 
-        for (int i = 0, j = 0; j < n && i < str.length();) {
+        for (int i = 0; i < str.length();) {
             final int currentCodepoint = str.codePointAt(i);
 
             if (previousCodepoint == 0) {

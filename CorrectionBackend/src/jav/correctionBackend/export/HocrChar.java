@@ -11,15 +11,19 @@ package jav.correctionBackend.export;
  */
 public class HocrChar extends AbstractHocrChar {
 
-    private static final int CONFIDENCE_THRESHOLD = 30;
+    private static final int CONFIDENCE_THRESHOLD = 10;
 
-    private final int i;
-    private final BoundingBox bb;
+    private String str;
+    private BoundingBox bb;
     private final HocrToken token;
 
-    public HocrChar(HocrToken token, BoundingBox bb, int i) {
+    public HocrChar(HocrToken token, BoundingBox bb, String str) {
         this.token = token;
-        this.i = i;
+        this.str = str;
+        this.bb = bb;
+    }
+
+    public void setBoundingBox(BoundingBox bb) {
         this.bb = bb;
     }
 
@@ -30,7 +34,7 @@ public class HocrChar extends AbstractHocrChar {
 
     @Override
     public String getChar() {
-        return token.charAt(i);
+        return str;
     }
 
     @Override
@@ -40,12 +44,14 @@ public class HocrChar extends AbstractHocrChar {
 
     @Override
     public void delete() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        token.delete(this);
     }
 
     @Override
     public Char substitute(String c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        str = c;
+        token.update();
+        return this;
     }
 
     @Override

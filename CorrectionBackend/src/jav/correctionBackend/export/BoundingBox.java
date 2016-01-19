@@ -71,12 +71,12 @@ public class BoundingBox {
     }
 
     /**
-     * Creates an array of horizontally split bounding boxes
+     * Creates an array of vertical split bounding boxes
      *
      * @param n number of bounding boxes
      * @return array that contains the bounding boxes
      */
-    public BoundingBox[] getHorizontalSplits(int n) {
+    public BoundingBox[] getVerticalSplits(int n) {
         BoundingBox res[] = new BoundingBox[n];
         final int width = getWidth() / n;
         final int ratio = getWidth() % n;
