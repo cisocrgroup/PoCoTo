@@ -103,6 +103,7 @@ public class HocrToken implements Iterable<HocrChar> {
                 newChar.setPrev(chars.get(i - 1));
                 chars.get(i - 1).setNext(newChar);
             }
+            chars.add(newChar);
             i += Character.charCount(cp);
             ++j;
         }

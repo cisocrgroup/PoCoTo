@@ -53,7 +53,6 @@ public class DocumentParser {
         documentBuilder.init();
         int i = 0;
         final int n = mappings.length();
-        Log.debug(this, "n: %d", n);
         for (OcrToImageFileMapping.Mapping mapping : mappings) {
             progress(mapping, ++i, n);
             PageParser pageParser = fileType.getPageParser();
@@ -67,10 +66,10 @@ public class DocumentParser {
     }
 
     private void progress(OcrToImageFileMapping.Mapping m, int i, int n) {
-        String msg = String.format("parsing %s [%s] (%d/%d)",
+        String msg = String.format("reading %s [%s] (%d/%d)",
                 m.ocrfile.getName(),
                 m.imagefile.getName(),
-                ++i,
+                i,
                 n
         );
         ph.progress(msg);
