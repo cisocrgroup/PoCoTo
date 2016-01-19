@@ -143,7 +143,7 @@ public class CorrectionSystem {
                 document.loadNumberOfTokensFromDB();
                 retval = 0;
             } catch (Exception e) {
-                Log.error(this, "%s", e.getMessage());
+                Log.error(this, e.toString());
             }
 
         }
