@@ -28,6 +28,19 @@ public class HocrToken implements Iterable<HocrChar> {
     public HocrToken(Node node) throws Exception {
         this.node = node;
         parse();
+        if (chars.isEmpty()) {
+            throw new Exception("Empty HOCR token not ignored");
+        }
+    }
+
+    public HocrChar getFirstChar() {
+        assert (!chars.isEmpty());
+        return this.get(0);
+    }
+
+    public HocrChar getLastChar() {
+        assert (!chars.isEmpty());
+        return this.get(this.size() - 1);
     }
 
     public HocrChar get(int i) {

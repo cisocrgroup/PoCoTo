@@ -97,7 +97,8 @@ public class HocrPageParser implements PageParser {
             HocrToken prevToken = null;
             for (int i = 0; i < cs.getLength(); ++i) {
                 final Node tokenNode = cs.item(i);
-                if (tokenNode.hasChildNodes()) {
+                if (tokenNode.hasChildNodes()
+                        && !tokenNode.getFirstChild().getNodeValue().isEmpty()) {
                     HocrToken newToken = new HocrToken(tokenNode);
                     if (prevToken != null) {
                         line.add(new HocrWhitespaceChar(prevToken, newToken));

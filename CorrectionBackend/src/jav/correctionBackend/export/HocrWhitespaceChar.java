@@ -13,13 +13,23 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
 
     private static final String WS = " ";
 
-    private final HocrToken prev, next;
+    private final HocrToken prevToken, nextToken;
 
     public HocrWhitespaceChar(HocrToken prev, HocrToken next) {
         assert (prev != null);
         assert (next != null);
-        this.prev = prev;
-        this.next = next;
+        this.prevToken = prev;
+        this.nextToken = next;
+        setupPrevAndNextChar();
+    }
+
+    private void setupPrevAndNextChar() {
+        HocrChar prevChar = prevToken.getLastChar();
+        HocrChar nextChar = nextToken.getFirstChar();
+        this.setPrev(prevChar);
+        prevChar.setNext(this);
+        this.setNext(nextChar);
+        nextChar.setPrev(this);
     }
 
     @Override
@@ -49,11 +59,11 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
 
     @Override
     public Char append(String c) {
-        return next.get(0).prepend(c);
+        return nextToken.get(0).prepend(c);
     }
 
     @Override
     public Char prepend(String c) {
-        return prev.get(prev.size() - 1).append(c);
+        return prevToken.get(prevToken.size() - 1).append(c);
     }
 }
