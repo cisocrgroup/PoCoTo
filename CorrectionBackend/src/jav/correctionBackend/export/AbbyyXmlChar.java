@@ -61,10 +61,7 @@ public class AbbyyXmlChar implements Char {
     @Override
     public boolean isSuspicious() {
         Node s = node.getAttributes().getNamedItem("suspicious");
-        if (s != null) {
-            return Boolean.parseBoolean(node.getNodeValue());
-        }
-        return false;
+        return s != null && "1".equals(s.getNodeValue());
     }
 
     @Override

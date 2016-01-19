@@ -45,7 +45,7 @@ public class TokenBuilder {
     }
 
     public void appendSuspicious(boolean s) {
-        suspicious |= s;
+        suspicious = suspicious || s;
     }
 
     public void appendBoundingBox(BoundingBox bb) {

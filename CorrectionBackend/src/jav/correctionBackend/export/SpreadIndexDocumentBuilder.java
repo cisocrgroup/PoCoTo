@@ -67,7 +67,7 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
     public void append(Char c) {
         String str = c.getChar();
         int n = str.codePointCount(0, str.length());
-        tokenBuilder.appendSuspicious(c.isSuspicious());
+
         for (int i = 0, j = 0; j < n && i < str.length();) {
             final int currentCodepoint = str.codePointAt(i);
 
@@ -75,11 +75,13 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
                 if (!isWhitespace(currentCodepoint)) {
                     tokenBuilder.appendCodepoint(currentCodepoint);
                     tokenBuilder.appendBoundingBox(c.getBoundingBox());
+                    tokenBuilder.appendSuspicious(c.isSuspicious());
                 }
             } else if (isAlphanumeric(previousCodepoint)) {
                 if (isAlphanumeric(currentCodepoint)) { // AA
                     tokenBuilder.appendCodepoint(currentCodepoint);
                     tokenBuilder.appendBoundingBox(c.getBoundingBox());
+                    tokenBuilder.appendSuspicious(c.isSuspicious());
                 } else if (isWhitespace(currentCodepoint)) { // A_
                     insertCurrentToken();
                     addToDocument(TokenBuilder.newWhitespaceToken());
@@ -87,17 +89,20 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
                     insertCurrentToken();
                     tokenBuilder.appendCodepoint(currentCodepoint);
                     tokenBuilder.appendBoundingBox(c.getBoundingBox());
+                    tokenBuilder.appendSuspicious(c.isSuspicious());
                 }
             } else if (isAlphanumeric(currentCodepoint)) { // .A
                 insertCurrentToken();
                 tokenBuilder.appendCodepoint(currentCodepoint);
                 tokenBuilder.appendBoundingBox(c.getBoundingBox());
+                tokenBuilder.appendSuspicious(c.isSuspicious());
             } else if (isWhitespace(currentCodepoint)) { // ._
                 insertCurrentToken();
                 addToDocument(TokenBuilder.newWhitespaceToken());
             } else { // ..
                 tokenBuilder.appendCodepoint(currentCodepoint);
                 tokenBuilder.appendBoundingBox(c.getBoundingBox());
+                tokenBuilder.appendSuspicious(c.isSuspicious());
             }
             i += Character.charCount(currentCodepoint);
             previousCodepoint = currentCodepoint;
