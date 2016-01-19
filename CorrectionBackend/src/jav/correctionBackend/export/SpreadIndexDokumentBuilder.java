@@ -8,6 +8,8 @@ package jav.correctionBackend.export;
 import jav.correctionBackend.SpreadIndexDocument;
 import jav.correctionBackend.Token;
 import jav.correctionBackend.TokenImageInfoBox;
+import java.io.File;
+import org.h2.jdbcx.JdbcConnectionPool;
 
 /**
  *
@@ -15,50 +17,112 @@ import jav.correctionBackend.TokenImageInfoBox;
  */
 public class SpreadIndexDokumentBuilder implements DocumentBuilder {
 
-    private BoundingBox linebb;
-    private int tokenIndex, pageIndex;
-    private String imagefile, ocrfile;
+    private final JdbcConnectionPool connection;
+    private SpreadIndexDocument document;
+    private File imagefile, ocrfile; // ocrfile is for later use
+    private Line currentLine;
+    private int pageIndex, tokenIndex;
+    private TokenBuilder tokenBuilder;
+    private int previousCodepoint;
 
-    @Override
-    public void append(Page page) {
-        for (Paragraph paragraph : page) {
-            append(paragraph);
-        }
+    public SpreadIndexDokumentBuilder(JdbcConnectionPool connection) {
+        this.connection = connection;
     }
 
     @Override
-    public void append(Paragraph paragraph) {
-        for (Line line : paragraph) {
-            append(line);
-        }
+    public void init() {
+        document = new SpreadIndexDocument(connection);
+        imagefile = ocrfile = null;
+        currentLine = null;
+        pageIndex = tokenIndex = -1; // indexing starts at 0 (++idx)
+        tokenBuilder = new TokenBuilder();
     }
 
     @Override
-    public void append(Line line) {
-        for (Char c : line) {
-            append(c);
+    public void append(Page page, File ocrfile, File imagefile) {
+        this.ocrfile = ocrfile;
+        this.imagefile = imagefile;
+        ++pageIndex;
+        for (Paragraph p : page) {
+            for (Line l : p) {
+                tokenBuilder.reset();
+                previousCodepoint = 0;
+                currentLine = l;
+                for (Char c : l) {
+                    append(c);
+                }
+                addToDocument(TokenBuilder.newNewlineToken());
+            }
+            addToDocument(TokenBuilder.newNewlineToken());
         }
-    }
-
-    @Override
-    public void append(Char c) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public SpreadIndexDocument build() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return document;
+    }
+
+    public void append(Char c) {
+        String str = c.getChar();
+        int n = str.codePointCount(0, str.length());
+        tokenBuilder.appendSuspicious(c.isSuspicious());
+        tokenBuilder.appendBoundingBox(c.getBoundingBox());
+
+        for (int i = 0, j = 0; j < n && i < str.length();) {
+            final int currentCodepoint = str.codePointAt(i);
+
+            if (previousCodepoint == 0) {
+                if (!isWhitespace(currentCodepoint)) {
+                    tokenBuilder.appendCodepoint(currentCodepoint);
+                }
+            } else if (isAlphanumeric(previousCodepoint)) {
+                if (isAlphanumeric(currentCodepoint)) { // AA
+                    tokenBuilder.appendCodepoint(currentCodepoint);
+                } else if (isWhitespace(currentCodepoint)) { // A_
+                    insertCurrentToken();
+                    addToDocument(TokenBuilder.newWhitespaceToken());
+                } else { // A.
+                    insertCurrentToken();
+                    tokenBuilder.appendCodepoint(currentCodepoint);
+                }
+            } else if (isAlphanumeric(currentCodepoint)) { // .A
+                insertCurrentToken();
+                tokenBuilder.appendCodepoint(currentCodepoint);
+            } else if (isWhitespace(currentCodepoint)) { // ._
+                insertCurrentToken();
+                addToDocument(TokenBuilder.newWhitespaceToken());
+            } else { // ..
+                tokenBuilder.appendCodepoint(currentCodepoint);
+            }
+            i += Character.charCount(currentCodepoint);
+            previousCodepoint = currentCodepoint;
+        }
+    }
+
+    private void insertCurrentToken() {
+        Token t = tokenBuilder.build();
+        if (t != null) {
+            addToDocument(t);
+        }
+        tokenBuilder.reset();
+    }
+
+    private void addToDocument(Token t) {
+        if (t != null) {
+            document.addToken(adjust(t));
+        }
     }
 
     private void adjust(TokenImageInfoBox tiib) {
         if (tiib != null) {
-            tiib.setImageFileName(imagefile);
-            if (linebb != null) {
+            tiib.setImageFileName(imagefile.getName());
+            BoundingBox bb = currentLine.getBoundingBox();
+            if (bb != null) {
                 tiib.setCoordinateTop(
-                        Math.min(linebb.getTop(), tiib.getCoordinateTop())
+                        Math.min(bb.getTop(), tiib.getCoordinateTop())
                 );
                 tiib.setCoordinateBottom(
-                        Math.max(linebb.getBottom(), tiib.getCoordinateBottom())
+                        Math.max(bb.getBottom(), tiib.getCoordinateBottom())
                 );
             }
         }
@@ -71,6 +135,15 @@ public class SpreadIndexDokumentBuilder implements DocumentBuilder {
             adjust(token.getTokenImageInfoBox());
         }
         return token;
+    }
+
+    private boolean isAlphanumeric(int codepoint) {
+        return Character.isAlphabetic(codepoint)
+                || Character.isDigit(codepoint);
+    }
+
+    private boolean isWhitespace(int codepoint) {
+        return Character.isWhitespace(codepoint);
     }
 
 }

@@ -30,7 +30,7 @@ public interface Char {
      *
      * @return true if this Character is suspicious.
      */
-    public String isSuspicious();
+    public boolean isSuspicious();
 
     /**
      * Returns the previous Char or null if it is the first Char on the line.

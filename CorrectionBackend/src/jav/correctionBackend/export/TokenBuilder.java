@@ -40,15 +40,15 @@ public class TokenBuilder {
         bb = null;
     }
 
-    public void append(int codepoint) {
+    public void appendCodepoint(int codepoint) {
         token.appendCodePoint(codepoint);
     }
 
-    public void append(boolean s) {
+    public void appendSuspicious(boolean s) {
         suspicious |= s;
     }
 
-    public void append(BoundingBox bb) {
+    public void appendBoundingBox(BoundingBox bb) {
         if (this.bb != null) {
             this.bb.combineWith(bb);
         } else {

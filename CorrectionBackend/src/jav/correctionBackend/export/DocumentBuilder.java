@@ -6,20 +6,34 @@
 package jav.correctionBackend.export;
 
 import jav.correctionBackend.SpreadIndexDocument;
+import java.io.File;
 
 /**
+ * Class that build Documents from OCR files.
  *
  * @author finkf
  */
 interface DocumentBuilder {
 
-    public void append(Page page);
+    /**
+     * Initialize the builder. This method should be called before any other
+     * call to the interface's methods.
+     */
+    public void init();
 
-    public void append(Paragraph paragraph);
+    /**
+     * Append a Page to the document builder.
+     *
+     * @param page One page of an OCR document.
+     * @param ocrfile the OCR file
+     * @param imagefile the image file that correspons to the ocrfile
+     */
+    public void append(Page page, File ocrfile, File imagefile);
 
-    public void append(Line line);
-
-    public void append(Char c);
-
+    /**
+     * Finish building the document and return it.
+     *
+     * @return the document
+     */
     public SpreadIndexDocument build();
 }
