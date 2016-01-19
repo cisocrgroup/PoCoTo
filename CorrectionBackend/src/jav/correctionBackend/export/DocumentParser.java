@@ -5,7 +5,9 @@
  */
 package jav.correctionBackend.export;
 
+import jav.correctionBackend.FileType;
 import jav.correctionBackend.SpreadIndexDocument;
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import org.h2.jdbcx.JdbcConnectionPool;
@@ -28,15 +30,21 @@ public class DocumentParser {
             FileType fileType,
             ProgressHandle ph,
             JdbcConnectionPool jdbc
-    ) {
+    ) throws IOException {
         this.fileType = fileType;
         this.imagedir = imagedir;
         this.ocrdir = ocrdir;
         this.ph = ph;
         this.documentBuilder = new SpreadIndexDocumentBuilder(jdbc);
+        if (!imagedir.isDirectory()) {
+            throw new IOException("Not a directory: " + imagedir.getName());
+        }
+        if (!ocrdir.isDirectory()) {
+            throw new IOException("Not a directory: " + ocrdir.getName());
+        }
     }
 
-    public SpreadIndexDocument parse() throws IOException {
+    public SpreadIndexDocument parse() throws IOException, Exception {
         OcrToImageFileMapping mappings = new OcrToImageFileMapping(
                 imagedir,
                 ocrdir,
@@ -44,7 +52,8 @@ public class DocumentParser {
         );
         documentBuilder.init();
         int i = 0;
-        final int n = mappings.size();
+        final int n = mappings.length();
+        Log.debug(this, "n: %d", n);
         for (OcrToImageFileMapping.Mapping mapping : mappings) {
             progress(mapping, ++i, n);
             PageParser pageParser = fileType.getPageParser();
@@ -58,13 +67,13 @@ public class DocumentParser {
     }
 
     private void progress(OcrToImageFileMapping.Mapping m, int i, int n) {
-        ph.progress(
-                String.format("parsing %s [%s] (%d/%d)",
-                        m.ocrfile,
-                        m.imagefile,
-                        ++i,
-                        n
-                )
+        String msg = String.format("parsing %s [%s] (%d/%d)",
+                m.ocrfile,
+                m.imagefile,
+                ++i,
+                n
         );
+        ph.progress(msg);
+        Log.info(this, msg);
     }
 }

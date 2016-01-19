@@ -1,6 +1,5 @@
 package jav.correctionBackend;
 
-import jav.correctionBackend.export.FileType;
 import jav.correctionBackend.export.Exporter;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.OverwriteFileDialog;
@@ -1336,6 +1335,7 @@ public abstract class Document {
 
     public Token getTokenByIndex(int indexInDocument) {
         Token token = null;
+
         try {
             Connection conn = jcp.getConnection();
             Statement s = conn.createStatement();
@@ -1373,6 +1373,7 @@ public abstract class Document {
         } catch (SQLException ex) {
             Log.error(this, ex.getMessage());
         }
+        Log.debug(this, "getTokenByIndex(%d) = %s", indexInDocument, token);
         return token;
     }
 

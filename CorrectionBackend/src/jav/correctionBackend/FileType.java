@@ -1,4 +1,4 @@
-package jav.correctionBackend.export;
+package jav.correctionBackend;
 
 import jav.correctionBackend.export.AbbyyXmlPageParser;
 import jav.correctionBackend.export.HocrPageParser;

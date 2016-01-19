@@ -1,7 +1,6 @@
 package jav.correctionBackend;
 
 import jav.correctionBackend.export.DocumentParser;
-import jav.correctionBackend.export.FileType;
 import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
@@ -125,15 +124,14 @@ public class CorrectionSystem {
     public int newDocumentFromXML(String dbPath, String xmldir, String imagedir, FileType t, String encoding, ProgressHandle ph) {
         int retval = -1;
         if (this.newDocDatabase(dbPath) == 0) {
-
             jcp = JdbcConnectionPool.create("jdbc:h2:" + dbPath + ";AUTO_RECONNECT=TRUE;MVCC=true", "SA", "");
             jcp.setMaxConnections(50);
             jcp.setLoginTimeout(0);
             try {
                 long time_start = System.currentTimeMillis();
                 DocumentParser p = new DocumentParser(
-                        new File(xmldir),
                         new File(imagedir),
+                        new File(xmldir),
                         t,
                         ph,
                         jcp
@@ -144,7 +142,7 @@ public class CorrectionSystem {
                 document.loadNumberOfPagesFromDB();
                 document.loadNumberOfTokensFromDB();
                 retval = 0;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Log.error(this, "%s", e.getMessage());
             }
 
