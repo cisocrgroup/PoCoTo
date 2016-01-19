@@ -68,8 +68,8 @@ public class DocumentParser {
 
     private void progress(OcrToImageFileMapping.Mapping m, int i, int n) {
         String msg = String.format("parsing %s [%s] (%d/%d)",
-                m.ocrfile,
-                m.imagefile,
+                m.ocrfile.getName(),
+                m.imagefile.getName(),
                 ++i,
                 n
         );
