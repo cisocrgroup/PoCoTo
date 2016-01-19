@@ -76,8 +76,9 @@ public class AbbyyXmlPageParser implements PageParser {
         NodeList ls = (NodeList) xline.evaluate(pnode, XPathConstants.NODESET);
         if (ls != null) {
             for (int i = 0; i < ls.getLength(); ++i) {
-                Line line = new Line();
-                appendChars(ls.item(i), line);
+                final Node lineNode = ls.item(i);
+                Line line = new Line(getBoundingBox(lineNode));
+                appendChars(lineNode, line);
                 p.add(line);
             }
         }
@@ -88,12 +89,15 @@ public class AbbyyXmlPageParser implements PageParser {
         NodeList cs = (NodeList) xchar.evaluate(linenode, XPathConstants.NODESET);
         if (cs != null) {
             for (int i = 0; i < cs.getLength(); ++i) {
-                AbbyyXmlChar newChar = new AbbyyXmlChar(cs.item(i));
+                final Node charNode = cs.item(i);
+                AbbyyXmlChar newChar = new AbbyyXmlChar(charNode);
+                newChar.setBoundingBox(getBoundingBox(charNode));
                 if (!line.isEmpty()) {
                     AbbyyXmlChar prev = (AbbyyXmlChar) line.get(line.size() - 1);
                     prev.setNext(newChar);
                     newChar.setPrev(prev);
                 }
+
                 line.add(newChar);
             }
         }
@@ -114,5 +118,25 @@ public class AbbyyXmlPageParser implements PageParser {
 
     private XPathExpression makeXpath(String expr) throws Exception {
         return XPathFactory.newInstance().newXPath().compile(expr);
+    }
+
+    private static BoundingBox getBoundingBox(Node node) {
+        if (node != null) {
+            Node l = node.getAttributes().getNamedItem("l");
+            Node t = node.getAttributes().getNamedItem("t");
+            Node r = node.getAttributes().getNamedItem("r");
+            Node b = node.getAttributes().getNamedItem("b");
+            if (l != null && t != null && r != null && b != null) {
+                return new BoundingBox(getInt(l), getInt(t), getInt(r), getInt(b));
+            }
+        }
+        return new BoundingBox(-1, -1, -1, -1);
+    }
+
+    private static int getInt(Node node) {
+        if (node != null) {
+            return Integer.parseInt(node.getNodeValue());
+        }
+        return -1;
     }
 }

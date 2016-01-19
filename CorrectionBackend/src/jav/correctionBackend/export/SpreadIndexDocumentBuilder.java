@@ -51,8 +51,10 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
                 for (Char c : l) {
                     append(c);
                 }
+                insertCurrentToken();
                 addToDocument(TokenBuilder.newNewlineToken());
             }
+            insertCurrentToken();
             addToDocument(TokenBuilder.newNewlineToken());
         }
     }

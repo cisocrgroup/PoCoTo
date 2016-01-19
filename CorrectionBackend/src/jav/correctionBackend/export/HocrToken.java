@@ -70,16 +70,7 @@ public class HocrToken implements Iterable<HocrChar> {
 
     private void parse() throws Exception {
         title = getTitleNode(this.node);
-        Matcher m = BBRE.matcher(title.getNodeValue());
-        if (!m.find()) {
-            throw new Exception("Invalid ocr(x)_word: missing bbox entry in title");
-        }
-        bb = new BoundingBox(
-                Integer.parseInt(m.group(1)),
-                Integer.parseInt(m.group(2)),
-                Integer.parseInt(m.group(3)),
-                Integer.parseInt(m.group(4))
-        );
+        bb = getBoundingBox(this.node);
         token = node.getFirstChild().getNodeValue();
         chars = new ArrayList<>();
         BoundingBox splits[] = bb.getHorizontalSplits(token.length());
@@ -91,6 +82,24 @@ public class HocrToken implements Iterable<HocrChar> {
             }
             chars.add(newChar);
         }
+    }
+
+    public static BoundingBox getBoundingBox(Node node) {
+        try {
+            Node titleNode = getTitleNode(node);
+            Matcher m = BBRE.matcher(titleNode.getNodeValue());
+            if (m.find()) {
+                return new BoundingBox(
+                        Integer.parseInt(m.group(1)),
+                        Integer.parseInt(m.group(2)),
+                        Integer.parseInt(m.group(3)),
+                        Integer.parseInt(m.group(4))
+                );
+            }
+        } catch (Exception e) {
+            // ignore;
+        }
+        return new BoundingBox(-1, -1, -1, -1);
     }
 
     private static Node getTitleNode(Node node) throws Exception {

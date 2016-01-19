@@ -51,14 +51,11 @@ public class AbbyyXmlChar implements Char {
 
     @Override
     public BoundingBox getBoundingBox() {
-        if (bb == null) {
-            Node l = node.getAttributes().getNamedItem("l");
-            Node t = node.getAttributes().getNamedItem("t");
-            Node r = node.getAttributes().getNamedItem("r");
-            Node b = node.getAttributes().getNamedItem("b");
-            bb = new BoundingBox(getInt(l), getInt(t), getInt(r), getInt(b));
-        }
         return bb;
+    }
+
+    public void setBoundingBox(BoundingBox bb) {
+        this.bb = bb;
     }
 
     @Override
@@ -133,12 +130,5 @@ public class AbbyyXmlChar implements Char {
         Node attr = node.getOwnerDocument().createAttribute(key);
         attr.setNodeValue(val);
         attrs.setNamedItem(attr);
-    }
-
-    private int getInt(Node node) {
-        if (node != null) {
-            return Integer.parseInt(node.getNodeValue());
-        }
-        return -1;
     }
 }

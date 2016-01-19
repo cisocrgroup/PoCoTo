@@ -79,8 +79,9 @@ public class HocrPageParser implements PageParser {
         NodeList ls = (NodeList) xline.evaluate(pnode, XPathConstants.NODESET);
         if (ls != null) {
             for (int i = 0; i < ls.getLength(); ++i) {
-                Line line = new Line();
-                appendTokens(ls.item(i), line);
+                final Node lineNode = ls.item(i);
+                Line line = new Line(HocrToken.getBoundingBox(lineNode));
+                appendTokens(lineNode, line);
                 p.add(line);
             }
         }
