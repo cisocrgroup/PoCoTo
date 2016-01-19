@@ -15,7 +15,7 @@ import org.h2.jdbcx.JdbcConnectionPool;
  *
  * @author finkf
  */
-public class SpreadIndexDokumentBuilder implements DocumentBuilder {
+public class SpreadIndexDocumentBuilder implements DocumentBuilder {
 
     private final JdbcConnectionPool connection;
     private SpreadIndexDocument document;
@@ -25,7 +25,7 @@ public class SpreadIndexDokumentBuilder implements DocumentBuilder {
     private TokenBuilder tokenBuilder;
     private int previousCodepoint;
 
-    public SpreadIndexDokumentBuilder(JdbcConnectionPool connection) {
+    public SpreadIndexDocumentBuilder(JdbcConnectionPool connection) {
         this.connection = connection;
     }
 
