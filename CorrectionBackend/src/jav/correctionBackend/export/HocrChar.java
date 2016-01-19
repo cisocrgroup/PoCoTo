@@ -27,6 +27,17 @@ public class HocrChar extends AbstractHocrChar {
     }
 
     @Override
+    public String getChar() {
+        return token.charAt(i);
+    }
+
+    @Override
+    public boolean isSuspicious() {
+        // Check for x_wconf in title
+        return false;
+    }
+
+    @Override
     public void delete() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -34,11 +45,6 @@ public class HocrChar extends AbstractHocrChar {
     @Override
     public void substitute(String c) {
         throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public String getChar() {
-        return token.charAt(i);
     }
 
     @Override

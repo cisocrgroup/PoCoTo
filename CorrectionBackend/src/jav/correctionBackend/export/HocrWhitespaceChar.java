@@ -28,6 +28,16 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
     }
 
     @Override
+    public boolean isSuspicious() {
+        return false;
+    }
+
+    @Override
+    public String getChar() {
+        return WS;
+    }
+
+    @Override
     public void delete() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -35,11 +45,6 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
     @Override
     public void substitute(String c) {
         throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public String getChar() {
-        return WS;
     }
 
     @Override
