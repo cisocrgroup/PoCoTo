@@ -70,10 +70,11 @@ public class AbbyyXmlChar implements Char {
     }
 
     @Override
-    public void substitute(String c) {
+    public Char substitute(String c) {
         setAttribute("pocotoSubstitution", letter);
         letter = c;
         node.getFirstChild().setNodeValue(letter);
+        return this;
     }
 
     @Override

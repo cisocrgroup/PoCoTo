@@ -44,7 +44,8 @@ public class DocumentCorrectorImpl extends DocumentCorrector {
     @Override
     public void substitute(int i, int j, char c) {
         char tmp[] = {c};
-        lines.get(i).get(j).substitute(new String(tmp));
+        Char nc = lines.get(i).get(j).substitute(new String(tmp));
+        lines.get(i).add(j, nc);
     }
 
     @Override

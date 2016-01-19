@@ -44,7 +44,7 @@ public class HocrChar extends AbstractHocrChar {
     }
 
     @Override
-    public void substitute(String c) {
+    public Char substitute(String c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

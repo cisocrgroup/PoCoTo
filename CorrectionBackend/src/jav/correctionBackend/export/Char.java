@@ -55,8 +55,9 @@ public interface Char {
      * Substitute this Character with another.
      *
      * @param c the new Character.
+     * @return the new Character or a reference to itself
      */
-    public void substitute(String c);
+    public Char substitute(String c);
 
     /**
      * Create a new Char instance and append it after this.
