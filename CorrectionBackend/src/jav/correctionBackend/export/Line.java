@@ -13,4 +13,21 @@ import java.util.ArrayList;
  */
 public class Line extends ArrayList<Char> {
 
+    private BoundingBox bb;
+
+    public Line() {
+        this(null);
+    }
+
+    public Line(BoundingBox bb) {
+        this.bb = bb;
+    }
+
+    public BoundingBox getBoundingBox() {
+        return bb;
+    }
+
+    public void setBoundingBox(BoundingBox bb) {
+        this.bb = bb;
+    }
 }
