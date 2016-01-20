@@ -36,15 +36,14 @@ public class DocumentCorrectorImpl extends DocumentCorrector {
     public String getLineAt(int i) {
         StringBuilder builder = new StringBuilder();
         for (int j = 0; j < lines.get(i).size(); ++j) {
-            builder.append(lines.get(i).get(j).getChar());
+            builder.appendCodePoint(lines.get(i).get(j).getChar());
         }
         return builder.toString();
     }
 
     @Override
-    public void substitute(int i, int j, char c) {
-        char tmp[] = {c};
-        Char nc = lines.get(i).get(j).substitute(new String(tmp));
+    public void substitute(int i, int j, int c) {
+        Char nc = lines.get(i).get(j).substitute(c);
         lines.get(i).add(j, nc);
     }
 
@@ -55,13 +54,12 @@ public class DocumentCorrectorImpl extends DocumentCorrector {
     }
 
     @Override
-    public void insert(int i, int j, char c) {
-        char tmp[] = {c};
+    public void insert(int i, int j, int c) {
         if (j < lines.get(i).size()) {
-            Char nc = lines.get(i).get(j).prepend(new String(tmp));
+            Char nc = lines.get(i).get(j).prepend(c);
             lines.get(i).add(j, nc);
         } else {
-            Char nc = lines.get(i).get(j).append(new String(tmp));
+            Char nc = lines.get(i).get(j).append(c);
             lines.get(i).add(nc);
         }
     }

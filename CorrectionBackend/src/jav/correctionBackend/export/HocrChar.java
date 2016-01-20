@@ -14,13 +14,13 @@ public class HocrChar extends AbstractHocrChar {
 
     private static final int CONFIDENCE_THRESHOLD = 10;
 
-    private String str;
+    private int letter;
     private BoundingBox bb;
     private HocrToken token;
 
-    public HocrChar(HocrToken token, BoundingBox bb, String str) {
+    public HocrChar(HocrToken token, BoundingBox bb, int letter) {
         this.token = token;
-        this.str = str;
+        this.letter = letter;
         this.bb = bb;
     }
 
@@ -39,8 +39,8 @@ public class HocrChar extends AbstractHocrChar {
     }
 
     @Override
-    public String getChar() {
-        return str;
+    public int getChar() {
+        return letter;
     }
 
     @Override
@@ -54,19 +54,19 @@ public class HocrChar extends AbstractHocrChar {
     }
 
     @Override
-    public Char substitute(String c) {
-        str = c;
+    public Char substitute(int c) {
+        letter = c;
         token.update();
         return this;
     }
 
     @Override
-    public Char append(String c) {
+    public Char append(int c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Char prepend(String c) {
+    public Char prepend(int c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -21,9 +21,9 @@ public interface Char {
     /**
      * Get the characters of this Char.
      *
-     * @return The characters of this Char.
+     * @return The unicode code point of this char
      */
-    public String getChar();
+    public int getChar();
 
     /**
      * Returs whether this Character is suspicious (Abbyy).
@@ -57,7 +57,7 @@ public interface Char {
      * @param c the new Character.
      * @return the new Character or a reference to itself
      */
-    public Char substitute(String c);
+    public Char substitute(int c);
 
     /**
      * Create a new Char instance and append it after this.
@@ -65,7 +65,7 @@ public interface Char {
      * @param c the data of the new Char.
      * @return the new Char that was appended.
      */
-    public Char append(String c);
+    public Char append(int c);
 
     /**
      * Create a new Character and put it before this Char.
@@ -73,5 +73,5 @@ public interface Char {
      * @param c the data of the new Char.
      * @return the new Char that was prepended.
      */
-    public Char prepend(String c);
+    public Char prepend(int c);
 }

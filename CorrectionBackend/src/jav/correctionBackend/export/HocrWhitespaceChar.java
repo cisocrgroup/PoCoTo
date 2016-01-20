@@ -13,7 +13,7 @@ package jav.correctionBackend.export;
  */
 public class HocrWhitespaceChar extends AbstractHocrChar {
 
-    private static final String WS = " ";
+    private static final int WS = ' ';
 
     private final HocrToken prevToken, nextToken;
 
@@ -57,7 +57,7 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
     }
 
     @Override
-    public String getChar() {
+    public int getChar() {
         return WS;
     }
 
@@ -67,17 +67,17 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
     }
 
     @Override
-    public Char substitute(String c) {
+    public Char substitute(int c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Char append(String c) {
+    public Char append(int c) {
         return nextToken.get(0).prepend(c);
     }
 
     @Override
-    public Char prepend(String c) {
+    public Char prepend(int c) {
         return prevToken.get(prevToken.size() - 1).append(c);
     }
 }

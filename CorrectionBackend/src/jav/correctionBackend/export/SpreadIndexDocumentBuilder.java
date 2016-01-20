@@ -65,47 +65,42 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
     }
 
     public void append(Char c) {
-        String str = c.getChar();
+        final int currentCodepoint = c.getChar();
 
-        for (int i = 0; i < str.length();) {
-            final int currentCodepoint = str.codePointAt(i);
-
-            if (previousCodepoint == 0) {
-                if (!isWhitespace(currentCodepoint)) {
-                    tokenBuilder.appendCodepoint(currentCodepoint);
-                    tokenBuilder.appendBoundingBox(c.getBoundingBox());
-                    tokenBuilder.appendSuspicious(c.isSuspicious());
-                }
-            } else if (isAlphanumeric(previousCodepoint)) {
-                if (isAlphanumeric(currentCodepoint)) { // AA
-                    tokenBuilder.appendCodepoint(currentCodepoint);
-                    tokenBuilder.appendBoundingBox(c.getBoundingBox());
-                    tokenBuilder.appendSuspicious(c.isSuspicious());
-                } else if (isWhitespace(currentCodepoint)) { // A_
-                    insertCurrentToken();
-                    addToDocument(TokenBuilder.newWhitespaceToken());
-                } else { // A.
-                    insertCurrentToken();
-                    tokenBuilder.appendCodepoint(currentCodepoint);
-                    tokenBuilder.appendBoundingBox(c.getBoundingBox());
-                    tokenBuilder.appendSuspicious(c.isSuspicious());
-                }
-            } else if (isAlphanumeric(currentCodepoint)) { // .A
-                insertCurrentToken();
-                tokenBuilder.appendCodepoint(currentCodepoint);
-                tokenBuilder.appendBoundingBox(c.getBoundingBox());
-                tokenBuilder.appendSuspicious(c.isSuspicious());
-            } else if (isWhitespace(currentCodepoint)) { // ._
-                insertCurrentToken();
-                addToDocument(TokenBuilder.newWhitespaceToken());
-            } else { // ..
+        if (previousCodepoint == 0) {
+            if (!isWhitespace(currentCodepoint)) {
                 tokenBuilder.appendCodepoint(currentCodepoint);
                 tokenBuilder.appendBoundingBox(c.getBoundingBox());
                 tokenBuilder.appendSuspicious(c.isSuspicious());
             }
-            i += Character.charCount(currentCodepoint);
-            previousCodepoint = currentCodepoint;
+        } else if (isAlphanumeric(previousCodepoint)) {
+            if (isAlphanumeric(currentCodepoint)) { // AA
+                tokenBuilder.appendCodepoint(currentCodepoint);
+                tokenBuilder.appendBoundingBox(c.getBoundingBox());
+                tokenBuilder.appendSuspicious(c.isSuspicious());
+            } else if (isWhitespace(currentCodepoint)) { // A_
+                insertCurrentToken();
+                addToDocument(TokenBuilder.newWhitespaceToken());
+            } else { // A.
+                insertCurrentToken();
+                tokenBuilder.appendCodepoint(currentCodepoint);
+                tokenBuilder.appendBoundingBox(c.getBoundingBox());
+                tokenBuilder.appendSuspicious(c.isSuspicious());
+            }
+        } else if (isAlphanumeric(currentCodepoint)) { // .A
+            insertCurrentToken();
+            tokenBuilder.appendCodepoint(currentCodepoint);
+            tokenBuilder.appendBoundingBox(c.getBoundingBox());
+            tokenBuilder.appendSuspicious(c.isSuspicious());
+        } else if (isWhitespace(currentCodepoint)) { // ._
+            insertCurrentToken();
+            addToDocument(TokenBuilder.newWhitespaceToken());
+        } else { // ..
+            tokenBuilder.appendCodepoint(currentCodepoint);
+            tokenBuilder.appendBoundingBox(c.getBoundingBox());
+            tokenBuilder.appendSuspicious(c.isSuspicious());
         }
+        previousCodepoint = currentCodepoint;
     }
 
     private void insertCurrentToken() {

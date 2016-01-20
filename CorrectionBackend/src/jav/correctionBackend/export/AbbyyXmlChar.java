@@ -15,18 +15,18 @@ import org.w3c.dom.Node;
 public class AbbyyXmlChar implements Char {
 
     private final Node node;
-    private String letter;
+    private int letter;
     private BoundingBox bb;
     private AbbyyXmlChar prev, next;
 
-    public AbbyyXmlChar(char c, Node node) {
+    public AbbyyXmlChar(int c, Node node) {
         this(node);
-        node.getFirstChild().setNodeValue(letter);
+        node.getFirstChild().setNodeValue(new String(Character.toChars(letter)));
     }
 
     public AbbyyXmlChar(Node node) {
         this.node = node;
-        this.letter = node.getFirstChild().getNodeValue();
+        this.letter = node.getFirstChild().getNodeValue().codePointAt(0);
         bb = null;
         prev = next = null;
     }
@@ -65,15 +65,15 @@ public class AbbyyXmlChar implements Char {
     }
 
     @Override
-    public String getChar() {
+    public int getChar() {
         return letter;
     }
 
     @Override
-    public Char substitute(String c) {
-        setAttribute("pocotoSubstitution", letter);
+    public Char substitute(int c) {
+        setAttribute("pocotoSubstitution", new String(Character.toChars(letter)));
         letter = c;
-        node.getFirstChild().setNodeValue(letter);
+        node.getFirstChild().setNodeValue(new String(Character.toChars(letter)));
         return this;
     }
 
@@ -89,28 +89,28 @@ public class AbbyyXmlChar implements Char {
     }
 
     @Override
-    public Char append(String str) {
+    public Char append(int c) {
         Node clone = node.cloneNode(true);
         node.getParentNode().insertBefore(clone, node.getNextSibling());
         AbbyyXmlChar nc = new AbbyyXmlChar(clone);
-        nc.setAttribute("pocotoInsertion", letter);
+        nc.setAttribute("pocotoInsertion", new String(Character.toChars(c)));
         nc.next = this.next;
         nc.prev = this;
         this.next = nc;
-        nc.node.getFirstChild().setNodeValue(str);
+        nc.node.getFirstChild().setNodeValue(new String(Character.toChars(c)));
         return nc;
     }
 
     @Override
-    public Char prepend(String str) {
+    public Char prepend(int c) {
         Node clone = node.cloneNode(true);
         node.getParentNode().insertBefore(clone, node);
         AbbyyXmlChar nc = new AbbyyXmlChar(clone);
-        nc.setAttribute("pocotoInsertion", letter);
+        nc.setAttribute("pocotoInsertion", new String(Character.toChars(letter)));
         nc.prev = this.prev;
         nc.next = this;
         this.prev = nc;
-        nc.node.getFirstChild().setNodeValue(str);
+        nc.node.getFirstChild().setNodeValue(new String(Character.toChars(c)));
         return nc;
     }
 
@@ -120,7 +120,7 @@ public class AbbyyXmlChar implements Char {
 
     @Override
     public String toString() {
-        return letter;
+        return new String(Character.toChars(letter));
     }
 
     private void setAttribute(String key, String val) {

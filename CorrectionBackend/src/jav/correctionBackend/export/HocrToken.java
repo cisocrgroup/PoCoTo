@@ -75,7 +75,7 @@ public class HocrToken implements Iterable<HocrChar> {
     private String gatherToken() {
         StringBuilder builder = new StringBuilder();
         for (HocrChar c : chars) {
-            builder.append(c.getChar());
+            builder.appendCodePoint(c.getChar());
         }
         return builder.toString();
     }
@@ -156,8 +156,7 @@ public class HocrToken implements Iterable<HocrChar> {
         BoundingBox splits[] = bb.getVerticalSplits(n);
         for (int i = 0, j = 0; j < n && i < token.length();) {
             final int cp = token.codePointAt(i);
-            String str = new String(Character.toChars(cp));
-            HocrChar newChar = new HocrChar(this, splits[j], str);
+            HocrChar newChar = new HocrChar(this, splits[j], cp);
             if (i > 0) {
                 newChar.setPrev(chars.get(i - 1));
                 chars.get(i - 1).setNext(newChar);

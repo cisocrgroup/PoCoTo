@@ -57,9 +57,9 @@ public abstract class DocumentCorrector implements LineReadeable {
      *
      * @param i the index of the line
      * @param j the index of the char
-     * @param c the substitution char
+     * @param c the substitution char (unicode code point)
      */
-    public abstract void substitute(int i, int j, char c);
+    public abstract void substitute(int i, int j, int c);
 
     /**
      * Insert a new character.
@@ -68,9 +68,9 @@ public abstract class DocumentCorrector implements LineReadeable {
      * @param j the index where the new character should be inserted. If j is
      * equal to the size of the line, the character is appended to the end of
      * the line
-     * @param c the new character
+     * @param c the new character (unicode codepoint)
      */
-    public abstract void insert(int i, int j, char c);
+    public abstract void insert(int i, int j, int c);
 
     /**
      * Delete a character.
