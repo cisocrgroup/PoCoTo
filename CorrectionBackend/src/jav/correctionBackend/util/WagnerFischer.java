@@ -57,7 +57,9 @@ public class WagnerFischer {
     public WagnerFischer(String truth, String test) {
         this.truth = truth;
         this.test = test;
-        matrix = new int[test.length() + 1][truth.length() + 1];
+        final int n = test.codePointCount(0, truth.length());
+        final int m = truth.codePointCount(0, truth.length());
+        matrix = new int[n + 1][m + 1];
         trace = new Trace();
     }
 
@@ -84,22 +86,26 @@ public class WagnerFischer {
         for (int i = 0; i < matrix[0].length; ++i) {
             matrix[0][i] = i;
         }
-        for (int i = 1; i < matrix.length; ++i) {
-            for (int j = 1; j < matrix[i].length; ++j) {
-                matrix[i][j] = getMin(i, j);
+        for (int i = 1, k = 0; i < matrix.length;) {
+            for (int j = 1, l = 0; k < matrix[i].length;) {
+                matrix[i][j] = getMin(i, j, k, l);
+                ++j;
+                l += Character.charCount(truth.codePointAt(l));
             }
+            ++i;
+            k += Character.charCount(test.codePointAt(k));
         }
         backtrack();
-        return matrix[test.length()][truth.length()];
+        return matrix[matrix.length - 1][matrix[0].length - 1];
     }
 
-    private int getMin(int i, int j) {
+    private int getMin(int i, int j, int k, int l) {
         assert (i > 0);
         assert (j > 0);
-        assert ((i - 1) < test.length());
-        assert ((j - 1) < truth.length());
+        assert (k < test.length());
+        assert (l < truth.length());
 
-        if (test.charAt(i - 1) == truth.charAt(j - 1)) {
+        if (test.codePointAt(k) == truth.codePointAt(l)) {
             return matrix[i - 1][j - 1];
         } else {
             int[] tmp = {
