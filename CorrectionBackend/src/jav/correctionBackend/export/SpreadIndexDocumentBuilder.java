@@ -118,7 +118,9 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
 
     private void addToDocument(Token t) {
         if (t != null) {
-            document.addToken(adjust(t));
+            t = adjust(t);
+            // Log.debug(this, "adding `%s` [%s]", t, ocrfile.getName());
+            document.addToken(t);
         }
     }
 

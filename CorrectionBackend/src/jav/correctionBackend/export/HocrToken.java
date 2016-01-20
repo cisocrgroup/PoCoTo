@@ -72,7 +72,7 @@ public class HocrToken implements Iterable<HocrChar> {
         return bb;
     }
 
-    public String getToken() {
+    private String gatherToken() {
         StringBuilder builder = new StringBuilder();
         for (HocrChar c : chars) {
             builder.append(c.getChar());
@@ -80,11 +80,19 @@ public class HocrToken implements Iterable<HocrChar> {
         return builder.toString();
     }
 
+    private BoundingBox gatherBoundingBox() {
+        assert (!this.chars.isEmpty());
+        BoundingBox acc = chars.get(0).getBoundingBox();
+        for (int i = 1; i < chars.size(); ++i) {
+            acc.combineWith(chars.get(i).getBoundingBox());
+        }
+        return acc;
+    }
+
     @Override
     public String toString() {
-        return String.format(
-                "HocrToken `%s` conf %d %s",
-                getToken(),
+        return String.format("HocrToken `%s` conf %d %s",
+                gatherToken(),
                 getConfidence(),
                 getBoundingBox().toString()
         );
@@ -92,14 +100,10 @@ public class HocrToken implements Iterable<HocrChar> {
 
     public void update() {
         if (!chars.isEmpty()) {
-            BoundingBox newBoundingBox = chars.get(0).getBoundingBox();
-            StringBuilder builder = new StringBuilder(chars.get(0).getChar());
-            for (int i = 1; i < chars.size(); ++i) {
-                newBoundingBox.combineWith(chars.get(i).getBoundingBox());
-                builder.append(chars.get(i).getChar());
-            }
-            bb = newBoundingBox;
-            node.getFirstChild().setNodeValue(builder.toString());
+            bb = gatherBoundingBox();
+            String token = gatherToken();
+            // node.getFirstChild().setNodeValue(token);
+            node.setTextContent(token);
             Matcher m = BBRE.matcher(title.getNodeValue());
             String replacement = String.format("bbox %d %d %d %d",
                     bb.getLeft(), bb.getTop(), bb.getRight(), bb.getBottom()
@@ -108,26 +112,44 @@ public class HocrToken implements Iterable<HocrChar> {
             BoundingBox splits[] = bb.getVerticalSplits(chars.size());
             assert (splits.length == chars.size());
             for (int i = 0; i < splits.length; ++i) {
-                chars.get(i).setBoundingBox(splits[i]);
+                HocrChar prevChar = i > 0 ? this.chars.get(i - 1) : null;
+                HocrChar nextChar = i < (chars.size() - 1) ? this.chars.get(i + 1) : null;
+                HocrChar currentChar = chars.get(i);
+                currentChar.setHocrToken(this);
+                currentChar.setBoundingBox(splits[i]);
+                if (prevChar != null) {
+                    currentChar.setPrev(prevChar);
+                }
+                if (nextChar != null) {
+                    currentChar.setNext(nextChar);
+                }
             }
         }
     }
 
     public void delete(HocrChar c) {
+        assert (!this.chars.isEmpty());
         int i = chars.indexOf(c);
         if (i != -1) {
             chars.remove(i);
             if (!chars.isEmpty()) {
                 update();
             } else {
-                // remove this token from the nodes;
+                node.getParentNode().removeChild(node);
             }
         }
     }
 
+    public void mergeRightWith(HocrToken right) {
+        assert (!this.chars.isEmpty());
+        assert (!right.chars.isEmpty());
+        this.chars.addAll(right.chars);
+        update();
+    }
+
     private void parse() throws Exception {
         bb = getBoundingBox(this.node);
-        String token = node.getFirstChild().getNodeValue();
+        String token = node.getFirstChild().getTextContent();
         chars = new ArrayList<>();
 
         final int n = token.codePointCount(0, token.length());

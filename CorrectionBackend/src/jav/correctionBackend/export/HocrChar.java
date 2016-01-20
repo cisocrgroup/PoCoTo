@@ -16,7 +16,7 @@ public class HocrChar extends AbstractHocrChar {
 
     private String str;
     private BoundingBox bb;
-    private final HocrToken token;
+    private HocrToken token;
 
     public HocrChar(HocrToken token, BoundingBox bb, String str) {
         this.token = token;
@@ -26,6 +26,11 @@ public class HocrChar extends AbstractHocrChar {
 
     public void setBoundingBox(BoundingBox bb) {
         this.bb = bb;
+    }
+
+    public void setHocrToken(HocrToken token) {
+        assert (token != null);
+        this.token = token;
     }
 
     @Override

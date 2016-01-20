@@ -97,9 +97,10 @@ public class HocrPageParser implements PageParser {
             HocrToken prevToken = null;
             for (int i = 0; i < cs.getLength(); ++i) {
                 final Node tokenNode = cs.item(i);
-                if (tokenNode.hasChildNodes()
-                        && !tokenNode.getFirstChild().getNodeValue().isEmpty()) {
+                if (tokenNode.getFirstChild() != null
+                        && !tokenNode.getFirstChild().getTextContent().isEmpty()) {
                     HocrToken newToken = new HocrToken(tokenNode);
+                    //Log.debug(this, "%s", newToken.toString());
                     if (prevToken != null) {
                         line.add(new HocrWhitespaceChar(prevToken, newToken));
                     }
@@ -108,6 +109,7 @@ public class HocrPageParser implements PageParser {
                     }
                     prevToken = newToken;
                 }
+                //Log.debug(this, "done");
             }
         }
     }

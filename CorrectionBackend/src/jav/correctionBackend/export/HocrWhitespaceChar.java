@@ -42,7 +42,13 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
 
     @Override
     public BoundingBox getBoundingBox() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        BoundingBox prevBB = prevToken.getLastChar().getBoundingBox();
+        BoundingBox nextBB = nextToken.getFirstChar().getBoundingBox();
+        final int l = prevBB.getRight();
+        final int t = Math.min(prevBB.getTop(), nextBB.getTop());
+        final int r = nextBB.getLeft();
+        final int b = Math.max(prevBB.getBottom(), nextBB.getBottom());
+        return new BoundingBox(l, t, r, b);
     }
 
     @Override
@@ -57,7 +63,7 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
 
     @Override
     public void delete() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        prevToken.mergeRightWith(nextToken);
     }
 
     @Override
