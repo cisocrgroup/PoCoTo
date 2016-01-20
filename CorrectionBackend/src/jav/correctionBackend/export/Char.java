@@ -6,6 +6,7 @@
 package jav.correctionBackend.export;
 
 /**
+ * The char interface defines one code point in the OCR document.
  *
  * @author flo
  */
@@ -19,14 +20,14 @@ public interface Char {
     public BoundingBox getBoundingBox();
 
     /**
-     * Get the characters of this Char.
+     * Get the code point of this Char.
      *
      * @return The unicode code point of this char
      */
     public int getChar();
 
     /**
-     * Returs whether this Character is suspicious (Abbyy).
+     * Returns whether this Character is suspicious (Abbyy).
      *
      * @return true if this Character is suspicious.
      */
@@ -47,22 +48,22 @@ public interface Char {
     public Char getNext();
 
     /**
-     * Remove this character from the line.
+     * Remove this character from its line.
      */
     public void delete();
 
     /**
-     * Substitute this Character with another.
+     * Substitute the code point of this Character with another code point.
      *
-     * @param c the new Character.
-     * @return the new Character or a reference to itself
+     * @param c the new code point
+     * @return a new Character or a reference to itself
      */
     public Char substitute(int c);
 
     /**
      * Create a new Char instance and append it after this.
      *
-     * @param c the data of the new Char.
+     * @param c the code point for the new Char.
      * @return the new Char that was appended.
      */
     public Char append(int c);
@@ -70,7 +71,7 @@ public interface Char {
     /**
      * Create a new Character and put it before this Char.
      *
-     * @param c the data of the new Char.
+     * @param c the code point for the new Char.
      * @return the new Char that was prepended.
      */
     public Char prepend(int c);
