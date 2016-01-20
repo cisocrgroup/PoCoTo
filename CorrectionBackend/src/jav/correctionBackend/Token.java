@@ -219,7 +219,7 @@ public class Token {
 
     @Override
     public String toString() {
-        return getWCOR() + " " + getID() + " " + getIndexInDocument();
+        return String.format("Token %s (%s) %d %d", getWOCR(), getWCOR(), getID(), getIndexInDocument());
     }
 
     @Override
