@@ -16,7 +16,7 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 public class WagnerFischer {
 
-    private final String truth, test;
+    private final int[] truth, test;
     private final int[][] matrix;
     private final Trace trace;
 
@@ -55,19 +55,17 @@ public class WagnerFischer {
     };
 
     public WagnerFischer(String truth, String test) {
-        this.truth = truth;
-        this.test = test;
-        final int n = test.codePointCount(0, truth.length());
-        final int m = truth.codePointCount(0, truth.length());
-        matrix = new int[n + 1][m + 1];
+        this.truth = toArray(truth);
+        this.test = toArray(test);
+        matrix = new int[this.test.length + 1][this.truth.length + 1];
         trace = new Trace();
     }
 
-    public String getTest() {
+    public int[] getTest() {
         return test;
     }
 
-    public String getTruth() {
+    public int[] getTruth() {
         return truth;
     }
 
@@ -86,26 +84,22 @@ public class WagnerFischer {
         for (int i = 0; i < matrix[0].length; ++i) {
             matrix[0][i] = i;
         }
-        for (int i = 1, k = 0; i < matrix.length;) {
-            for (int j = 1, l = 0; k < matrix[i].length;) {
-                matrix[i][j] = getMin(i, j, k, l);
-                ++j;
-                l += Character.charCount(truth.codePointAt(l));
+        for (int i = 1; i < matrix.length; ++i) {
+            for (int j = 1; j < matrix[i].length; ++j) {
+                matrix[i][j] = getMin(i, j);
             }
-            ++i;
-            k += Character.charCount(test.codePointAt(k));
         }
         backtrack();
         return matrix[matrix.length - 1][matrix[0].length - 1];
     }
 
-    private int getMin(int i, int j, int k, int l) {
+    private int getMin(int i, int j) {
         assert (i > 0);
         assert (j > 0);
-        assert (k < test.length());
-        assert (l < truth.length());
+        assert ((i - 1) < test.length);
+        assert ((j - 1) < truth.length);
 
-        if (test.codePointAt(k) == truth.codePointAt(l)) {
+        if (test[i - 1] == truth[j - 1]) {
             return matrix[i - 1][j - 1];
         } else {
             int[] tmp = {
@@ -118,7 +112,7 @@ public class WagnerFischer {
     }
 
     private void backtrack() {
-        for (int i = test.length(), j = truth.length(); i > 0 && j > 0;) {
+        for (int i = test.length, j = truth.length; i > 0 && j > 0;) {
             MinArg minArg = setTrace(i, j);
             i = minArg.i;
             j = minArg.j;
@@ -158,6 +152,17 @@ public class WagnerFischer {
             default:
                 throw new IllegalArgumentException("Index out of bounds: " + index);
         }
+    }
+
+    private static int[] toArray(String str) {
+        final int n = str.codePointCount(0, str.length());
+        int res[] = new int[n];
+        for (int i = 0, j = 0; i < n;) {
+            res[i] = str.codePointAt(j);
+            ++i;
+            j += Character.charCount(res[i]);
+        }
+        return res;
     }
 
     private class MinArg {
