@@ -34,12 +34,12 @@ public abstract class DocumentCorrector implements LineReadeable {
                     ++j;
                     break;
                 case Substitution:
-                    substitute(i, k, truth.charAt(k));
+                    substitute(i, k, wf.getTruth()[k]);
                     ++k;
                     ++j;
                     break;
                 case Insertion:
-                    insert(i, k, truth.charAt(k));
+                    insert(i, k, wf.getTruth()[k]);
                     ++k;
                     ++j;
                     break;
