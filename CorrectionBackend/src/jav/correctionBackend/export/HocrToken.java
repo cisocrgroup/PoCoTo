@@ -21,14 +21,15 @@ public class HocrToken implements Iterable<HocrChar> {
 
     static Pattern BBRE
             = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
-    private static final Pattern WCONF = Pattern.compile("x?_wconfg\\s+(\\d+)");
+    private static final Pattern WCONF = Pattern.compile("x_wconf\\s+(\\d+)");
 
-    private Node node, title;
+    private final Node node, title;
     private ArrayList<HocrChar> chars;
     private BoundingBox bb;
 
     public HocrToken(Node node) throws Exception {
         this.node = node;
+        this.title = getTitleNode(node);
         parse();
         if (chars.isEmpty()) {
             throw new Exception("Empty HOCR token not ignored");
@@ -67,6 +68,28 @@ public class HocrToken implements Iterable<HocrChar> {
         }
     }
 
+    public BoundingBox getBoundingBox() {
+        return bb;
+    }
+
+    public String getToken() {
+        StringBuilder builder = new StringBuilder();
+        for (HocrChar c : chars) {
+            builder.append(c.getChar());
+        }
+        return builder.toString();
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "HocrToken `%s` conf %d %s",
+                getToken(),
+                getConfidence(),
+                getBoundingBox().toString()
+        );
+    }
+
     public void update() {
         if (!chars.isEmpty()) {
             BoundingBox newBoundingBox = chars.get(0).getBoundingBox();
@@ -103,7 +126,6 @@ public class HocrToken implements Iterable<HocrChar> {
     }
 
     private void parse() throws Exception {
-        title = getTitleNode(this.node);
         bb = getBoundingBox(this.node);
         String token = node.getFirstChild().getNodeValue();
         chars = new ArrayList<>();
