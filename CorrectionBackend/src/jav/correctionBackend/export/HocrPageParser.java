@@ -93,7 +93,7 @@ public class HocrPageParser implements PageParser {
         //  </span>
         XPathExpression xchar = makeXpath(".//span[@class=\"ocrx_word\" or @class=\"ocr_word\"]");
         NodeList cs = (NodeList) xchar.evaluate(linenode, XPathConstants.NODESET);
-        if (cs != null) {
+        if (cs != null && cs.getLength() > 0) {
             HocrToken prevToken = null;
             for (int i = 0; i < cs.getLength(); ++i) {
                 final Node tokenNode = cs.item(i);
@@ -108,6 +108,12 @@ public class HocrPageParser implements PageParser {
                     }
                     prevToken = newToken;
                 }
+            }
+        } else if (linenode.getFirstChild() != null
+                && !linenode.getFirstChild().getTextContent().isEmpty()) {
+            HocrToken newToken = new HocrToken(line, linenode);
+            for (HocrChar c : newToken) {
+                line.add(c);
             }
         }
     }
