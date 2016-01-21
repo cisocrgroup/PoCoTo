@@ -77,6 +77,11 @@ public class WagnerFischer {
         return matrix;
     }
 
+    /**
+     * Calculate the matrix and the trace.
+     *
+     * @return the levenshteindistance between test and truth
+     */
     public int calculate() {
         for (int i = 0; i < matrix.length; ++i) {
             matrix[i][0] = i;
