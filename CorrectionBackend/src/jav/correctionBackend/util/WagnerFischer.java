@@ -174,4 +174,27 @@ public class WagnerFischer {
             this.j = j;
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0, j = 0; i < trace.size() && j < test.length; ++i) {
+            if (trace.get(i).equals(EditOperations.Insertion)) {
+                builder.append('_');
+            } else {
+                builder.appendCodePoint(test[j]);
+                ++j;
+            }
+        }
+        builder.append(trace.toString());
+        for (int i = 0, j = 0; i < trace.size() && j < truth.length; ++i) {
+            if (trace.get(i).equals(EditOperations.Deletion)) {
+                builder.append('_');
+            } else {
+                builder.appendCodePoint(truth[j]);
+                ++j;
+            }
+        }
+        return builder.toString();
+    }
 }
