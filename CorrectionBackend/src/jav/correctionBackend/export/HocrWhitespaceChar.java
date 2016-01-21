@@ -15,9 +15,9 @@ public class HocrWhitespaceChar extends AbstractBaseChar {
 
     private static final int WS = ' ';
 
-    private final HocrToken prevToken, nextToken;
+    private final AbstractToken prevToken, nextToken;
 
-    public HocrWhitespaceChar(Line line, HocrToken prev, HocrToken next) {
+    public HocrWhitespaceChar(Line line, AbstractToken prev, AbstractToken next) {
         super(line);
         assert (prev != null);
         assert (next != null);
@@ -50,7 +50,7 @@ public class HocrWhitespaceChar extends AbstractBaseChar {
     public void delete() {
         final int i = getIndexInLine();
         if (i != -1) {
-            HocrToken.merge(prevToken, nextToken, null);
+            prevToken.mergeRightward(null, nextToken);
             getLine().remove(i);
         }
     }
@@ -61,7 +61,7 @@ public class HocrWhitespaceChar extends AbstractBaseChar {
             final int i = getIndexInLine();
             if (i != -1) {
                 HocrChar newChar = new HocrChar(getLine(), c);
-                HocrToken.merge(prevToken, nextToken, newChar);
+                prevToken.mergeRightward(newChar, nextToken);
                 getLine().set(i, newChar);
             }
         }

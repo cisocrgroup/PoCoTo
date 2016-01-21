@@ -5,8 +5,6 @@
  */
 package jav.correctionBackend.export;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.w3c.dom.Node;
@@ -17,53 +15,27 @@ import org.w3c.dom.Node;
  *
  * @author finkf
  */
-public class HocrToken implements Iterable<HocrChar> {
+public class HocrToken extends AbstractToken<HocrChar> {
 
     static Pattern BBRE
             = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
     private static final Pattern WCONF = Pattern.compile("x_wconf\\s+(\\d+)");
 
     private final Node node, title;
-    private final ArrayList<HocrChar> chars;
     private BoundingBox bb;
 
     public HocrToken(Line line, Node node) throws Exception {
         this.node = node;
         this.title = getTitleNode(node);
-        this.chars = new ArrayList<>();
         parse(line);
-        if (chars.isEmpty()) {
+        if (isEmpty()) {
             throw new Exception("Empty HOCR token not ignored");
         }
     }
 
-    private HocrToken(Node node, Node title, ArrayList<HocrChar> chars) {
+    private HocrToken(Node node, Node title, boolean noparse) {
         this.node = node;
         this.title = title;
-        this.chars = chars;
-    }
-
-    public HocrChar getFirstChar() {
-        assert (!chars.isEmpty());
-        return this.get(0);
-    }
-
-    public HocrChar getLastChar() {
-        assert (!chars.isEmpty());
-        return this.get(this.size() - 1);
-    }
-
-    public HocrChar get(int i) {
-        return chars.get(i);
-    }
-
-    public int size() {
-        return chars.size();
-    }
-
-    @Override
-    public Iterator<HocrChar> iterator() {
-        return chars.iterator();
     }
 
     public int getConfidence() {
@@ -81,17 +53,17 @@ public class HocrToken implements Iterable<HocrChar> {
 
     private String gatherToken() {
         StringBuilder builder = new StringBuilder();
-        for (HocrChar c : chars) {
+        for (Char c : this) {
             builder.appendCodePoint(c.getChar());
         }
         return builder.toString();
     }
 
     private BoundingBox gatherBoundingBox() {
-        assert (!this.chars.isEmpty());
-        BoundingBox acc = chars.get(0).getBoundingBox();
-        for (int i = 1; i < chars.size(); ++i) {
-            acc.combineWith(chars.get(i).getBoundingBox());
+        assert (!this.isEmpty());
+        BoundingBox acc = this.get(0).getBoundingBox();
+        for (int i = 1; i < this.size(); ++i) {
+            acc.combineWith(this.get(i).getBoundingBox());
         }
         return acc;
     }
@@ -105,8 +77,9 @@ public class HocrToken implements Iterable<HocrChar> {
         );
     }
 
+    @Override
     public void update() {
-        if (!chars.isEmpty()) {
+        if (!this.isEmpty()) {
             bb = gatherBoundingBox();
             String token = gatherToken();
             // node.getFirstChild().setNodeValue(token);
@@ -116,52 +89,19 @@ public class HocrToken implements Iterable<HocrChar> {
                     bb.getLeft(), bb.getTop(), bb.getRight(), bb.getBottom()
             );
             m.replaceFirst(replacement);
-            BoundingBox splits[] = bb.getVerticalSplits(chars.size());
-            assert (splits.length == chars.size());
+            BoundingBox splits[] = bb.getVerticalSplits(this.size());
+            assert (splits.length == this.size());
             for (int i = 0; i < splits.length; ++i) {
-                chars.get(i).setHocrToken(this);
-                chars.get(i).setBoundingBox(splits[i]);
+                get(i).setToken(this);
+                get(i).setBoundingBox(splits[i]);
             }
+
         }
     }
 
-    public void delete(HocrChar c) {
-        int i = chars.indexOf(c);
-        if (i != -1) {
-            chars.remove(i);
-            if (!chars.isEmpty()) {
-                update();
-            } else {
-                node.getParentNode().removeChild(node);
-            }
-        }
-    }
-
-    public static HocrToken merge(HocrToken l, HocrToken r, HocrChar c) {
-        HocrToken newToken = new HocrToken(l.node, l.title, l.chars);
-        if (c != null) {
-            newToken.chars.add(c);
-        }
-        newToken.chars.addAll(r.chars);
-        newToken.update();
-        r.node.getParentNode().removeChild(r.node);
-        return newToken;
-    }
-
-    public void append(HocrChar c, int cp) {
-        final int i = chars.indexOf(c);
-        if (i != -1) {
-            chars.add(i + 1, new HocrChar(c.getLine(), cp));
-            update();
-        }
-    }
-
-    public void prepend(HocrChar c, int cp) {
-        final int i = chars.indexOf(c);
-        if (i != -1) {
-            chars.add(i, new HocrChar(c.getLine(), cp));
-            update();
-        }
+    @Override
+    public void removeFromTree() {
+        node.getParentNode().removeChild(node);
     }
 
     private void parse(Line line) throws Exception {
@@ -173,7 +113,7 @@ public class HocrToken implements Iterable<HocrChar> {
         for (int i = 0, j = 0; j < n && i < token.length();) {
             final int cp = token.codePointAt(i);
             HocrChar newChar = new HocrChar(line, this, splits[j], cp);
-            chars.add(newChar);
+            this.add(newChar);
             i += Character.charCount(cp);
             ++j;
         }

@@ -12,13 +12,11 @@ package jav.correctionBackend.export;
  */
 public class HocrChar extends AbstractBaseChar {
 
-    private static final int CONFIDENCE_THRESHOLD = 10;
-
     private int letter;
     private BoundingBox bb;
-    private HocrToken token;
+    private AbstractToken token;
 
-    public HocrChar(Line line, HocrToken token, BoundingBox bb, int letter) {
+    public HocrChar(Line line, AbstractToken token, BoundingBox bb, int letter) {
         super(line);
         this.token = token;
         this.letter = letter;
@@ -33,7 +31,7 @@ public class HocrChar extends AbstractBaseChar {
         this.bb = bb;
     }
 
-    public void setHocrToken(HocrToken token) {
+    public void setToken(AbstractToken token) {
         assert (token != null);
         this.token = token;
     }
@@ -50,7 +48,7 @@ public class HocrChar extends AbstractBaseChar {
 
     @Override
     public boolean isSuspicious() {
-        return token.getConfidence() <= CONFIDENCE_THRESHOLD;
+        return false;
     }
 
     @Override
@@ -66,12 +64,12 @@ public class HocrChar extends AbstractBaseChar {
 
     @Override
     public void append(int c) {
-        token.append(this, c);
+        token.append(this, new HocrChar(getLine(), token, bb, c));
     }
 
     @Override
     public void prepend(int c) {
-        token.prepend(this, c);
+        token.prepend(this, new HocrChar(getLine(), token, bb, c));
     }
 
 }
