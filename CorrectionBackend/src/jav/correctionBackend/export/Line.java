@@ -30,4 +30,25 @@ public class Line extends ArrayList<Char> {
     public void setBoundingBox(BoundingBox bb) {
         this.bb = bb;
     }
+
+    public void substitute(int idx, int codepoint) {
+        get(idx).substitute(codepoint);
+    }
+
+    public void delete(int idx) {
+        get(idx).delete();
+        remove(idx);
+    }
+
+    public void insert(int idx, int codepoint) {
+        if (0 < size()) {
+            if (idx < size()) {
+                Char nc = get(idx).prepend(codepoint);
+                add(idx, nc);
+            } else {
+                Char nc = get(size() - 1).append(codepoint);
+                add(nc);
+            }
+        }
+    }
 }
