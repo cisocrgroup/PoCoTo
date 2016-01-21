@@ -90,15 +90,8 @@ public class AbbyyXmlPageParser implements PageParser {
         if (cs != null) {
             for (int i = 0; i < cs.getLength(); ++i) {
                 final Node charNode = cs.item(i);
-                AbbyyXmlChar newChar = new AbbyyXmlChar(charNode);
-                newChar.setBoundingBox(getBoundingBox(charNode));
-                if (!line.isEmpty()) {
-                    AbbyyXmlChar prev = (AbbyyXmlChar) line.get(line.size() - 1);
-                    prev.setNext(newChar);
-                    newChar.setPrev(prev);
-                }
-
-                line.add(newChar);
+                final BoundingBox bb = getBoundingBox(charNode);
+                line.add(new AbbyyXmlChar(line, charNode, bb));
             }
         }
     }

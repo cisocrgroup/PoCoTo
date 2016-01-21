@@ -5,6 +5,7 @@
  */
 package jav.correctionBackend.export;
 
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.ArrayList;
  */
 public class DocumentCorrectorImpl extends DocumentCorrector {
 
-    private final ArrayList<ArrayList<Char>> lines;
+    private final ArrayList<Line> lines;
     private final PageParser pageParser;
     private final File input;
 
@@ -43,25 +44,20 @@ public class DocumentCorrectorImpl extends DocumentCorrector {
 
     @Override
     public void substitute(int i, int j, int c) {
-        Char nc = lines.get(i).get(j).substitute(c);
-        lines.get(i).add(j, nc);
+        Log.debug(this, "substitute(%d, %d, %s)", i, j, new String(Character.toChars(i)));
+        lines.get(i).substitute(j, c);
     }
 
     @Override
     public void delete(int i, int j) {
-        lines.get(i).get(j).delete();
-        lines.get(i).remove(j);
+        Log.debug(this, "delete(%d, %d)", i, j);
+        lines.get(i).delete(j);
     }
 
     @Override
     public void insert(int i, int j, int c) {
-        if (j < lines.get(i).size()) {
-            Char nc = lines.get(i).get(j).prepend(c);
-            lines.get(i).add(j, nc);
-        } else {
-            Char nc = lines.get(i).get(j).append(c);
-            lines.get(i).add(nc);
-        }
+        Log.debug(this, "insert(%d, %d, %s)", i, j, new String(Character.toChars(c)));
+        lines.get(i).insert(j, c);
     }
 
     @Override
@@ -77,13 +73,9 @@ public class DocumentCorrectorImpl extends DocumentCorrector {
         Page page = pageParser.parse(input);
         for (Paragraph p : page) {
             for (Line l : p) {
-                lines.add(new ArrayList<Char>());
-                ArrayList<Char> back = lines.get(lines.size() - 1);
-                for (Char c : l) {
-                    back.add(c);
-                }
+                lines.add(l);
             }
-            lines.add(new ArrayList<Char>()); // append an empty line after paragraphs
+            lines.add(new Line()); // append an empty new line after paragraphs
         }
     }
 }

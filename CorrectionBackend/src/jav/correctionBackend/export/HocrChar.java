@@ -54,19 +54,18 @@ public class HocrChar extends AbstractHocrChar {
     }
 
     @Override
-    public Char substitute(int c) {
+    public void substitute(int c) {
         letter = c;
         token.update();
-        return this;
     }
 
     @Override
-    public Char append(int c) {
+    public void append(int c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Char prepend(int c) {
+    public void prepend(int c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

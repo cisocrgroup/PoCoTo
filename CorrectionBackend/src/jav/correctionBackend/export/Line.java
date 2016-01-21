@@ -43,11 +43,9 @@ public class Line extends ArrayList<Char> {
     public void insert(int idx, int codepoint) {
         if (0 < size()) {
             if (idx < size()) {
-                Char nc = get(idx).prepend(codepoint);
-                add(idx, nc);
+                get(idx).prepend(codepoint);
             } else {
-                Char nc = get(size() - 1).append(codepoint);
-                add(nc);
+                get(size() - 1).append(codepoint);
             }
         }
     }

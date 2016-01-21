@@ -56,23 +56,20 @@ public interface Char {
      * Substitute the code point of this Character with another code point.
      *
      * @param c the new code point
-     * @return a new Character or a reference to itself
      */
-    public Char substitute(int c);
+    public void substitute(int c);
 
     /**
-     * Create a new Char instance and append it after this.
+     * Prepend a new Character before this character.
      *
      * @param c the code point for the new Char.
-     * @return the new Char that was appended.
      */
-    public Char append(int c);
+    public void prepend(int c);
 
     /**
-     * Create a new Character and put it before this Char.
+     * Append a new character after this one.
      *
      * @param c the code point for the new Char.
-     * @return the new Char that was prepended.
      */
-    public Char prepend(int c);
+    public void append(int c);
 }

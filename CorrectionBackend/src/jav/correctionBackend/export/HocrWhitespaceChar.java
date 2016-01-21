@@ -67,17 +67,17 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
     }
 
     @Override
-    public Char substitute(int c) {
+    public void substitute(int c) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Char append(int c) {
-        return nextToken.get(0).prepend(c);
+    public void append(int c) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
-    public Char prepend(int c) {
-        return prevToken.get(prevToken.size() - 1).append(c);
+    public void prepend(int c) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
