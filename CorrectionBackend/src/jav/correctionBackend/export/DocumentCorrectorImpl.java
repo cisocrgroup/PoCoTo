@@ -44,7 +44,7 @@ public class DocumentCorrectorImpl extends DocumentCorrector {
 
     @Override
     public void substitute(int i, int j, int c) {
-        Log.debug(this, "substitute(%d, %d, %s)", i, j, new String(Character.toChars(i)));
+        Log.debug(this, "substitute(%d, %d, %s)", i, j, new String(Character.toChars(c)));
         lines.get(i).substitute(j, c);
     }
 
