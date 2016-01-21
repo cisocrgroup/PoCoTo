@@ -11,33 +11,18 @@ package jav.correctionBackend.export;
  *
  * @author finkf
  */
-public class HocrWhitespaceChar extends AbstractHocrChar {
+public class HocrWhitespaceChar extends AbstractBaseChar {
 
     private static final int WS = ' ';
 
     private final HocrToken prevToken, nextToken;
 
-    /**
-     * Construct an instance.
-     *
-     * @param prev the previous token. Not null.
-     * @param next the next token. Not null
-     */
-    public HocrWhitespaceChar(HocrToken prev, HocrToken next) {
+    public HocrWhitespaceChar(Line line, HocrToken prev, HocrToken next) {
+        super(line);
         assert (prev != null);
         assert (next != null);
         this.prevToken = prev;
         this.nextToken = next;
-        setupPrevAndNextChar();
-    }
-
-    private void setupPrevAndNextChar() {
-        HocrChar prevChar = prevToken.getLastChar();
-        HocrChar nextChar = nextToken.getFirstChar();
-        this.setPrev(prevChar);
-        prevChar.setNext(this);
-        this.setNext(nextChar);
-        nextChar.setPrev(this);
     }
 
     @Override
@@ -63,21 +48,36 @@ public class HocrWhitespaceChar extends AbstractHocrChar {
 
     @Override
     public void delete() {
-        prevToken.mergeRightWith(nextToken);
+        final int i = getIndexInLine();
+        if (i != -1) {
+            HocrToken.merge(prevToken, nextToken, null);
+            getLine().remove(i);
+        }
     }
 
     @Override
     public void substitute(int c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (!Character.isWhitespace(c)) {
+            final int i = getIndexInLine();
+            if (i != -1) {
+                HocrChar newChar = new HocrChar(getLine(), c);
+                HocrToken.merge(prevToken, nextToken, newChar);
+                getLine().set(i, newChar);
+            }
+        }
     }
 
+    /**
+     * This call can only happen if WhitespaceChar is the last char on line,
+     * which is illegeal, since WhitespaceChar are allways between two token.
+     */
     @Override
     public void append(int c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Append called on HocrWhitespaceChar");
     }
 
     @Override
     public void prepend(int c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        prevToken.getLastChar().append(c);
     }
 }

@@ -24,16 +24,23 @@ public class HocrToken implements Iterable<HocrChar> {
     private static final Pattern WCONF = Pattern.compile("x_wconf\\s+(\\d+)");
 
     private final Node node, title;
-    private ArrayList<HocrChar> chars;
+    private final ArrayList<HocrChar> chars;
     private BoundingBox bb;
 
-    public HocrToken(Node node) throws Exception {
+    public HocrToken(Line line, Node node) throws Exception {
         this.node = node;
         this.title = getTitleNode(node);
-        parse();
+        this.chars = new ArrayList<>();
+        parse(line);
         if (chars.isEmpty()) {
             throw new Exception("Empty HOCR token not ignored");
         }
+    }
+
+    private HocrToken(Node node, Node title, ArrayList<HocrChar> chars) {
+        this.node = node;
+        this.title = title;
+        this.chars = chars;
     }
 
     public HocrChar getFirstChar() {
@@ -112,23 +119,13 @@ public class HocrToken implements Iterable<HocrChar> {
             BoundingBox splits[] = bb.getVerticalSplits(chars.size());
             assert (splits.length == chars.size());
             for (int i = 0; i < splits.length; ++i) {
-                HocrChar prevChar = i > 0 ? this.chars.get(i - 1) : null;
-                HocrChar nextChar = i < (chars.size() - 1) ? this.chars.get(i + 1) : null;
-                HocrChar currentChar = chars.get(i);
-                currentChar.setHocrToken(this);
-                currentChar.setBoundingBox(splits[i]);
-                if (prevChar != null) {
-                    currentChar.setPrev(prevChar);
-                }
-                if (nextChar != null) {
-                    currentChar.setNext(nextChar);
-                }
+                chars.get(i).setHocrToken(this);
+                chars.get(i).setBoundingBox(splits[i]);
             }
         }
     }
 
     public void delete(HocrChar c) {
-        assert (!this.chars.isEmpty());
         int i = chars.indexOf(c);
         if (i != -1) {
             chars.remove(i);
@@ -140,27 +137,42 @@ public class HocrToken implements Iterable<HocrChar> {
         }
     }
 
-    public void mergeRightWith(HocrToken right) {
-        assert (!this.chars.isEmpty());
-        assert (!right.chars.isEmpty());
-        this.chars.addAll(right.chars);
-        update();
+    public static HocrToken merge(HocrToken l, HocrToken r, HocrChar c) {
+        HocrToken newToken = new HocrToken(l.node, l.title, l.chars);
+        if (c != null) {
+            newToken.chars.add(c);
+        }
+        newToken.chars.addAll(r.chars);
+        newToken.update();
+        r.node.getParentNode().removeChild(r.node);
+        return newToken;
     }
 
-    private void parse() throws Exception {
+    public void append(HocrChar c, int cp) {
+        final int i = chars.indexOf(c);
+        if (i != -1) {
+            chars.add(i + 1, new HocrChar(c.getLine(), cp));
+            update();
+        }
+    }
+
+    public void prepend(HocrChar c, int cp) {
+        final int i = chars.indexOf(c);
+        if (i != -1) {
+            chars.add(i, new HocrChar(c.getLine(), cp));
+            update();
+        }
+    }
+
+    private void parse(Line line) throws Exception {
         bb = getBoundingBox(this.node);
         String token = node.getFirstChild().getTextContent();
-        chars = new ArrayList<>();
 
         final int n = token.codePointCount(0, token.length());
         BoundingBox splits[] = bb.getVerticalSplits(n);
         for (int i = 0, j = 0; j < n && i < token.length();) {
             final int cp = token.codePointAt(i);
-            HocrChar newChar = new HocrChar(this, splits[j], cp);
-            if (i > 0) {
-                newChar.setPrev(chars.get(i - 1));
-                chars.get(i - 1).setNext(newChar);
-            }
+            HocrChar newChar = new HocrChar(line, this, splits[j], cp);
             chars.add(newChar);
             i += Character.charCount(cp);
             ++j;

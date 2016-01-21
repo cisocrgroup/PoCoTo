@@ -10,7 +10,7 @@ package jav.correctionBackend.export;
  *
  * @author finkf
  */
-public class HocrChar extends AbstractHocrChar {
+public class HocrChar extends AbstractBaseChar {
 
     private static final int CONFIDENCE_THRESHOLD = 10;
 
@@ -18,10 +18,15 @@ public class HocrChar extends AbstractHocrChar {
     private BoundingBox bb;
     private HocrToken token;
 
-    public HocrChar(HocrToken token, BoundingBox bb, int letter) {
+    public HocrChar(Line line, HocrToken token, BoundingBox bb, int letter) {
+        super(line);
         this.token = token;
         this.letter = letter;
         this.bb = bb;
+    }
+
+    public HocrChar(Line line, int letter) {
+        this(line, null, null, letter);
     }
 
     public void setBoundingBox(BoundingBox bb) {
@@ -61,12 +66,12 @@ public class HocrChar extends AbstractHocrChar {
 
     @Override
     public void append(int c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        token.append(this, c);
     }
 
     @Override
     public void prepend(int c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        token.prepend(this, c);
     }
 
 }
