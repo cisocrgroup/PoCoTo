@@ -20,7 +20,7 @@ public class WagnerFischer {
     private final int[][] matrix;
     private final Trace trace;
 
-    public enum EditOperations {
+    public enum EditOperation {
 
         Noop,
         Substitution,
@@ -28,12 +28,12 @@ public class WagnerFischer {
         Insertion
     };
 
-    public class Trace extends ArrayList<EditOperations> {
+    public class Trace extends ArrayList<EditOperation> {
 
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            for (EditOperations e : this) {
+            for (EditOperation e : this) {
                 switch (e) {
                     case Deletion:
                         builder.append('-');
@@ -124,14 +124,14 @@ public class WagnerFischer {
         MinArg minArg = getMinArg(i, j);
         if (minArg.i == i - 1 && minArg.j == j - 1) {
             if (matrix[i - 1][j - 1] == matrix[i][j]) {
-                trace.add(EditOperations.Noop);
+                trace.add(EditOperation.Noop);
             } else {
-                trace.add(EditOperations.Substitution);
+                trace.add(EditOperation.Substitution);
             }
         } else if (minArg.i == i && minArg.j == j - 1) {
-            trace.add(EditOperations.Insertion);
+            trace.add(EditOperation.Insertion);
         } else {
-            trace.add(EditOperations.Deletion);
+            trace.add(EditOperation.Deletion);
         }
         return minArg;
     }
@@ -157,10 +157,10 @@ public class WagnerFischer {
     private static int[] toArray(String str) {
         final int n = str.codePointCount(0, str.length());
         int res[] = new int[n];
-        for (int i = 0, j = 0; i < n;) {
+        for (int i = 0, j = 0; i < n && j < str.length();) {
             res[i] = str.codePointAt(j);
-            ++i;
             j += Character.charCount(res[i]);
+            ++i;
         }
         return res;
     }
@@ -179,7 +179,7 @@ public class WagnerFischer {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         for (int i = 0, j = 0; i < trace.size() && j < test.length; ++i) {
-            if (trace.get(i).equals(EditOperations.Insertion)) {
+            if (trace.get(i).equals(EditOperation.Insertion)) {
                 builder.append('_');
             } else {
                 builder.appendCodePoint(test[j]);
@@ -188,7 +188,7 @@ public class WagnerFischer {
         }
         builder.append(trace.toString());
         for (int i = 0, j = 0; i < trace.size() && j < truth.length; ++i) {
-            if (trace.get(i).equals(EditOperations.Deletion)) {
+            if (trace.get(i).equals(EditOperation.Deletion)) {
                 builder.append('_');
             } else {
                 builder.appendCodePoint(truth[j]);
