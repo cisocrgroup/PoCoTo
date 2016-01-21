@@ -1695,7 +1695,7 @@ public abstract class Document {
                             this,
                             "could not export file %s: %s",
                             exporter.getDestinationFile().getName(),
-                            e.getMessage()
+                            e.toString()
                     );
                 }
             }
