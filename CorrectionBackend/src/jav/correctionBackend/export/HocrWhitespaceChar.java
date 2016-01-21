@@ -69,7 +69,8 @@ public class HocrWhitespaceChar extends AbstractBaseChar {
 
     /**
      * This call can only happen if WhitespaceChar is the last char on line,
-     * which is illegeal, since WhitespaceChar are allways between two token.
+     * which is illegeal, since WhitespaceChar must allways lie between two
+     * token.
      */
     @Override
     public void append(int c) {
