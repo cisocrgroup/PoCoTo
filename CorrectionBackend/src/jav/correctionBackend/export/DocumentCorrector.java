@@ -6,6 +6,7 @@
 package jav.correctionBackend.export;
 
 import jav.correctionBackend.util.WagnerFischer;
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 
@@ -25,6 +26,7 @@ public abstract class DocumentCorrector implements LineReadeable {
     private void doCorrectLine(int i, String truth) {
         final WagnerFischer wf = new WagnerFischer(truth, getLineAt(i));
         wf.calculate();
+        Log.info(this, "%s", wf.toString());
 
         // j -> trace index, k -> word index
         for (int j = 0, k = 0; j < wf.getTrace().size();) {

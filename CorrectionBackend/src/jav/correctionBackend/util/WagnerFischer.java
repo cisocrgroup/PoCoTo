@@ -177,7 +177,7 @@ public class WagnerFischer {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder("\n");
         for (int i = 0, j = 0; i < trace.size() && j < test.length; ++i) {
             if (trace.get(i).equals(EditOperation.Insertion)) {
                 builder.append('_');
@@ -186,7 +186,9 @@ public class WagnerFischer {
                 ++j;
             }
         }
+        builder.append('\n');
         builder.append(trace.toString());
+        builder.append('\n');
         for (int i = 0, j = 0; i < trace.size() && j < truth.length; ++i) {
             if (trace.get(i).equals(EditOperation.Deletion)) {
                 builder.append('_');
