@@ -25,8 +25,10 @@ public abstract class DocumentCorrector implements LineReadeable {
 
     private void doCorrectLine(int i, String truth) {
         final WagnerFischer wf = new WagnerFischer(truth, getLineAt(i));
-        wf.calculate();
-        Log.info(this, "%s", wf.toString());
+        if (wf.calculate() <= 0) { // skip if Levenshteindistance <= 0
+            return;
+        }
+        Log.info(this, "Levenshtein:\n%s", wf.toString());
 
         // j -> trace index, k -> word index
         for (int j = 0, k = 0; j < wf.getTrace().size();) {
