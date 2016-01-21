@@ -1,5 +1,7 @@
 package jav.correctionBackend;
 
+import java.util.Arrays;
+
 /**
  *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
  *All rights reserved.
@@ -39,14 +41,19 @@ public class TokenImageInfoBox {
     private int coordinate_bottom;
     private String imageFileName;
 
-    public TokenImageInfoBox(int l, int t, int r, int b) {
+    public TokenImageInfoBox(int l, int t, int r, int b, String img) {
         coordinate_left = l;
         coordinate_top = t;
         coordinate_right = r;
-        coordinate_bottom = b;
+        coordinate_bottom = b;        
+        imageFileName = img;
+    }
+    
+    public TokenImageInfoBox(int l, int t, int r, int b) {
+        this(l, t, r, b, "");
     }
     public TokenImageInfoBox() {
-        this(0, 0, 0, 0);
+        this(0, 0, 0, 0, "");
     }
 
     public int getCoordinateLeft() {
@@ -119,5 +126,71 @@ public class TokenImageInfoBox {
 
     public void setImageFileName(String s) {
         this.imageFileName = s;
+    }
+    
+    public void mergeWith(TokenImageInfoBox other) {
+        coordinate_left = Math.min(coordinate_left, other.coordinate_left);
+        coordinate_top = Math.min(coordinate_top, other.coordinate_top);
+        coordinate_right = Math.max(coordinate_right, other.coordinate_right);
+        coordinate_bottom = Math.max(coordinate_bottom, other.coordinate_bottom);
+    }
+    
+    public boolean overlapsWith(TokenImageInfoBox other) {
+        if (other == null)
+            return false;
+        if (!imageFileName.equals(other.imageFileName))
+            return false;
+        if (coordinate_right < other.coordinate_left)
+            return false;
+        if (coordinate_left > other.coordinate_right)
+            return false;
+        if (coordinate_left < other.coordinate_top)
+            return false;
+        if (coordinate_top > other.coordinate_bottom)
+            return false;
+        return true;
+    }
+    
+    public int getWidth() {
+        return Math.abs(coordinate_left - coordinate_right);
+    }
+    
+    public int getHeight() {
+        return Math.abs(coordinate_top - coordinate_bottom);
+    }
+    
+    public int getArea() {
+        return getHeight() * getWidth();
+    }
+    
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append(imageFileName)
+                .append(' ')
+                .append(coordinate_left)
+                .append(' ')                
+                .append(coordinate_top)
+                .append(' ')
+                .append(coordinate_right)
+                .append(' ')
+                .append(coordinate_bottom)
+                .toString();
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (this == other)
+            return true;
+        if (other == null)
+            return false;
+        if (!(other instanceof TokenImageInfoBox))
+            return false;
+        TokenImageInfoBox that = (TokenImageInfoBox) other;
+        return this.imageFileName.equals(that.imageFileName) &&
+                this.coordinate_bottom == that.coordinate_bottom &&
+                this.coordinate_left == that.coordinate_left &&
+                this.coordinate_right == that.coordinate_right &&
+                this.coordinate_top == that.coordinate_top;
     }
 }

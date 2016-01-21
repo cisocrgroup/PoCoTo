@@ -15,6 +15,7 @@ import jav.gui.token.display.OnlyTextTokenVisualization;
 import jav.gui.token.display.PseudoImageTokenVisualization;
 import jav.gui.token.display.TokenVisualization;
 import jav.gui.token.tools.ImageProcessor;
+import jav.logging.log4j.Log;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
@@ -129,29 +130,14 @@ public class PageView extends JPanel {
             while (it.hasNext()) {
                 Token tok = it.next();
                 if (tok == null) {
-                    System.out.println("NULL");
+                    Log.error(this, "Null token in token iterator");
+                    continue;
                 }
-                TokenImageInfoBox tiib = tok.getTokenImageInfoBox();
-                TokenVisualization tv;
-                if (tiib != null) {
-                    int left = tiib.getCoordinateLeft();
-                    int right = tiib.getCoordinateRight();
-                    int top = tiib.getCoordinateTop();
-                    int bottom = tiib.getCoordinateBottom();
-                    int width = right - left;
-                    int height = bottom - top;
 
-                    BufferedImage bi = ip.getTokenImage(left, top, width, height, imgScale);
-                    tv = new ImageTokenVisualization(bi, tok, fontSize);
+                TokenVisualization tv = TokenVisualization.fromToken(tok, imgScale, fontSize, lineheight, ip);
+                if (tv instanceof ImageTokenVisualization) {
                     lineheight = ((ImageTokenVisualization) tv).getImageHeight();
-                } else {
-                    if (tok.isNormal()) {
-                        tv = new PseudoImageTokenVisualization(tok, fontSize, lineheight);
-                    } else {
-                        tv = new OnlyTextTokenVisualization(tok, fontSize);
-                    }
                 }
-
                 tv.setMode(tvMode, tok);
                 tv.setAlignmentY(Component.BOTTOM_ALIGNMENT);
 
@@ -269,7 +255,7 @@ public class PageView extends JPanel {
                     this.remove(todelete);
                 }
             }
-            
+
             this.tvMode.unSelect();
             affectedTv.setSelected(true);
             affectedTv.grabFocus();
@@ -281,7 +267,7 @@ public class PageView extends JPanel {
             TokenVisualization affectedTv = (TokenVisualization) parent.getTokenVisualizationRegistry().getTokenVisualization(affectedID);
             if (affectedTv != null) {
                 affectedTv.setSelected(false);
-//                MessageCenter.getInstance().fireTokenDeselectionEvent(new TokenDeselectionEvent(test, test.getTokenIndex()));                
+//                MessageCenter.getInstance().fireTokenDeselectionEvent(new TokenDeselectionEvent(test, test.getTokenIndex()));
                 Token tok = MainController.findInstance().getDocument().getTokenByID(affectedTokens.get(0));
                 affectedTv.setTokenID(tok.getID());
                 if (affectedTv.hasImage() && parent.getShowImages()) {

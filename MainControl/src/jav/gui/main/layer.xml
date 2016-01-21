@@ -66,9 +66,16 @@
                 <attr name="surviveFocusChange" boolvalue="false"/>
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
+
             <file name="jav-gui-actions-ImportFromDocXml.instance">
                 <attr name="delegate" newvalue="jav.gui.actions.ImportFromDocXml"/>
                 <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#importdocxml"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
+            <file name="jav-gui-actions-ExportAll.instance">
+                <attr name="delegate" newvalue="jav.gui.actions.ExportAll"/>
+                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#exportAll"/>
                 <attr name="surviveFocusChange" boolvalue="false"/>
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>

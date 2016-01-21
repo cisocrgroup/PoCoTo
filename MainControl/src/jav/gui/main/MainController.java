@@ -1,5 +1,6 @@
 package jav.gui.main;
 
+import jav.correctionBackend.FileType;
 import cis.profiler.client.ProfilerWebServiceCallbackHandler;
 import cis.profiler.client.ProfilerWebServiceStub;
 import cis.profiler.client.ProfilerWebServiceStub.AbortProfilingRequest;
@@ -231,7 +232,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
         globalDocument = d;
         globalDocument.setUndoRedoManager(manager);
-
         if (d != null) {
             content.add(saveAs);
             content.add(csrcookie);
@@ -246,7 +246,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     public void createDocumentNoAnalysis(final String inputDirPath, final String imgDirPath, final FileType t, String encoding, String propertiespath, String projectpath, String projectname) {
         ProgressRunnable<Document> r = new DocumentCreator(inputDirPath, imgDirPath, t, encoding, propertiespath, projectpath, projectname);
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
-
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
 
@@ -266,7 +265,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     public void createDocumentAnalysis(String xmlDirName, String imgDirName, FileType inputType, String encoding, String propertiespath, String projectpath, String projectname, String configuration) {
         ProgressRunnable<Document> r = new DocumentCreator(xmlDirName, imgDirName, inputType, encoding, propertiespath, projectpath, projectname);
         Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
-
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
 
@@ -902,6 +900,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"));
             ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"));
 
+            docproperties.setProperty("xmlbasepath", doc);
+            docproperties.setProperty("filetype", t.toString());
             docproperties.setProperty("imgbasepath", img);
             docproperties.setProperty("original_encoding", enc);
             docproperties.setProperty("databasepath", projectpath + File.separator + projectname);

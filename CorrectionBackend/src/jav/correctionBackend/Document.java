@@ -1,6 +1,8 @@
 package jav.correctionBackend;
 
+import jav.correctionBackend.export.Exporter;
 import jav.gui.dialogs.CustomErrorDialog;
+import jav.gui.dialogs.OverwriteFileDialog;
 import jav.logging.log4j.Log;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -94,7 +96,7 @@ public abstract class Document {
 
     protected abstract int addToken(Token t, Connection conn);
 
-    protected abstract int addToken(Token t);
+    public abstract int addToken(Token t);
 
     /**
      * Adds a correction candidate. Linked to a token via the tokenid. Used when
@@ -1333,6 +1335,7 @@ public abstract class Document {
 
     public Token getTokenByIndex(int indexInDocument) {
         Token token = null;
+
         try {
             Connection conn = jcp.getConnection();
             Statement s = conn.createStatement();
@@ -1370,6 +1373,7 @@ public abstract class Document {
         } catch (SQLException ex) {
             Log.error(this, ex.getMessage());
         }
+        Log.debug(this, "getTokenByIndex(%d) = %s", indexInDocument, token);
         return token;
     }
 
@@ -1387,6 +1391,39 @@ public abstract class Document {
         }
         return str;
     }
+
+
+    /**
+     * Search for the page that corresponds to a given OCR file
+     *
+     * @param ocrfile The OCR file
+     * @return the page or null if no page could be found
+     */
+    public Page getPage(File ocrfile) {
+        Page page = null;
+        String name = ocrfile.getName();
+        int idx = name.indexOf(".");
+        if (idx != -1) {
+            name = name.substring(0, idx);
+        }
+        try {
+            Connection c = jcp.getConnection();
+            Statement s = c.createStatement();
+            ResultSet rs = s.executeQuery(
+                    "SELECT pageIndex FROM token WHERE imageFile like '%"
+                    + name + "%'"
+            );
+            if (rs.next()) {
+                page = getPage(rs.getInt(1));
+            }
+            s.close();
+            c.close();
+        } catch (SQLException e) {
+            Log.error(this, "SQLError: %s", e.getMessage());
+        }
+        return page;
+    }
+
 
     public Page getPage(int index) {
         Page page = null;
@@ -1633,6 +1670,49 @@ public abstract class Document {
                 new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
             }
         }
+    }
+
+    public void exportAll(String fromDir, String toDir, String t) {
+        FileType fileType = FileType.fromString(t);
+        Log.info(this, "exporting %s %s %s", fromDir, toDir, t);
+        String[] sources = new File(fromDir).list(fileType.getFilenameFilter());
+        OverwriteFileDialog.Result doOverwrite = OverwriteFileDialog.Result.YES;
+        for (String fileName : sources) {
+            Exporter exporter = new Exporter(
+                    new File(fromDir, fileName),
+                    new File(toDir, fileName),
+                    fileType.getPageParser()
+            );
+
+            if (doOverwrite != OverwriteFileDialog.Result.ALL
+                    && exporter.getDestinationFile().exists()) {
+                doOverwrite = new OverwriteFileDialog(exporter.getDestinationFile())
+                        .showDialogAndGetResult();
+            }
+            if (doOverwrite != OverwriteFileDialog.Result.NO) {
+                try {
+                    exporter.export(this);
+                } catch (Exception e) {
+                    Log.error(
+                            this,
+                            "could not export file %s: %s",
+                            exporter.getDestinationFile().getName(),
+                            e.toString()
+                    );
+                }
+            }
+
+        }
+    }
+
+    public MyIterator<Token> selectTokens(PreparedStatement stmnt)
+            throws SQLException {
+        return TokenIterator.fromStmnt(jcp.getConnection(), stmnt);
+    }
+
+    public PreparedStatement prepareStatement(String stmnt)
+            throws SQLException {
+        return jcp.getConnection().prepareStatement(stmnt);
     }
 
     public ArrayList<Integer> mergeRightward(int iD) throws SQLException {
@@ -1969,6 +2049,19 @@ class TokenIterator implements MyIterator<Token> {
     private Statement s;
     private ResultSet rs = null;
 
+    public static TokenIterator fromStmnt(Connection conn, PreparedStatement stmnt)
+            throws SQLException {
+        TokenIterator it = new TokenIterator();
+        it.conn = conn;
+        it.s = stmnt;
+        it.rs = stmnt.executeQuery();
+        return it;
+    }
+
+    private TokenIterator() {
+
+    }
+
     protected TokenIterator(Connection c) {
         try {
             conn = c;
@@ -2048,7 +2141,8 @@ class TokenIterator implements MyIterator<Token> {
                 retval.setTokenImageInfoBox(null);
             } else {
                 TokenImageInfoBox tiib = new TokenImageInfoBox();
-                tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                //tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                tiib.setImageFileName(rs.getString(14));
                 tiib.setCoordinateBottom(rs.getInt(12));
                 tiib.setCoordinateTop(rs.getInt(11));
                 tiib.setCoordinateLeft(rs.getInt(9));
