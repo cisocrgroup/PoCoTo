@@ -182,7 +182,7 @@ public class WagnerFischer {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("\n");
+        StringBuilder builder = new StringBuilder();
         for (int i = 0, j = 0; i < trace.size() && j < test.length; ++i) {
             if (trace.get(i).equals(EditOperation.Insertion)) {
                 builder.append('_');
