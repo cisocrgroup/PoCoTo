@@ -1392,7 +1392,6 @@ public abstract class Document {
         return str;
     }
 
-
     /**
      * Search for the page that corresponds to a given OCR file
      *
@@ -1423,7 +1422,6 @@ public abstract class Document {
         }
         return page;
     }
-
 
     public Page getPage(int index) {
         Page page = null;
@@ -1693,12 +1691,7 @@ public abstract class Document {
                 try {
                     exporter.export(this);
                 } catch (Exception e) {
-                    Log.error(
-                            this,
-                            "could not export file %s: %s",
-                            exporter.getDestinationFile().getName(),
-                            e.toString()
-                    );
+                    Log.error(this, e);
                 }
             }
 

@@ -5,15 +5,16 @@
  */
 package jav.correctionBackend.export;
 
+import com.sun.media.jai.codec.FileSeekableStream;
 import jav.logging.log4j.Log;
-import java.awt.image.BufferedImage;
+import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.imageio.ImageIO;
+import javax.media.jai.JAI;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -152,7 +153,6 @@ public class HocrPageParser implements PageParser {
         if (node.getFirstChild() != null
                 && node.getFirstChild().getTextContent() != null
                 && !node.getFirstChild().getTextContent().isEmpty()) {
-            Log.debug(this, "line: %s", node.getFirstChild().getTextContent());
             HocrToken newToken = new HocrToken(line, node, doGetBoundingBox(node));
             line.addAll(newToken);
         }
@@ -172,15 +172,27 @@ public class HocrPageParser implements PageParser {
         parseHocrMeta();
     }
 
+    // This method is a pile of crap
     private BoundingBox doGetBoundingBox(Node node) throws Exception {
         BoundingBox bb = HocrPageParser.getBoundingBox(node);
         if (meta.isOcropus) { // ocropus lives in its own little world
             if (imageHeight == 0) {
                 try {
-                    BufferedImage img = ImageIO.read(image);
-                    imageHeight = img.getHeight();
-                } catch (IOException e) {
-                    //ignore
+                    FileSeekableStream fss = new FileSeekableStream(image);
+                    ParameterBlock pb = new ParameterBlock();
+                    pb.add(fss);
+                    if (image.getName().endsWith("tiff")
+                            || image.getName().endsWith("tif")) {
+                        imageHeight = JAI.create("tiff", pb).getHeight();
+                    } else if (image.getName().endsWith("jpeg")
+                            || image.getName().endsWith("jpg")) {
+                        imageHeight = JAI.create("jpeg", pb).getHeight();
+                    } else {
+                        imageHeight = -1; // just try once for each file
+                    }
+                } catch (Exception e) {
+                    imageHeight = -1; // just try once for each file
+                    throw new Exception(e);
                 }
             }
             if (imageHeight > 0) {

@@ -99,7 +99,7 @@ public class CorrectionSystem {
             conn.close();
             retval = 0;
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -143,7 +143,7 @@ public class CorrectionSystem {
                 document.loadNumberOfTokensFromDB();
                 retval = 0;
             } catch (Exception e) {
-                Log.error(this, e.toString());
+                Log.error(this, e);
             }
 
         }
@@ -163,7 +163,7 @@ public class CorrectionSystem {
             conn.close();
             jcp.dispose();
         } catch (SQLException ex) {
-            Log.error(this, "could not shutdown database: %s", ex.getMessage());
+            Log.error(this, ex);
         }
     }
 
