@@ -1670,6 +1670,15 @@ public abstract class Document {
         }
     }
 
+    public void exportAsTei(String filename) {
+        try {
+            TeiXmlExporter teiXmlExporter = new TeiXmlExporter(this);
+            teiXmlExporter.export(new File(filename));
+        } catch (Exception e) {
+            Log.error(this, "%s", e.toString());
+        }
+    }
+
     public void exportAll(String fromDir, String toDir, String t) {
         FileType fileType = FileType.fromString(t);
         Log.info(this, "exporting %s %s %s", fromDir, toDir, t);

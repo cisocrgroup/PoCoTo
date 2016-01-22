@@ -22,8 +22,8 @@
                 <attr name="position" intvalue="0"/>
             </file>
             <file name="jav-gui-actions-MRUFilesAction.instance">
-<!--                <attr name="instanceClass" stringvalue="jav.gui.actions.MRUFilesAction"/> -->
-<!--                <attr name="delegate" newvalue="jav.gui.main.MRUFilesAction"/>
+                <!--                <attr name="instanceClass" stringvalue="jav.gui.actions.MRUFilesAction"/> -->
+                <!--                <attr name="delegate" newvalue="jav.gui.main.MRUFilesAction"/>
                 <attr name="displayName" bundlevalue="jav.gui.main.Bundle#CTL_MRUFiles"/>
                 <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.alwaysEnabled"/>
                 <attr name="noIconInMenu" boolvalue="true"/>-->
@@ -32,14 +32,14 @@
                 <attr name="displayName" bundlevalue="jav.gui.wizard.newProject.Bundle#CTL_NewProject"/>
                 <attr name="iconBase" stringvalue="jav/gui/wizard/newProject/newProject.png"/>
                 <attr name="noIconInMenu" stringvalue="false"/>
-                    <attr name="position" intvalue="0"/>
+                <attr name="position" intvalue="0"/>
             </file>
             <file name="jav-gui-wizard-importDocument-ImportDocumentWizardAction.instance">
                 <attr name="delegate" newvalue="jav.gui.wizard.importDocument.ImportDocument"/>
                 <attr name="displayName" bundlevalue="jav.gui.wizard.importDocument.Bundle#CTL_ImportDocument"/>
                 <attr name="iconBase" stringvalue="jav/gui/wizard/ImportDocument/newProject.png"/>
                 <attr name="position" intvalue="0"/>
-             </file>
+            </file>
         </folder>
         <folder name="Profiler">
             <file name="jav-gui-actions-EnterID.instance_hidden"/>
@@ -101,16 +101,16 @@
                 <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-MRUFilesAction.instance"/>
                 <attr name="position" intvalue="700"/>
             </file>
-<!--            <folder name="newproj">-->
-                <file name="jav-gui-wizard-newProject-NewProjectWizardAction.shadow">
-                    <attr name="originalFile" stringvalue="Actions/File/jav-gui-wizard-newProject-NewProjectWizardAction.instance"/>
-                    <attr name="position" intvalue="0"/>
-                </file>
-<!--                <file name="jav-gui-wizard-importDocument-ImportDocumentWizardAction.shadow">
-                    <attr name="originalFile" stringvalue="Actions/File/jav-gui-wizard-importDocument-ImportDocumentWizardAction.instance"/>
-                    <attr name="position" intvalue="0"/>
-                </file>-->
-<!--            </folder>-->
+            <!--            <folder name="newproj">-->
+            <file name="jav-gui-wizard-newProject-NewProjectWizardAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/jav-gui-wizard-newProject-NewProjectWizardAction.instance"/>
+                <attr name="position" intvalue="0"/>
+            </file>
+            <!--                <file name="jav-gui-wizard-importDocument-ImportDocumentWizardAction.shadow">
+                <attr name="originalFile" stringvalue="Actions/File/jav-gui-wizard-importDocument-ImportDocumentWizardAction.instance"/>
+                <attr name="position" intvalue="0"/>
+            </file>-->
+            <!--            </folder>-->
             <folder name="Export">
                 <attr name="position" intvalue="1150"/>
                 <file name="jav-gui-actions-ExportAsDocXML.shadow">
@@ -125,9 +125,13 @@
                     <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ExportAsPageSeparatedPlainText.instance"/>
                     <attr name="position" intvalue="1300"/>
                 </file>
+                <file name="jav-gui-actions-ExportAsTeiXml.shadow">
+                    <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ExportAsTeiXml.instance"/>
+                    <attr name="position" intvalue="1400"/>
+                </file>
                 <file name="jav-gui-actions-ExportAll.shadow">
                     <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ExportAll.instance"/>
-                    <attr name="position" intvalue="1400"/>
+                    <attr name="position" intvalue="1500"/>
                 </file>
 
             </folder>
@@ -136,14 +140,14 @@
                 <attr name="position" intvalue="1400"/>
             </file>
         </folder>
-        
+
         <folder name="Profiler">
             <file name="jav-gui-wizard-profiler-CreateAccountWizardAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/File/jav-gui-wizard-profiler-createAccount-CreateAccountWizardAction.instance"/>
                 <attr name="position" intvalue="10"/>
             </file>
         </folder>
-        
+
         <folder name="Tools">
             <file name="JavaPlatformsCustomizerAction.shadow_hidden"/>
             <file name="Separator2.instance_hidden"/>

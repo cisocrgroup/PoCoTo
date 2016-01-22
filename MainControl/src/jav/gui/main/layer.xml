@@ -66,6 +66,12 @@
                 <attr name="surviveFocusChange" boolvalue="false"/>
                 <attr name="noIconInMenu" boolvalue="true"/>
             </file>
+            <file name="jav-gui-actions-ExportAsTeiXml.instance">
+                <attr name="delegate" newvalue="jav.gui.actions.ExportAsTeiXml"/>
+                <attr name="displayName" bundlevalue="jav.gui.actions.Bundle#exportteixml"/>
+                <attr name="surviveFocusChange" boolvalue="false"/>
+                <attr name="noIconInMenu" boolvalue="true"/>
+            </file>
 
             <file name="jav-gui-actions-ImportFromDocXml.instance">
                 <attr name="delegate" newvalue="jav.gui.actions.ImportFromDocXml"/>
@@ -139,7 +145,7 @@
             <file name="org-openide-actions-FindAction.shadow_hidden"/>
             <file name="org-openide-actions-ReplaceAction.shadow_hidden"/>
 
-<!--            <file name="jav-gui-main-FilterAction.shadow">
+            <!--            <file name="jav-gui-main-FilterAction.shadow">
                 <attr name="originalFile" stringvalue="Actions/Edit/jav-gui-main-FilterAction.instance"/>
                 <attr name="position" intvalue="100"/>
             </file>-->
