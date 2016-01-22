@@ -12,34 +12,35 @@ import javax.media.jai.RenderedOp;
 import org.openide.modules.InstalledFileLocator;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class ImageProcessor {
@@ -58,20 +59,19 @@ public class ImageProcessor {
     public void setImageInput(String filename) {
 
 //        graphicsConfiguration = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
-
         FileSeekableStream fss = null;
         try {
             fss = new FileSeekableStream(filename);
         } catch (IOException e) {
             System.exit(0);
         }
-        
+
         ParameterBlock pb = new ParameterBlock();
         pb.add(fss);
         this.imageString = filename;
-        if( filename.endsWith("tif")) {
+        if (filename.endsWith("tif")) {
             rop = JAI.create("tiff", pb);
-        } else if( filename.endsWith("jpg") || filename.endsWith("jpeg")) {
+        } else if (filename.endsWith("jpg") || filename.endsWith("jpeg")) {
             rop = JAI.create("jpeg", pb);
         } else {
             throw new NullPointerException();
@@ -94,9 +94,9 @@ public class ImageProcessor {
 //        bim.setData(subr);
         try {
             rop.getAsBufferedImage(new Rectangle(inx, iny, inw, inh), null);
-            returnimg =  scale(rop.getAsBufferedImage(new Rectangle(inx, iny, inw, inh), null), scale);
+            returnimg = scale(rop.getAsBufferedImage(new Rectangle(inx, iny, inw, inh), null), scale);
         } catch (Exception e) {
-            
+
             FileSeekableStream fss = null;
             try {
                 fss = new FileSeekableStream(InstalledFileLocator.getDefault().locate("modules/ext/notavailable.tiff", "jav.gui.token.display", false).getCanonicalPath());
@@ -106,9 +106,9 @@ public class ImageProcessor {
             ParameterBlock pb = new ParameterBlock();
             pb.add(fss);
             RenderedOp notavailable = JAI.create("tiff", pb);
-            returnimg =  scale(notavailable.getAsBufferedImage(), scale);
+            returnimg = scale(notavailable.getAsBufferedImage(), scale);
         }
-        
+
         return returnimg;
 //        return bim;
 //        return scale( bim, scale);
@@ -121,7 +121,7 @@ public class ImageProcessor {
      * @param image to scale, scale factor
      */
     public BufferedImage scale(BufferedImage in, double s) {
-        
+
         try {
             float scale = (float) s;
 
