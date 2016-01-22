@@ -122,14 +122,16 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
     private void adjust(TokenImageInfoBox tiib) {
         if (tiib != null) {
             tiib.setImageFileName(imagefile.getName());
-            BoundingBox bb = currentLine.getBoundingBox();
-            if (bb != null) {
-                tiib.setCoordinateTop(
-                        Math.min(bb.getTop(), tiib.getCoordinateTop())
-                );
-                tiib.setCoordinateBottom(
-                        Math.max(bb.getBottom(), tiib.getCoordinateBottom())
-                );
+            if (currentLine != null) {
+                BoundingBox bb = currentLine.getBoundingBox();
+                if (bb != null) {
+                    tiib.setCoordinateTop(
+                            Math.min(bb.getTop(), tiib.getCoordinateTop())
+                    );
+                    tiib.setCoordinateBottom(
+                            Math.max(bb.getBottom(), tiib.getCoordinateBottom())
+                    );
+                }
             }
         }
     }
