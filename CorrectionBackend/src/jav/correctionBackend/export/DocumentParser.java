@@ -56,11 +56,8 @@ public class DocumentParser {
         for (OcrToImageFileMapping.Mapping mapping : mappings) {
             progress(mapping, ++i, n);
             PageParser pageParser = fileType.getPageParser();
-            documentBuilder.append(
-                    pageParser.parse(mapping.ocrfile),
-                    mapping.imagefile,
-                    mapping.ocrfile
-            );
+            pageParser.setImageFile(mapping.imagefile);
+            documentBuilder.append(pageParser.parse(mapping.ocrfile));
         }
         return documentBuilder.build();
     }

@@ -39,9 +39,9 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
     }
 
     @Override
-    public void append(Page page, File imagefile, File ocrfile) {
-        this.ocrfile = ocrfile;
-        this.imagefile = imagefile;
+    public void append(Page page) {
+        this.ocrfile = page.getOcrFile();
+        this.imagefile = page.getImageFile();
         ++pageIndex;
         for (Paragraph p : page) {
             for (Line l : p) {

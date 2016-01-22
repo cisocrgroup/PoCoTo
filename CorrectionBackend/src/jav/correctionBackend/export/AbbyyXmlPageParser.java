@@ -31,6 +31,12 @@ import org.xml.sax.InputSource;
 public class AbbyyXmlPageParser implements PageParser {
 
     private org.w3c.dom.Document xml;
+    private File image;
+
+    @Override
+    public void setImageFile(File image) {
+        this.image = image;
+    }
 
     @Override
     public void write(File output) throws IOException, Exception {
@@ -50,7 +56,7 @@ public class AbbyyXmlPageParser implements PageParser {
 
     private Page parsePage(File input) throws IOException, Exception {
         parseXml(input);
-        Page page = new Page();
+        Page page = new Page(image, input);
         XPathExpression xpage = makeXpath("//page");
         Node pagenode = (Node) xpage.evaluate(xml, XPathConstants.NODE);
         if (pagenode != null) {

@@ -6,7 +6,6 @@
 package jav.correctionBackend.export;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.w3c.dom.Node;
 
 /**
@@ -17,34 +16,21 @@ import org.w3c.dom.Node;
  */
 public class HocrToken extends AbstractToken<HocrChar> {
 
-    static Pattern BBRE
-            = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
-    private static final Pattern WCONF = Pattern.compile("x_wconf\\s+(\\d+)");
-
-    private final Node node, title;
+    private final Node node;
     private BoundingBox bb;
 
-    public HocrToken(Line line, Node node) throws Exception {
+    public HocrToken(Line line, Node node, BoundingBox bb) throws Exception {
         this.node = node;
-        this.title = getTitleNode(node);
+        this.bb = bb;
         parse(line);
         if (isEmpty()) {
             throw new Exception("Empty HOCR token not ignored");
         }
     }
 
-    private HocrToken(Node node, Node title, boolean noparse) {
+    private HocrToken(Node node, Node title, BoundingBox bb, boolean noparse) {
         this.node = node;
-        this.title = title;
-    }
-
-    public int getConfidence() {
-        Matcher m = WCONF.matcher(title.getNodeValue());
-        if (m.find()) {
-            return Integer.parseInt(m.group(1));
-        } else {
-            return 0;
-        }
+        this.bb = bb;
     }
 
     public BoundingBox getBoundingBox() {
@@ -70,9 +56,8 @@ public class HocrToken extends AbstractToken<HocrChar> {
 
     @Override
     public String toString() {
-        return String.format("HocrToken `%s` conf %d %s",
+        return String.format("HocrToken `%s` %s",
                 gatherToken(),
-                getConfidence(),
                 getBoundingBox().toString()
         );
     }
@@ -84,7 +69,7 @@ public class HocrToken extends AbstractToken<HocrChar> {
             String token = gatherToken();
             // node.getFirstChild().setNodeValue(token);
             node.setTextContent(token);
-            Matcher m = BBRE.matcher(title.getNodeValue());
+            Matcher m = HocrPageParser.BBRE.matcher(node.getAttributes().getNamedItem("title").getNodeValue());
             String replacement = String.format("bbox %d %d %d %d",
                     bb.getLeft(), bb.getTop(), bb.getRight(), bb.getBottom()
             );
@@ -105,9 +90,7 @@ public class HocrToken extends AbstractToken<HocrChar> {
     }
 
     private void parse(Line line) throws Exception {
-        bb = getBoundingBox(this.node);
-        String token = node.getFirstChild().getTextContent();
-
+        final String token = node.getFirstChild().getTextContent();
         final int n = token.codePointCount(0, token.length());
         BoundingBox splits[] = bb.getVerticalSplits(n);
         for (int i = 0, j = 0; j < n && i < token.length();) {
@@ -117,33 +100,5 @@ public class HocrToken extends AbstractToken<HocrChar> {
             i += Character.charCount(cp);
             ++j;
         }
-    }
-
-    public static BoundingBox getBoundingBox(Node node) {
-        try {
-            Node titleNode = getTitleNode(node);
-            Matcher m = BBRE.matcher(titleNode.getNodeValue());
-            if (m.find()) {
-                return new BoundingBox(
-                        Integer.parseInt(m.group(1)),
-                        Integer.parseInt(m.group(2)),
-                        Integer.parseInt(m.group(3)),
-                        Integer.parseInt(m.group(4))
-                );
-            }
-        } catch (Exception e) {
-            // ignore;
-        }
-        return new BoundingBox(-1, -1, -1, -1);
-    }
-
-    private static Node getTitleNode(Node node) throws Exception {
-        if (node.hasAttributes()) {
-            org.w3c.dom.Node attr = node.getAttributes().getNamedItem("title");
-            if (attr != null) {
-                return attr;
-            }
-        }
-        throw new Exception("Invalid ocr(x)_word: missing title");
     }
 }

@@ -15,6 +15,13 @@ import java.io.IOException;
 public interface PageParser {
 
     /**
+     * Sets the image file of the OCR Page.
+     *
+     * @param image the image file.
+     */
+    public void setImageFile(File image);
+
+    /**
      * Parses an OCR File into its Page representation
      *
      * @param input the input file to read

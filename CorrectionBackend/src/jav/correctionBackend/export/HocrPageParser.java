@@ -5,11 +5,15 @@
  */
 package jav.correctionBackend.export;
 
+import jav.logging.log4j.Log;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import javax.xml.parsers.DocumentBuilder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -25,12 +29,39 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
 /**
+ * This class parses Hocr files. It handles both token oriented files
+ * (tesseract) and line oriented files (ocropus).
  *
  * @author flo
  */
 public class HocrPageParser implements PageParser {
 
+    private static final XPathExpression XPAGE, XPAR, XLINE, XWORD, XCAPS, XSYS;
+    public static Pattern BBRE
+            = Pattern.compile("bbox\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)");
+    private static final Pattern WCONF = Pattern.compile("x_wconf\\s+(\\d+)");
+
+    static {
+        try {
+            XPAGE = makeXpath("//div[@class=\"ocr_page\"]");
+            XPAR = makeXpath(".//p[@class=\"ocr_par\"]");
+            XLINE = makeXpath(".//span[@class=\"ocr_line\"]");
+            XWORD = makeXpath(".//span[@class=\"ocrx_word\" or @class=\"ocr_word\"]");
+            XCAPS = makeXpath("/html/head/meta[@name=\"ocr-capabilities\"]");
+            XSYS = makeXpath("/html/head/meta[@name=\"ocr-system\"]");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
     private org.w3c.dom.Document xml;
+    private HocrMeta meta;
+    private int imageHeight;
+    private File image;
+
+    @Override
+    public void setImageFile(File image) {
+        this.image = image;
+    }
 
     @Override
     public void write(File output) throws IOException, Exception {
@@ -45,25 +76,34 @@ public class HocrPageParser implements PageParser {
 
     @Override
     public Page parse(File input) throws IOException, Exception {
+        parseXml(input);
+        Log.info(this, "ocr-capabilities: %s", meta);
         return parsePage(input);
     }
 
-    private Page parsePage(File input) throws IOException, Exception {
-        parseXml(input);
-        Page page = new Page();
-        // <div class='ocr_page' id='page_1' title='image "0018.tif"; bbox 0 0 1156 1782; ppageno 0'>
-        XPathExpression xpage = makeXpath("//div[@class=\"ocr_page\"]");
-        Node pagenode = (Node) xpage.evaluate(xml, XPathConstants.NODE);
+    private Page parsePage(File input) throws Exception {
+        if (!meta.hasPage) {
+            throw new Exception("Hocr document has no page segmentation");
+        }
+        if (!meta.hasLine) {
+            throw new Exception("Hocr document has no line segmentation");
+        }
+        Page page = new Page(image, input);
+        Node pagenode = (Node) XPAGE.evaluate(xml, XPathConstants.NODE);
         if (pagenode != null) {
-            appendParagraphs(pagenode, page);
+            if (meta.hasPar) {
+                appendParagraphs(pagenode, page);
+            } else { // no paragraphs in document
+                Paragraph p = new Paragraph();
+                appendLines(pagenode, p);
+                page.add(p);
+            }
         }
         return page;
     }
 
-    private void appendParagraphs(Node pagenode, Page page) throws Exception {
-        // <p class='ocr_par' dir='ltr' id='par_1_1' title="bbox 574 59 612 83">
-        XPathExpression xpar = makeXpath(".//p[@class=\"ocr_par\"]");
-        NodeList ps = (NodeList) xpar.evaluate(pagenode, XPathConstants.NODESET);
+    private void appendParagraphs(Node node, Page page) throws Exception {
+        NodeList ps = (NodeList) XPAR.evaluate(node, XPathConstants.NODESET);
         if (ps != null) {
             for (int i = 0; i < ps.getLength(); ++i) {
                 Paragraph p = new Paragraph();
@@ -73,55 +113,55 @@ public class HocrPageParser implements PageParser {
         }
     }
 
-    private void appendLines(Node pnode, Paragraph p) throws Exception {
-        // <span class='ocr_line' id='line_1_1' title="bbox 574 59 612 83; baseline -0.053 0">
-        XPathExpression xline = makeXpath(".//span[@class=\"ocr_line\"]");
-        NodeList ls = (NodeList) xline.evaluate(pnode, XPathConstants.NODESET);
+    private void appendLines(Node node, Paragraph p) throws Exception {
+        NodeList ls = (NodeList) XLINE.evaluate(node, XPathConstants.NODESET);
         if (ls != null) {
             for (int i = 0; i < ls.getLength(); ++i) {
                 final Node lineNode = ls.item(i);
-                Line line = new Line(HocrToken.getBoundingBox(lineNode));
-                appendTokens(lineNode, line);
+                Line line = new Line(doGetBoundingBox(lineNode));
+                if (meta.hasWord) {
+                    appendTokens(lineNode, line);
+                } else { // no words; just lines (ocropus)
+                    appendCharsToLine(lineNode, line);
+                }
                 p.add(line);
             }
         }
     }
 
-    private void appendTokens(Node linenode, Line line) throws Exception {
-        // <span class='ocr(x)_word' id='word_1_2' title='bbox 211 141 322 176;
-        //      x_wconf 72' lang='deu-frak' dir='ltr'>zuuns
-        //  </span>
-        XPathExpression xchar = makeXpath(".//span[@class=\"ocrx_word\" or @class=\"ocr_word\"]");
-        NodeList cs = (NodeList) xchar.evaluate(linenode, XPathConstants.NODESET);
+    private void appendTokens(Node node, Line line) throws Exception {
+        NodeList cs = (NodeList) XWORD.evaluate(node, XPathConstants.NODESET);
         if (cs != null && cs.getLength() > 0) {
             HocrToken prevToken = null;
             for (int i = 0; i < cs.getLength(); ++i) {
                 final Node tokenNode = cs.item(i);
                 if (tokenNode.getFirstChild() != null
                         && !tokenNode.getFirstChild().getTextContent().isEmpty()) {
-                    HocrToken newToken = new HocrToken(line, tokenNode);
+                    HocrToken newToken = new HocrToken(line, tokenNode, doGetBoundingBox(node));
                     if (prevToken != null) {
                         line.add(new HocrWhitespaceChar(line, prevToken, newToken));
                     }
-                    for (HocrChar c : newToken) {
-                        line.add(c);
-                    }
+                    line.addAll(newToken);
                     prevToken = newToken;
                 }
             }
-        } else if (linenode.getFirstChild() != null
-                && !linenode.getFirstChild().getTextContent().isEmpty()) {
-            HocrToken newToken = new HocrToken(line, linenode);
-            for (HocrChar c : newToken) {
-                line.add(c);
-            }
+        }
+    }
+
+    private void appendCharsToLine(Node node, Line line) throws Exception {
+        if (node.getFirstChild() != null
+                && node.getFirstChild().getTextContent() != null
+                && !node.getFirstChild().getTextContent().isEmpty()) {
+            Log.debug(this, "line: %s", node.getFirstChild().getTextContent());
+            HocrToken newToken = new HocrToken(line, node, doGetBoundingBox(node));
+            line.addAll(newToken);
         }
     }
 
     private void parseXml(File input) throws IOException, Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setExpandEntityReferences(false);
-        DocumentBuilder db = dbf.newDocumentBuilder();
+        javax.xml.parsers.DocumentBuilder db = dbf.newDocumentBuilder();
         db.setEntityResolver(new EntityResolver() {
             @Override
             public InputSource resolveEntity(String pid, String sid) {
@@ -129,9 +169,123 @@ public class HocrPageParser implements PageParser {
             }
         });
         xml = db.parse(input);
+        parseHocrMeta();
     }
 
-    private XPathExpression makeXpath(String expr) throws Exception {
+    private BoundingBox doGetBoundingBox(Node node) throws Exception {
+        BoundingBox bb = HocrPageParser.getBoundingBox(node);
+        if (meta.isOcropus) { // ocropus lives in its own little world
+            if (imageHeight == 0) {
+                try {
+                    BufferedImage img = ImageIO.read(image);
+                    imageHeight = img.getHeight();
+                } catch (IOException e) {
+                    //ignore
+                }
+            }
+            if (imageHeight > 0) {
+                bb = new BoundingBox(
+                        bb.getLeft(),
+                        imageHeight - bb.getBottom() - 1,
+                        bb.getRight(),
+                        imageHeight - bb.getTop() - 1
+                );
+            }
+        }
+        return bb;
+    }
+
+    private static XPathExpression makeXpath(String expr) throws Exception {
         return XPathFactory.newInstance().newXPath().compile(expr);
+    }
+
+    private class HocrMeta {
+
+        boolean hasPage, hasPar, hasLine, hasWord, isOcropus;
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            if (hasPage) {
+                builder.append("ocr_page ");
+            }
+            if (hasPar) {
+                builder.append("ocr_par ");
+            }
+            if (hasLine) {
+                builder.append("ocr_line ");
+            }
+            if (hasWord) {
+                builder.append("ocr(x)_word");
+            }
+            if (isOcropus) {
+                builder.append(" (ocropus)");
+            }
+            return builder.toString();
+        }
+    }
+
+    private void parseHocrMeta() throws Exception {
+        final Node caps = (Node) XCAPS.evaluate(xml, XPathConstants.NODE);
+        meta = new HocrMeta();
+        if (caps != null && caps.getAttributes() != null) {
+            final Node content = caps.getAttributes().getNamedItem("content");
+            meta.hasPage = hasCapability(content, "ocr_page");
+            meta.hasPar = hasCapability(content, "ocr_par");
+            meta.hasLine = hasCapability(content, "ocr_line");
+            meta.hasWord = hasCapability(content, "ocrx_word")
+                    || hasCapability(content, "ocr_word");
+        }
+        final Node sys = (Node) XSYS.evaluate(xml, XPathConstants.NODE);
+        if (sys != null && sys.getAttributes() != null) {
+            meta.isOcropus = isOcropus(sys.getAttributes().getNamedItem("content"));
+        }
+    }
+
+    private static boolean hasCapability(Node content, String name) {
+        if (content != null) {
+            return content.getNodeValue().contains(name);
+        } else {
+            return false;
+        }
+    }
+
+    private static boolean isOcropus(Node content) {
+        if (content != null) {
+            return content.getNodeValue().contains("ocropus");
+        } else {
+            return false;
+        }
+    }
+
+    public static int getConfidence(Node node) {
+        try {
+            Node title = node.getAttributes().getNamedItem("title");
+            Matcher m = WCONF.matcher(title.getNodeValue());
+            if (m.find()) {
+                return Integer.parseInt(m.group(1));
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+        return -1;
+    }
+
+    public static BoundingBox getBoundingBox(Node node) {
+        try {
+            Node titleNode = node.getAttributes().getNamedItem("title");
+            Matcher m = BBRE.matcher(titleNode.getNodeValue());
+            if (m.find()) {
+                return new BoundingBox(
+                        Integer.parseInt(m.group(1)),
+                        Integer.parseInt(m.group(2)),
+                        Integer.parseInt(m.group(3)),
+                        Integer.parseInt(m.group(4))
+                );
+            }
+        } catch (Exception e) {
+            // ignore;
+        }
+        return new BoundingBox(-1, -1, -1, -1);
     }
 }
