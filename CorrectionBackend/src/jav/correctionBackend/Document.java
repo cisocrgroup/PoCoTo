@@ -1392,7 +1392,6 @@ public abstract class Document {
         return str;
     }
 
-
     /**
      * Search for the page that corresponds to a given OCR file
      *
@@ -1423,7 +1422,6 @@ public abstract class Document {
         }
         return page;
     }
-
 
     public Page getPage(int index) {
         Page page = null;
@@ -1669,6 +1667,15 @@ public abstract class Document {
             } catch (Exception e) {
                 new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
             }
+        }
+    }
+
+    public void exportAsTei(String filename) {
+        try {
+            TeiXmlExporter teiXmlExporter = new TeiXmlExporter(this);
+            teiXmlExporter.export(new File(filename));
+        } catch (Exception e) {
+            Log.error(this, "%s", e.toString());
         }
     }
 
