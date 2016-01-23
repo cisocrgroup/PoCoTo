@@ -7,6 +7,7 @@ package jav.correctionBackend.export;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import jav.correctionBackend.util.FilePathUtils;
+import jav.logging.log4j.Log;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.BufferedReader;
 import java.io.File;
@@ -54,38 +55,43 @@ public class OcropusBoundingBoxAdjuster {
     }
 
     private void adjust(Line line, AdjustmentLine adj) throws Exception {
-        if (line.size() != adj.size()) {
-            throw new Exception("Invalid ocropus: line add lloc differ");
-        }
-        adjust(line.getBoundingBox());
-        Char prev = null;
-        for (int i = 0; i < line.size(); ++i) {
-            adjust(line.getBoundingBox(), prev, line.get(i), adj.get(i));
-            prev = line.get(i);
+        adjustHorizontal(line.getBoundingBox());
+        BoundingBox prev = null;
+        for (int i = 0, j = -1; i < line.size(); ++i) {
+            Char c = line.get(i);
+            final int oldj = j;
+            j = adj.findNext(j, c);
+            if (j != -1) {
+                adjust(line.getBoundingBox(), prev, c.getBoundingBox(), adj.get(j));
+            } else {
+                Log.info(this, "skipping `%s`", new String(Character.toChars(c.getChar())));
+                adjust(line.getBoundingBox(), prev, c.getBoundingBox(), null);
+                j = oldj;
+            }
+            prev = c.getBoundingBox();
         }
     }
 
-    private void adjust(BoundingBox line) {
-        final int y0 = imageHeight - line.getBottom() - 1;
-        final int y1 = imageHeight - line.getTop() - 1;
-        line.setTop(y0);
-        line.setBottom(y1);
+    private void adjustHorizontal(BoundingBox bb) {
+        final int y0 = imageHeight - bb.getBottom() - 1;
+        final int y1 = imageHeight - bb.getTop() - 1;
+        bb.setTop(y0);
+        bb.setBottom(y1);
     }
 
-    private void adjust(BoundingBox line, Char prev, Char current, AdjustmentChar adj) throws Exception {
-        if (current.getChar() != adj.codepoint) {
-            throw new Exception("Invalid ocropus characters differ");
-        }
-        adjust(line, prev.getBoundingBox(), current.getBoundingBox(), adj);
-    }
-
-    private void adjust(BoundingBox line, BoundingBox prev, BoundingBox current, AdjustmentChar adj) {
-        current.setLeft(line.getLeft() + adj.adjustment);
-        if (prev != null) {
-            prev.setRight(current.getLeft() - 1);
+    private void adjust(BoundingBox line, BoundingBox prev, BoundingBox current, AdjustmentChar adj) throws Exception {
+        if (adj != null) {
+            current.setLeft(line.getLeft() + adj.adjustment);
+        } else if (prev != null) {
+            current.setLeft(prev.getRight() + 1);
+        } else {
+            current.setLeft(line.getLeft());
         }
         current.setTop(line.getTop());
         current.setBottom(line.getBottom());
+        if (prev != null) {
+            prev.setRight(current.getLeft() - 1);
+        }
     }
 
     private void setOcrFile(File ocr) throws Exception {
@@ -98,6 +104,7 @@ public class OcropusBoundingBoxAdjuster {
         File pp = ocr.getParentFile().getParentFile();
         String book = ocr.getParentFile().getName().replaceFirst("hocr", "book");
         locDir = new File(new File(pp, book), name);
+        Log.info(this, "locDir %s", locDir);
     }
 
     private void setImageFile(File image) throws Exception {
@@ -122,15 +129,17 @@ public class OcropusBoundingBoxAdjuster {
                 return file.getName().endsWith(".llocs");
             }
         });
-        Arrays.sort(adjustmentFiles, new Comparator<File>() {
-            @Override
-            public int compare(File a, File b) {
-                return a.getName().compareTo(b.getName());
-            }
-        });
         Adjustments adjustments = new Adjustments();
-        for (File file : adjustmentFiles) {
-            adjustments.add(getAdjustmentLine(file));
+        if (adjustmentFiles != null) { // if the directory does not exist (empty file)
+            Arrays.sort(adjustmentFiles, new Comparator<File>() {
+                @Override
+                public int compare(File a, File b) {
+                    return a.getName().compareTo(b.getName());
+                }
+            });
+            for (File file : adjustmentFiles) {
+                adjustments.add(getAdjustmentLine(file));
+            }
         }
         return adjustments;
     }
@@ -164,6 +173,15 @@ public class OcropusBoundingBoxAdjuster {
 
         public File getFile() {
             return file;
+        }
+
+        public int findNext(int i, Char c) {
+            for (int j = i + 1; j < size(); ++j) {
+                if (get(j).codepoint == c.getChar()) {
+                    return j;
+                }
+            }
+            return -1;
         }
     }
 

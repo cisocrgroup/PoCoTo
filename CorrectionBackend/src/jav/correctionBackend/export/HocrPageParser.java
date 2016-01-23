@@ -5,16 +5,13 @@
  */
 package jav.correctionBackend.export;
 
-import com.sun.media.jai.codec.FileSeekableStream;
 import jav.logging.log4j.Log;
-import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.media.jai.JAI;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -84,7 +81,11 @@ public class HocrPageParser implements PageParser {
     public Page parse() throws IOException, Exception {
         parseXml();
         Log.info(this, "ocr-capabilities: %s", meta);
-        return parsePage();
+        Page page = parsePage();
+        if (meta.isOcropus) {
+            page = new OcropusBoundingBoxAdjuster(page).adjust();
+        }
+        return page;
     }
 
     private Page parsePage() throws Exception {
@@ -124,7 +125,7 @@ public class HocrPageParser implements PageParser {
         if (ls != null) {
             for (int i = 0; i < ls.getLength(); ++i) {
                 final Node lineNode = ls.item(i);
-                Line line = new Line(doGetBoundingBox(lineNode));
+                Line line = new Line(getBoundingBox(lineNode));
                 if (meta.hasWord) {
                     appendTokens(lineNode, line);
                 } else { // no words; just lines (ocropus)
@@ -143,7 +144,7 @@ public class HocrPageParser implements PageParser {
                 final Node tokenNode = cs.item(i);
                 if (tokenNode.getFirstChild() != null
                         && !tokenNode.getFirstChild().getTextContent().isEmpty()) {
-                    HocrToken newToken = new HocrToken(line, tokenNode, doGetBoundingBox(node));
+                    HocrToken newToken = new HocrToken(line, tokenNode, getBoundingBox(node));
                     if (prevToken != null) {
                         line.add(new HocrWhitespaceChar(line, prevToken, newToken));
                     }
@@ -158,7 +159,7 @@ public class HocrPageParser implements PageParser {
         if (node.getFirstChild() != null
                 && node.getFirstChild().getTextContent() != null
                 && !node.getFirstChild().getTextContent().isEmpty()) {
-            HocrToken newToken = new HocrToken(line, node, doGetBoundingBox(node));
+            HocrToken newToken = new HocrToken(line, node, getBoundingBox(node));
             line.addAll(newToken);
         }
     }
@@ -175,41 +176,6 @@ public class HocrPageParser implements PageParser {
         });
         xml = db.parse(ocr);
         parseHocrMeta();
-    }
-
-    // This method is a pile of crap
-    private BoundingBox doGetBoundingBox(Node node) throws Exception {
-        BoundingBox bb = HocrPageParser.getBoundingBox(node);
-        if (meta.isOcropus) { // ocropus lives in its own little world
-            if (imageHeight == 0) {
-                try {
-                    FileSeekableStream fss = new FileSeekableStream(image);
-                    ParameterBlock pb = new ParameterBlock();
-                    pb.add(fss);
-                    if (image.getName().endsWith("tiff")
-                            || image.getName().endsWith("tif")) {
-                        imageHeight = JAI.create("tiff", pb).getHeight();
-                    } else if (image.getName().endsWith("jpeg")
-                            || image.getName().endsWith("jpg")) {
-                        imageHeight = JAI.create("jpeg", pb).getHeight();
-                    } else {
-                        imageHeight = -1; // just try once for each file
-                    }
-                } catch (Exception e) {
-                    imageHeight = -1; // just try once for each file
-                    throw new Exception(e);
-                }
-            }
-            if (imageHeight > 0) {
-                bb = new BoundingBox(
-                        bb.getLeft(),
-                        imageHeight - bb.getBottom() - 1,
-                        bb.getRight(),
-                        imageHeight - bb.getTop() - 1
-                );
-            }
-        }
-        return bb;
     }
 
     private static XPathExpression makeXpath(String expr) throws Exception {
