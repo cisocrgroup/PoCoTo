@@ -28,16 +28,32 @@ public class BoundingBox {
         return t;
     }
 
+    public void setTop(int t) {
+        this.t = t;
+    }
+
     public int getLeft() {
         return l;
+    }
+
+    public void setLeft(int l) {
+        this.l = l;
     }
 
     public int getRight() {
         return r;
     }
 
+    public void setRight(int r) {
+        this.r = r;
+    }
+
     public int getBottom() {
         return b;
+    }
+
+    public void setBottom(int b) {
+        this.b = b;
     }
 
     public int getWidth() {
