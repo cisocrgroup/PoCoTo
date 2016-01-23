@@ -8,7 +8,6 @@ package jav.correctionBackend.export;
 import jav.correctionBackend.util.WagnerFischer;
 import jav.logging.log4j.Log;
 import java.io.File;
-import java.io.IOException;
 
 /**
  *
@@ -88,7 +87,7 @@ public abstract class DocumentCorrector implements LineReadeable {
      * Write the corrected file
      *
      * @param output The output file
-     * @throws IOException if an writing error occurs
+     * @throws Exception if an writing error occurs
      */
-    public abstract void write(File output) throws IOException;
+    public abstract void write(File output) throws Exception;
 }

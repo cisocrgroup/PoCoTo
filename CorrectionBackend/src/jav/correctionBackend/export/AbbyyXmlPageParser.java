@@ -31,11 +31,16 @@ import org.xml.sax.InputSource;
 public class AbbyyXmlPageParser implements PageParser {
 
     private org.w3c.dom.Document xml;
-    private File image;
+    private File image, ocr;
 
     @Override
     public void setImageFile(File image) {
         this.image = image;
+    }
+
+    @Override
+    public void setOcrFile(File ocr) {
+        this.ocr = ocr;
     }
 
     @Override
@@ -50,13 +55,13 @@ public class AbbyyXmlPageParser implements PageParser {
     }
 
     @Override
-    public Page parse(File input) throws IOException, Exception {
-        return parsePage(input);
+    public Page parse() throws Exception {
+        return parsePage();
     }
 
-    private Page parsePage(File input) throws IOException, Exception {
-        parseXml(input);
-        Page page = new Page(image, input);
+    private Page parsePage() throws IOException, Exception {
+        parseXml();
+        Page page = new Page(image, ocr);
         XPathExpression xpage = makeXpath("//page");
         Node pagenode = (Node) xpage.evaluate(xml, XPathConstants.NODE);
         if (pagenode != null) {
@@ -102,7 +107,7 @@ public class AbbyyXmlPageParser implements PageParser {
         }
     }
 
-    private void parseXml(File input) throws IOException, Exception {
+    private void parseXml() throws IOException, Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setExpandEntityReferences(false);
         DocumentBuilder db = dbf.newDocumentBuilder();
@@ -112,7 +117,7 @@ public class AbbyyXmlPageParser implements PageParser {
                 return new InputSource(new StringReader(""));
             }
         });
-        xml = db.parse(input);
+        xml = db.parse(ocr);
     }
 
     private XPathExpression makeXpath(String expr) throws Exception {
