@@ -57,7 +57,7 @@ public class HocrPageParser implements PageParser {
     private org.w3c.dom.Document xml;
     private HocrMeta meta;
     private int imageHeight;
-    private File image;
+    private File image, ocr;
 
     @Override
     public void setImageFile(File image) {
@@ -65,7 +65,12 @@ public class HocrPageParser implements PageParser {
     }
 
     @Override
-    public void write(File output) throws IOException, Exception {
+    public void setOcrFile(File ocr) {
+        this.ocr = ocr;
+    }
+
+    @Override
+    public void write(File output) throws Exception {
         Transformer transformer
                 = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -76,20 +81,20 @@ public class HocrPageParser implements PageParser {
     }
 
     @Override
-    public Page parse(File input) throws IOException, Exception {
-        parseXml(input);
+    public Page parse() throws IOException, Exception {
+        parseXml();
         Log.info(this, "ocr-capabilities: %s", meta);
-        return parsePage(input);
+        return parsePage();
     }
 
-    private Page parsePage(File input) throws Exception {
+    private Page parsePage() throws Exception {
         if (!meta.hasPage) {
             throw new Exception("Hocr document has no page segmentation");
         }
         if (!meta.hasLine) {
             throw new Exception("Hocr document has no line segmentation");
         }
-        Page page = new Page(image, input);
+        Page page = new Page(image, ocr);
         Node pagenode = (Node) XPAGE.evaluate(xml, XPathConstants.NODE);
         if (pagenode != null) {
             if (meta.hasPar) {
@@ -158,7 +163,7 @@ public class HocrPageParser implements PageParser {
         }
     }
 
-    private void parseXml(File input) throws IOException, Exception {
+    private void parseXml() throws IOException, Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setExpandEntityReferences(false);
         javax.xml.parsers.DocumentBuilder db = dbf.newDocumentBuilder();
@@ -168,7 +173,7 @@ public class HocrPageParser implements PageParser {
                 return new InputSource(new StringReader(""));
             }
         });
-        xml = db.parse(input);
+        xml = db.parse(ocr);
         parseHocrMeta();
     }
 

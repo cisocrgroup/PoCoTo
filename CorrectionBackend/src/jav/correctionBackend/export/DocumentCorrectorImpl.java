@@ -61,16 +61,13 @@ public class DocumentCorrectorImpl extends DocumentCorrector {
     }
 
     @Override
-    public void write(File output) throws IOException {
-        try {
-            pageParser.write(output);
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
+    public void write(File output) throws Exception {
+        pageParser.write(output);
     }
 
-    private void parseLines() throws IOException, Exception {
-        Page page = pageParser.parse(input);
+    private void parseLines() throws Exception {
+        pageParser.setOcrFile(input);
+        Page page = pageParser.parse();
         for (Paragraph p : page) {
             for (Line l : p) {
                 lines.add(l);

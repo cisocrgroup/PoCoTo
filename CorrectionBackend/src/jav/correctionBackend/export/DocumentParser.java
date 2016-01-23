@@ -57,7 +57,8 @@ public class DocumentParser {
             progress(mapping, ++i, n);
             PageParser pageParser = fileType.getPageParser();
             pageParser.setImageFile(mapping.imagefile);
-            documentBuilder.append(pageParser.parse(mapping.ocrfile));
+            pageParser.setOcrFile(mapping.ocrfile);
+            documentBuilder.append(pageParser.parse());
         }
         return documentBuilder.build();
     }

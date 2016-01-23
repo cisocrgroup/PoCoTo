@@ -6,7 +6,6 @@
 package jav.correctionBackend.export;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  *
@@ -22,14 +21,19 @@ public interface PageParser {
     public void setImageFile(File image);
 
     /**
-     * Parses an OCR File into its Page representation
+     * Sets the OCR file that will be parsed
      *
-     * @param input the input file to read
-     * @return the page representation of the OCR file
-     * @throws IOException if an Input/Output error occurred
-     * @throws Exception if some formatting error occurred
+     * @param ocr the OCR file
      */
-    public Page parse(File input) throws IOException, Exception;
+    public void setOcrFile(File ocr);
+
+    /**
+     * Parses an OCR File and returns its page representation.
+     *
+     * @return the page representation of the OCR file
+     * @throws Exception if any error occurs.
+     */
+    public Page parse() throws Exception;
 
     /**
      * Write the (modified) representation of the Parser to a file. You should
@@ -37,8 +41,7 @@ public interface PageParser {
      * method before a call to @parse.
      *
      * @param output the output file
-     * @throws IOException if an Input/Output error occurred
-     * @throws Exception if some formatting error occurred
+     * @throws Exception if any error occurs.
      */
-    public void write(File output) throws IOException, Exception;
+    public void write(File output) throws Exception;
 }
