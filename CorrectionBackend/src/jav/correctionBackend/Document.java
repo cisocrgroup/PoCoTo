@@ -1373,7 +1373,7 @@ public abstract class Document {
         } catch (SQLException ex) {
             Log.error(this, ex.getMessage());
         }
-        Log.debug(this, "getTokenByIndex(%d) = %s", indexInDocument, token);
+        //Log.debug(this, "getTokenByIndex(%d) = %s", indexInDocument, token);
         return token;
     }
 
@@ -1441,14 +1441,6 @@ public abstract class Document {
                 page.setStartIndex(startIndex);
                 page.setEndIndex(endIndex);
                 String path = this.getTokenByIndex(startIndex).getImageFilename();
-                Log.debug(
-                        this,
-                        "getPage index %d startIndex %d endIndex %d filename %s",
-                        index,
-                        startIndex,
-                        endIndex,
-                        this.getTokenByIndex(startIndex).getImageFilename()
-                );
                 String filename = getFileName(path);
                 page.setImageFilename(filename);
                 page.setImageCanonical(path);
