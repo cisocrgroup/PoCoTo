@@ -144,7 +144,7 @@ public class HocrPageParser implements PageParser {
                 final Node tokenNode = cs.item(i);
                 if (tokenNode.getFirstChild() != null
                         && !tokenNode.getFirstChild().getTextContent().isEmpty()) {
-                    HocrToken newToken = new HocrToken(line, tokenNode, getBoundingBox(node));
+                    HocrToken newToken = new HocrToken(line, tokenNode, getBoundingBox(tokenNode));
                     if (prevToken != null) {
                         line.add(new HocrWhitespaceChar(line, prevToken, newToken));
                     }
