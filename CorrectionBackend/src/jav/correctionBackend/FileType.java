@@ -1,8 +1,8 @@
 package jav.correctionBackend;
 
-import jav.correctionBackend.export.AbbyyXmlPageParser;
-import jav.correctionBackend.export.HocrPageParser;
-import jav.correctionBackend.export.PageParser;
+import jav.correctionBackend.parser.AbbyyXmlPageParser;
+import jav.correctionBackend.parser.HocrPageParser;
+import jav.correctionBackend.parser.PageParser;
 import java.io.File;
 import java.io.FilenameFilter;
 

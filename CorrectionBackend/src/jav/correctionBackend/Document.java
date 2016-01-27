@@ -1,6 +1,6 @@
 package jav.correctionBackend;
 
-import jav.correctionBackend.export.Exporter;
+import jav.correctionBackend.parser.Exporter;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.OverwriteFileDialog;
 import jav.logging.log4j.Log;

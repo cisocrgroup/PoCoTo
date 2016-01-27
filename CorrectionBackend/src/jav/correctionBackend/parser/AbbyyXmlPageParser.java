@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jav.correctionBackend.export;
+package jav.correctionBackend.parser;
 
 import java.io.File;
 import java.io.FileOutputStream;
