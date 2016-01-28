@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jav.correctionBackend.export;
+package jav.correctionBackend.parser;
 
 /**
  * The char interface defines one code point in the OCR document.

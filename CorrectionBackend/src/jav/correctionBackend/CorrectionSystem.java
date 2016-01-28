@@ -1,6 +1,6 @@
 package jav.correctionBackend;
 
-import jav.correctionBackend.export.DocumentParser;
+import jav.correctionBackend.parser.DocumentParser;
 import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;

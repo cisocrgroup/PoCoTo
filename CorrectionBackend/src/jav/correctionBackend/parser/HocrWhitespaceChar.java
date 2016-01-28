@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jav.correctionBackend.export;
+package jav.correctionBackend.parser;
 
 /**
  * This class represents HOCR Whitespace chars (which are not explicitly in the
