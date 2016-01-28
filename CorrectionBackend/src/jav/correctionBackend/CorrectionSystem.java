@@ -156,11 +156,13 @@ public class CorrectionSystem {
 
     public void closeDocument() {
         try {
-            Connection conn = jcp.getConnection();
-            Statement stat = conn.createStatement();
-            stat.execute("SHUTDOWN COMPACT");
-            stat.close();
-            conn.close();
+            try (Connection conn = jcp.getConnection()) {
+                try (Statement stat = conn.createStatement()) {
+                    stat.execute("SHUTDOWN COMPACT");
+                } catch (SQLException ex) {
+                    Log.error(this, ex);
+                }
+            }
             jcp.dispose();
         } catch (SQLException ex) {
             Log.error(this, ex);
