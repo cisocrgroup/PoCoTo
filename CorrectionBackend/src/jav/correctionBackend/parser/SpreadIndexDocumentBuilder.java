@@ -73,8 +73,8 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
                 tokenBuilder.appendBoundingBox(c.getBoundingBox());
                 tokenBuilder.appendSuspicious(c.isSuspicious());
             }
-        } else if (isAlphanumeric(previousCodepoint)) {
-            if (isAlphanumeric(currentCodepoint)) { // AA
+        } else if (isWordCharacter(previousCodepoint)) {
+            if (isWordCharacter(currentCodepoint)) { // AA
                 tokenBuilder.appendCodepoint(currentCodepoint);
                 tokenBuilder.appendBoundingBox(c.getBoundingBox());
                 tokenBuilder.appendSuspicious(c.isSuspicious());
@@ -87,7 +87,7 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
                 tokenBuilder.appendBoundingBox(c.getBoundingBox());
                 tokenBuilder.appendSuspicious(c.isSuspicious());
             }
-        } else if (isAlphanumeric(currentCodepoint)) { // .A
+        } else if (isWordCharacter(currentCodepoint)) { // .A
             insertCurrentToken();
             tokenBuilder.appendCodepoint(currentCodepoint);
             tokenBuilder.appendBoundingBox(c.getBoundingBox());
@@ -145,12 +145,12 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
         return token;
     }
 
-    private boolean isAlphanumeric(int codepoint) {
+    private static boolean isWordCharacter(int codepoint) {
         return Character.isAlphabetic(codepoint)
                 || Character.isDigit(codepoint);
     }
 
-    private boolean isWhitespace(int codepoint) {
+    private static boolean isWhitespace(int codepoint) {
         return Character.isWhitespace(codepoint);
     }
 
