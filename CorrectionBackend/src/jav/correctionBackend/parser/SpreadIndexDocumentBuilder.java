@@ -147,7 +147,8 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
 
     private static boolean isWordCharacter(int codepoint) {
         return Character.isAlphabetic(codepoint)
-                || Character.isDigit(codepoint);
+                || Character.isDigit(codepoint)
+                || Character.getType(codepoint) == Character.NON_SPACING_MARK;
     }
 
     private static boolean isWhitespace(int codepoint) {
