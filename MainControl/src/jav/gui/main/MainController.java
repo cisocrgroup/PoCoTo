@@ -1,6 +1,5 @@
 package jav.gui.main;
 
-import jav.correctionBackend.FileType;
 import cis.profiler.client.ProfilerWebServiceCallbackHandler;
 import cis.profiler.client.ProfilerWebServiceStub;
 import cis.profiler.client.ProfilerWebServiceStub.AbortProfilingRequest;
@@ -21,7 +20,25 @@ import cis.profiler.client.ProfilerWebServiceStub.SimpleEnrichRequest;
 import cis.profiler.client.ProfilerWebServiceStub.SimpleEnrichRequestType;
 import cis.profiler.client.ProfilerWebServiceStub.SimpleEnrichResponse;
 import cis.profiler.client.ProfilerWebServiceStub.SimpleEnrichResponseType;
-import jav.correctionBackend.*;
+import jav.correctionBackend.Candidate;
+import jav.correctionBackend.CorrectedUndoRedoInformation;
+import jav.correctionBackend.CorrectionSystem;
+import jav.correctionBackend.DeleteUndoRedoInformation;
+import jav.correctionBackend.Document;
+import jav.correctionBackend.FileType;
+import jav.correctionBackend.MergeUndoRedoInformation;
+import jav.correctionBackend.MultiCorrectedUndoRedoInformation;
+import jav.correctionBackend.MultiSetCorrectedUndoRedoInformation;
+import jav.correctionBackend.MyEditType;
+import jav.correctionBackend.OcrErrorInfo;
+import jav.correctionBackend.OcrXmlImporter;
+import jav.correctionBackend.Page;
+import jav.correctionBackend.Pattern;
+import jav.correctionBackend.PatternOccurrence;
+import jav.correctionBackend.SetCorrectedUndoRedoInformation;
+import jav.correctionBackend.SplitUndoRedoInformation;
+import jav.correctionBackend.Token;
+import jav.correctionBackend.TokenImageInfoBox;
 import jav.gui.cookies.CorrectionSystemReadyCookie;
 import jav.gui.cookies.DocumentLoadedCookie;
 import jav.gui.cookies.ProfilerIDCookie;
@@ -33,13 +50,28 @@ import jav.gui.events.concordance.ConcordanceType;
 import jav.gui.events.documentChanged.DocumentChangedEvent;
 import jav.gui.events.saved.SavedEvent;
 import jav.gui.events.saved.SavedEventSlot;
-import jav.gui.events.tokenStatus.*;
+import jav.gui.events.tokenStatus.CorrectedEvent;
+import jav.gui.events.tokenStatus.DeleteEvent;
+import jav.gui.events.tokenStatus.InsertEvent;
+import jav.gui.events.tokenStatus.MergeEvent;
+import jav.gui.events.tokenStatus.SetCorrectedEvent;
+import jav.gui.events.tokenStatus.SplitEvent;
+import jav.gui.events.tokenStatus.TokenStatusEvent;
+import jav.gui.events.tokenStatus.TokenStatusEventSlot;
+import jav.gui.events.tokenStatus.TokenStatusType;
 import jav.gui.filter.AbstractTokenFilter;
 import jav.gui.main.undoredo.MyUndoableEdit;
 import jav.logging.log4j.Log;
 import java.awt.Component;
 import java.awt.Cursor;
-import java.io.*;
+import java.awt.Font;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
@@ -47,13 +79,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.prefs.Preferences;
 import java.util.ResourceBundle;
+import java.util.prefs.Preferences;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
-import javax.swing.*;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
 import javax.swing.event.UndoableEditEvent;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.Constants;
@@ -61,7 +98,11 @@ import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
 import org.netbeans.api.progress.ProgressUtils;
 import org.openide.awt.UndoRedo;
-import org.openide.util.*;
+import org.openide.util.Cancellable;
+import org.openide.util.Exceptions;
+import org.openide.util.Lookup;
+import org.openide.util.Mutex;
+import org.openide.util.NbPreferences;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
@@ -101,10 +142,10 @@ import org.xml.sax.SAXException;
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class MainController implements Lookup.Provider, TokenStatusEventSlot, SavedEventSlot {
-    
-    private static final String DEFAULT_PROFILER_SERVICE_URL = 
-            java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").
-                    getString("defaultProfilerUrl");
+
+    private static final String DEFAULT_PROFILER_SERVICE_URL
+            = java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").
+            getString("defaultProfilerUrl");
     private static final String USERID = "PoCoToUser";
     private static final Cursor busyCursor = new Cursor(Cursor.WAIT_CURSOR);
     private static final Cursor defaultCursor = new Cursor(Cursor.DEFAULT_CURSOR);
@@ -128,12 +169,11 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     private File tempFile;
     private UndoRedo.Manager manager = null;
     private Thread backgroundSaverThread = null;
-    
+
     static {
         instance = new MainController();
     }
 
-    
     public static MainController findInstance() {
         return instance;
     }
@@ -142,7 +182,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
         try {
             System.loadLibrary("mlib_jai");
-        } catch( UnsatisfiedLinkError e ) {
+        } catch (UnsatisfiedLinkError e) {
             e.printStackTrace();
         }
         content = new InstanceContent();
@@ -191,6 +231,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         Log.info(this, "profiler_service_url: '%s'", url);
         return url;
     }
+
     public void setProfilerServiceUrl(String url) {
         Log.info(this, "setting profiler_service_url: '%s'", url);
         NbPreferences.forModule(MainController.class)
@@ -202,7 +243,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public UndoRedo getUndoRedo() {
-        if( globalDocument != null) {
+        if (globalDocument != null) {
             return globalDocument.getUndoRedoManager();
         } else {
             return manager;
@@ -366,7 +407,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public void profileDocument(String configuration) {
-        try {          
+        try {
             ProgressRunnable<Integer> r = new DocumentProfiler(configuration);
             Integer retval = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"), true);
             if (retval != null) {
@@ -391,7 +432,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         try {
             final int undo_redo = globalDocument.getUndoRedoIndex();
             globalDocument.correctTokenByString(tokenID, cand);
-            if( globalDocument.getUndoRedoManager() == null) {
+            if (globalDocument.getUndoRedoManager() == null) {
                 System.out.println("NULL MANAGER");
             }
             globalDocument.getUndoRedoManager().undoableEditHappened(new UndoableEditEvent(this, new MyUndoableEdit(MyEditType.CORRECTED, undo_redo)));
@@ -638,8 +679,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     }
 
     public ProfilerWebServiceStub newProfilerWebServiceStub() throws AxisFault {
-        ProfilerWebServiceStub stub = 
-                new ProfilerWebServiceStub(getProfilerServiceUrl());
+        ProfilerWebServiceStub stub
+                = new ProfilerWebServiceStub(getProfilerServiceUrl());
         stub._getServiceClient().getOptions().setManageSession(true);
         stub._getServiceClient()
                 .getOptions()
@@ -654,19 +695,19 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public void refreshID() {
         String profiler_user_id = node.get("profiler_user_id", "");
-            if (profiler_user_id.equals("")) {
-                if (profileridcookie != null) {
-                    content.remove(profileridcookie);
-                    profileridcookie = null;
-                }
-            } else {
-                if (profileridcookie != null) {
-                    content.remove(profileridcookie);
-                    profileridcookie = null;
-                }
-                profileridcookie = new ProfilerIDCookie();
-                content.add(profileridcookie);
+        if (profiler_user_id.equals("")) {
+            if (profileridcookie != null) {
+                content.remove(profileridcookie);
+                profileridcookie = null;
             }
+        } else {
+            if (profileridcookie != null) {
+                content.remove(profileridcookie);
+                profileridcookie = null;
+            }
+            profileridcookie = new ProfilerIDCookie();
+            content.add(profileridcookie);
+        }
     }
 
     public void updatePattern(Pattern p) {
@@ -724,6 +765,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         docproperties.setProperty("profiled", "false");
         docproperties.setProperty("configuration", "");
         docproperties.setProperty("hasImages", "");
+        docproperties.setProperty("mainFontType", "FreeSerif");
     }
 
     public void undo(MyEditType edittype, int editid) {
@@ -847,14 +889,14 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             Exceptions.printStackTrace(ex);
         }
     }
-    
+
     public void importProfile(String docpath, String profilepath) {
         try {
             globalDocument.clearCandidates();
             OcrXmlImporter.importCandidates(globalDocument, docpath);
             globalDocument.clearPatterns();
             OcrXmlImporter.importProfile(globalDocument, profilepath);
-        } catch (IOException|SAXException e) {
+        } catch (IOException | SAXException e) {
             Log.error(this, "could not import profile: %s", e.getMessage());
         }
     }
@@ -892,7 +934,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         @Override
         public Document run(ProgressHandle ph) {
             Document document = null;
-            if( globalDocument != null) {
+            if (globalDocument != null) {
                 ph.progress("erasing UndoRedo");
                 ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("doc_create"));
                 globalDocument.getUndoRedoManager().discardAllEdits();
@@ -987,7 +1029,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 return document;
             }
 
-            if( globalDocument != null) {
+            if (globalDocument != null) {
                 ph.progress("erasing UndoRedo");
                 ph.setDisplayName("erasing UndoRedo");
                 globalDocument.getUndoRedoManager().discardAllEdits();
@@ -1028,25 +1070,25 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         private String status;
         private int retval;
         private ProfilerWebServiceStub stub;
-        private final String statusProfiling = 
-                ResourceBundle.getBundle("jav/gui/main/Bundle")
-                        .getString("profiling");
-        private final String statusApplyProfile = 
-                ResourceBundle.getBundle("jav/gui/main/Bundle")
-                        .getString("applyprofile"); 
-        private final String statusImportCandidates = 
-                ResourceBundle.getBundle("jav/gui/main/Bundle")
-                        .getString("importcandidates");         
-        private final String statusUploading = 
-                ResourceBundle.getBundle("jav/gui/main/Bundle")
-                        .getString("uploadprofile");
-        private final String statusDownloading = 
-                ResourceBundle.getBundle("jav/gui/main/Bundle")
-                        .getString("downloadprofile");
-        private final String statusWaiting = 
-                ResourceBundle.getBundle("jav/gui/main/Bundle")
-                        .getString("waitprofile");
-        
+        private final String statusProfiling
+                = ResourceBundle.getBundle("jav/gui/main/Bundle")
+                .getString("profiling");
+        private final String statusApplyProfile
+                = ResourceBundle.getBundle("jav/gui/main/Bundle")
+                .getString("applyprofile");
+        private final String statusImportCandidates
+                = ResourceBundle.getBundle("jav/gui/main/Bundle")
+                .getString("importcandidates");
+        private final String statusUploading
+                = ResourceBundle.getBundle("jav/gui/main/Bundle")
+                .getString("uploadprofile");
+        private final String statusDownloading
+                = ResourceBundle.getBundle("jav/gui/main/Bundle")
+                .getString("downloadprofile");
+        private final String statusWaiting
+                = ResourceBundle.getBundle("jav/gui/main/Bundle")
+                .getString("waitprofile");
+
         public DocumentProfiler(String c) throws AxisFault {
             this.configuration = c;
             stub = MainController.findInstance().newProfilerWebServiceStub();
@@ -1110,12 +1152,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                                     .getBase64Binary();
                             InputStream doc_in = new GZIPInputStream(
                                     dh_doc.getInputStream()
-                            );                         
+                            );
                             ph.progress(statusImportCandidates);
                             Log.info(this, "importing candidates");
                             globalDocument.clearCandidates();
                             OcrXmlImporter.importCandidates(
-                                    globalDocument, 
+                                    globalDocument,
                                     doc_in
                             );
                             Log.info(this, "done importing candidates");
@@ -1132,10 +1174,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             OcrXmlImporter.importProfile(globalDocument, prof_in);
                             Log.info(this, "done applying new profile to document");
                             retval = 0;
-                        } catch (IOException|SAXException ex) {
+                        } catch (IOException | SAXException ex) {
                             retval = -1;
                             Exceptions.printStackTrace(ex);
-                            Log.error(this, "Could not profile document: %s", ex.getMessage());                           
+                            Log.error(this, "Could not profile document: %s", ex.getMessage());
                         } finally {
                             done = true;
                         }
@@ -1296,7 +1338,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             OcrXmlImporter.simpleUpdateDocument(globalDocument, tempFile.getCanonicalPath());
                             retval = 0;
                             done = true;
-                        } catch (IOException|SAXException ex) {
+                        } catch (IOException | SAXException ex) {
                             retval = -1;
                             Exceptions.printStackTrace(ex);
                         }
@@ -1427,8 +1469,8 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             try {
                 if (profilename != null) {
                     cs.importProfile(document, profilename);
-                } 
-            } catch (IOException|SAXException e) {
+                }
+            } catch (IOException | SAXException e) {
                 Log.error("Could not import new project: %s", e.getMessage());
             }
 
@@ -1475,5 +1517,13 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
             }
             return document;
         }
+    }
+
+    public Font getMainFont(int size) {
+        return new Font(
+                docproperties.getProperty("mainFontType", "DejaVu Sans"),
+                Font.PLAIN,
+                size
+        );
     }
 }
