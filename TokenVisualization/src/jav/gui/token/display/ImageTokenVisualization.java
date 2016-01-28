@@ -2,6 +2,7 @@ package jav.gui.token.display;
 
 import com.sun.media.jai.widget.DisplayJAI;
 import jav.correctionBackend.Token;
+import jav.gui.main.MainController;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -152,20 +153,7 @@ public class ImageTokenVisualization extends TokenVisualization {
         this.setImage(bi);
     }
 
-    private Font getFont(int fontSize) {
-//        try (InputStream is = new FileInputStream(
-//                new File("/home/flo/downloads/freefont-20120503/FreeSerif.ttf")
-//        )) {
-//            Font font = Font.createFont(Font.TRUETYPE_FONT, is);
-//            GraphicsEnvironment ge
-//                    = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//            ge.registerFont(font);
-//            return font;
-//        } catch (IOException | FontFormatException e) {
-//            Log.error(this, e);
-//        }
-
-        return new Font("FreeSerif", Font.PLAIN, fontSize);
-        //return new Font("DejaVu Sans", Font.PLAIN, fontSize);
+    private static Font getFont(int fontSize) {
+        return MainController.findInstance().getMainFont(fontSize);
     }
 }
