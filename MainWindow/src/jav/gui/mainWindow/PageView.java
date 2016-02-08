@@ -15,7 +15,6 @@ import jav.gui.token.display.OnlyTextTokenVisualization;
 import jav.gui.token.display.PseudoImageTokenVisualization;
 import jav.gui.token.display.TokenVisualization;
 import jav.gui.token.tools.ImageProcessor;
-import jav.logging.log4j.Log;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.image.BufferedImage;
@@ -130,7 +129,7 @@ public class PageView extends JPanel {
             while (it.hasNext()) {
                 Token tok = it.next();
                 if (tok == null) {
-                    Log.error(this, "Null token in token iterator");
+                    //Log.error(this, "Null token in token iterator");
                     continue;
                 }
 
