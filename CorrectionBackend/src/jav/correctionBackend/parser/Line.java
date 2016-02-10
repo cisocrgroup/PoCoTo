@@ -11,7 +11,7 @@ import java.util.ArrayList;
  *
  * @author flo
  */
-public class Line extends ArrayList<Char> implements LineReadeable {
+public class Line extends ArrayList<Char> {
 
     private BoundingBox bb;
 
@@ -48,15 +48,5 @@ public class Line extends ArrayList<Char> implements LineReadeable {
                 get(size() - 1).append(codepoint);
             }
         }
-    }
-
-    @Override
-    public int getNumberOfLines() {
-        return this.size();
-    }
-
-    @Override
-    public String getLineAt(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
