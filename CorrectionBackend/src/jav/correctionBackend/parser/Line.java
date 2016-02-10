@@ -49,4 +49,8 @@ public class Line extends ArrayList<Char> {
             }
         }
     }
+
+    public void finishCorrection() {
+        // do nothing
+    }
 }

@@ -21,6 +21,11 @@ public class Page extends ArrayList<Paragraph> {
         this.ocr = ocr;
     }
 
+    public Page() {
+        this.image = new File("");
+        this.ocr = new File("");
+    }
+
     public File getImageFile() {
         return image;
     }

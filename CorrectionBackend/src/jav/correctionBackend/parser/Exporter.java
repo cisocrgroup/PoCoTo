@@ -35,13 +35,12 @@ public class Exporter {
     }
 
     public void export(Document document) throws Exception {
-        LineCorrectable toCorrect = new CorrectablePage(dest, pageParser);
-        LineReadeable corrections = new PageLineReader(
-                document.getPage(src),
-                document
+        Page page = pageParser.parse();
+        Corrector.correct(
+                new SpreadIndexDocumentPage(document.getPage(src), document),
+                page
         );
-        Corrector corrector = new Corrector(corrections, toCorrect);
-        corrector.correct();
+        pageParser.write(dest);
     }
 
 }

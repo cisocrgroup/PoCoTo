@@ -6,7 +6,6 @@
 package jav.correctionBackend.parser;
 
 import jav.correctionBackend.util.WagnerFischer;
-import jav.logging.log4j.Log;
 
 /**
  *
@@ -14,55 +13,69 @@ import jav.logging.log4j.Log;
  */
 public class Corrector {
 
-    private final LineReadeable corrections;
-    private final LineCorrectable toCorrect;
-
-    public Corrector(LineReadeable corrections, LineCorrectable toCorrect) {
-        this.corrections = corrections;
-        this.toCorrect = toCorrect;
-    }
-
-    public void correct() throws Exception {
-        final int n = Math.min(
-                corrections.getNumberOfLines(),
-                toCorrect.getNumberOfLines()
-        );
+    public static void correct(Book correct, Book incorrect) {
+        final int n = Math.min(correct.size(), incorrect.size());
         for (int i = 0; i < n; ++i) {
-            applyWagnerFischer(i);
+            correct(correct.get(i), incorrect.get(i));
         }
     }
 
-    private void applyWagnerFischer(int i) throws Exception {
+    public static void correct(Page correct, Page incorrect) {
+        final int n = Math.min(correct.size(), incorrect.size());
+        for (int i = 0; i < n; ++i) {
+            correct(correct.get(i), incorrect.get(i));
+        }
+    }
+
+    public static void correct(Paragraph correct, Paragraph incorrect) {
+        final int n = Math.min(correct.size(), incorrect.size());
+        for (int i = 0; i < n; ++i) {
+            correct(correct.get(i), incorrect.get(i));
+        }
+    }
+
+    public static void correct(Line correct, Line incorrect) {
         final WagnerFischer wf = new WagnerFischer(
-                corrections.getLineAt(i),
-                toCorrect.getLineAt(i)
+                getStringFromLine(correct),
+                getStringFromLine(incorrect)
         );
         if (wf.calculate() <= 0) { // skip if Levenshteindistance <= 0
             return;
         }
-        Log.info(this, "Levenshtein:\n%s", wf.toString());
-        for (int j = 0, k = 0; j < wf.getTrace().size();) {
-            switch (wf.getTrace().get(j)) {
+        for (int i = 0, j = 0; i < wf.getTrace().size();) {
+            switch (wf.getTrace().get(i)) {
                 case Deletion:
-                    toCorrect.delete(i, k);
-                    ++j;
+                    incorrect.delete(j);
+                    ++i;
                     break;
                 case Substitution:
-                    toCorrect.substitute(i, k, wf.getTruth()[k]);
-                    ++k;
+                    incorrect.substitute(j, wf.getTruth()[j]);
                     ++j;
+                    ++i;
                     break;
                 case Insertion:
-                    toCorrect.insert(i, k, wf.getTruth()[k]);
-                    ++k;
+                    incorrect.insert(j, wf.getTruth()[j]);
                     ++j;
+                    ++i;
                     break;
                 default:
-                    ++k;
                     ++j;
+                    ++i;
                     break;
             }
         }
-        toCorrect.finishCorrection();
+        incorrect.finishCorrection();
+    }
+
+    private static String getStringFromLine(Line line) {
+        StringBuilder builder = new StringBuilder();
+        for (Char c : line) {
+            builder.appendCodePoint(c.getChar());
+        }
+        return builder.toString();
+    }
+
+    private Corrector() {
+
     }
 }
