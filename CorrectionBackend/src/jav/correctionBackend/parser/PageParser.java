@@ -8,6 +8,8 @@ package jav.correctionBackend.parser;
 import java.io.File;
 
 /**
+ * This class parses an OCR file. It is assumed that the page consists of on
+ * image file and one according OCR file.
  *
  * @author flo
  */
