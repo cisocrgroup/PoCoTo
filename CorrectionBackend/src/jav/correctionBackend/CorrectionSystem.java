@@ -1,6 +1,11 @@
 package jav.correctionBackend;
 
+import jav.correctionBackend.parser.Book;
+import jav.correctionBackend.parser.Char;
 import jav.correctionBackend.parser.DocumentParser;
+import jav.correctionBackend.parser.Line;
+import jav.correctionBackend.parser.Paragraph;
+import jav.correctionBackend.parser.TeiBookParser;
 import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
@@ -171,5 +176,21 @@ public class CorrectionSystem {
 
     public Document getDocument() {
         return this.document;
+    }
+
+    public void infuseTei(File teifile) throws Exception {
+        Book book = new TeiBookParser(teifile).parse();
+        for (jav.correctionBackend.parser.Page page : book) {
+            Log.debug(this, "### PAGE ###");
+            for (Paragraph p : page) {
+                for (Line l : p) {
+                    for (Char c : l) {
+                        Log.debug(this, "%c", c.getChar());
+                    }
+                    Log.debug(this, "\n");
+                }
+                Log.debug(this, "\n");
+            }
+        }
     }
 }

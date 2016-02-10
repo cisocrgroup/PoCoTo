@@ -5,6 +5,7 @@
  */
 package jav.correctionBackend.parser;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -14,5 +15,32 @@ import java.util.ArrayList;
  * @author flo
  */
 public class Book extends ArrayList<Page> {
+
+    private final File imageDir, ocrDir;
+
+    public Book(File imageDir, File ocrDir) {
+        if (imageDir == null) {
+            this.imageDir = new File("");
+        } else {
+            this.imageDir = imageDir;
+        }
+        if (ocrDir == null) {
+            this.ocrDir = new File("");
+        } else {
+            this.ocrDir = ocrDir;
+        }
+    }
+
+    public Book() {
+        this(null, null);
+    }
+
+    public File getOcrDir() {
+        return ocrDir;
+    }
+
+    public File getImageDir() {
+        return imageDir;
+    }
 
 }

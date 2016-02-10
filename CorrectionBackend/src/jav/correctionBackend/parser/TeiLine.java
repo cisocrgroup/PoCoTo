@@ -13,18 +13,24 @@ import org.w3c.dom.Node;
  */
 public class TeiLine extends Line {
 
+    private final Node node;
+
     public TeiLine(Node node) {
-        assert (node != null);
-        parse(node);
+        this.node = node;
     }
 
-    private void parse(Node node) {
-        final String line = node.getTextContent();
-        final int length = line.length();
-        for (int offset = 0; offset < length;) {
-            final int codepoint = line.codePointAt(offset);
+    public void add(String str) {
+        str = str.trim();
+        if (str.isEmpty()) {
+            return;
+        }
+        if (!this.isEmpty()) {
+            add(new TeiChar(' ', this));
+        }
+        for (int offset = 0; offset < str.length();) {
+            final int codepoint = str.codePointAt(offset);
+            add(new TeiChar(codepoint, this));
             offset += Character.charCount(codepoint);
-            this.add(new TeiChar(codepoint, this));
         }
     }
 }

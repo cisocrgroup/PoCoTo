@@ -90,13 +90,15 @@ public class ImportTei extends ContextAction<DocumentLoadedCookie> {
         if (teifile == null) {
             return;
         }
-        try {
-            ImportTei.NativeMethodRunner runner
-                    = new ImportTei.NativeMethodRunner(teifile);
-            int retval = ProgressUtils.showProgressDialogAndRun(runner, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing"), true);
-            if (retval == 0) {
-                new CustomErrorDialog().showDialog("Error while importing the document!\n");
-            }
+        ImportTei.NativeMethodRunner runner
+                = new ImportTei.NativeMethodRunner(teifile);
+        int retval = ProgressUtils.showProgressDialogAndRun(runner, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing"), true);
+        if (retval == 0) {
+            new CustomErrorDialog().showDialog(
+                    String.format(
+                            "Error while importing the document: %s\n",
+                            runner.getErrorMessage())
+            );
         }
     }
 
@@ -123,6 +125,7 @@ public class ImportTei extends ContextAction<DocumentLoadedCookie> {
     private class NativeMethodRunner implements ProgressRunnable<Integer> {
 
         private final File teifile;
+        private String error = "";
 
         public NativeMethodRunner(File teifile) {
             this.teifile = teifile;
@@ -137,8 +140,13 @@ public class ImportTei extends ContextAction<DocumentLoadedCookie> {
                 return 1;
             } catch (Exception e) {
                 Log.error(this, e);
+                this.error = e.getLocalizedMessage();
                 return 0;
             }
+        }
+
+        public String getErrorMessage() {
+            return error;
         }
     }
 
