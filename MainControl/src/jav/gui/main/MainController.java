@@ -901,6 +901,10 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         }
     }
 
+    public void importTei(File teifile) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     private class DocumentCreator implements ProgressRunnable<Document> {
 
         private final String doc;
