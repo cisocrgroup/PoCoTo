@@ -50,6 +50,11 @@ public class Line extends ArrayList<Char> {
         }
     }
 
+    /**
+     * This method should be called if any corrections have been applied to this
+     * line. Specialized Line implementations should override this method do do
+     * something usefull.
+     */
     public void finishCorrection() {
         // do nothing
     }
