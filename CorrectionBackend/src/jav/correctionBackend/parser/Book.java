@@ -16,16 +16,18 @@ import java.util.ArrayList;
  */
 public class Book extends ArrayList<Page> {
 
+    private static final File EMPTY_FILE = new File("");
+
     private final File imageDir, ocrDir;
 
     public Book(File imageDir, File ocrDir) {
         if (imageDir == null) {
-            this.imageDir = new File("");
+            this.imageDir = EMPTY_FILE;
         } else {
             this.imageDir = imageDir;
         }
         if (ocrDir == null) {
-            this.ocrDir = new File("");
+            this.ocrDir = EMPTY_FILE;
         } else {
             this.ocrDir = ocrDir;
         }
