@@ -9,14 +9,13 @@ package jav.correctionBackend.parser;
  *
  * @author finkf
  */
-public class TeiChar implements Char {
+public class TeiChar extends AbstractBaseChar {
 
     private int codepoint;
-    private final TeiLine line;
 
-    public TeiChar(int codepoint, TeiLine line) {
+    public TeiChar(int codepoint, Line line) {
+        super(line);
         this.codepoint = codepoint;
-        this.line = line;
     }
 
     @Override
@@ -35,20 +34,8 @@ public class TeiChar implements Char {
     }
 
     @Override
-    public Char getPrev() {
-        int i = line.indexOf(this);
-        return i > 0 ? line.get(i - 1) : null;
-    }
-
-    @Override
-    public Char getNext() {
-        int i = line.indexOf(this);
-        return i < (line.size() - 1) && i > 0 ? line.get(i + 1) : null;
-    }
-
-    @Override
     public void delete() {
-        line.remove(this);
+        getLine().remove(getIndexInLine());
     }
 
     @Override
@@ -58,20 +45,20 @@ public class TeiChar implements Char {
 
     @Override
     public void prepend(int c) {
-        int i = line.indexOf(this);
+        final int i = getIndexInLine();
         if (i > 0) {
-            line.add(i, new TeiChar(codepoint, line));
+            getLine().add(i, new TeiChar(codepoint, getLine()));
         }
     }
 
     @Override
     public void append(int c) {
-        int i = line.indexOf(this);
-        TeiChar newTeiChar = new TeiChar(codepoint, line);
-        if (i == (line.size() - 1)) {
-            line.add(newTeiChar);
+        final int i = getIndexInLine();
+        TeiChar newTeiChar = new TeiChar(codepoint, getLine());
+        if (i == (getLine().size() - 1)) {
+            getLine().add(newTeiChar);
         } else if (i >= 0) {
-            line.add(i, newTeiChar);
+            getLine().add(i, newTeiChar);
         }
     }
 
