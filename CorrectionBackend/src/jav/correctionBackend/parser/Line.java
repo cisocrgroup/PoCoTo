@@ -53,4 +53,13 @@ public class Line extends ArrayList<Char> {
     public void finishCorrection() {
         // do nothing
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        for (Char c : this) {
+            builder.appendCodePoint(c.getChar());
+        }
+        return builder.toString();
+    }
 }
