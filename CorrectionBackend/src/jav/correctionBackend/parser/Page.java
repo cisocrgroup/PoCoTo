@@ -45,4 +45,14 @@ public class Page extends ArrayList<Paragraph> {
         return ocr;
     }
 
+    public ArrayList<Line> getAllLines() {
+        ArrayList<Line> allLines = new ArrayList<>();
+        for (Paragraph p : this) {
+            for (Line l : p) {
+                allLines.add(l);
+            }
+        }
+        return allLines;
+    }
+
 }

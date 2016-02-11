@@ -43,6 +43,7 @@ public class SpreadIndexDocumentChar extends AbstractBaseChar {
 
     @Override
     public void delete() {
+        assert (false);
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -53,11 +54,13 @@ public class SpreadIndexDocumentChar extends AbstractBaseChar {
 
     @Override
     public void prepend(int c) {
+        assert (false);
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void append(int c) {
+        assert (false);
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

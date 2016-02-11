@@ -12,5 +12,4 @@ import java.util.ArrayList;
  * @author flo
  */
 public class Paragraph extends ArrayList<Line> {
-
 }

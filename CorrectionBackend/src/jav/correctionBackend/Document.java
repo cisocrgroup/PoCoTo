@@ -2292,7 +2292,6 @@ class PageIterator implements MyIterator<Page> {
             retval.setStartIndex(rs.getInt(2));
             retval.setEndIndex(rs.getInt(3));
             String path = doc.getTokenByIndex(rs.getInt(2)).getImageFilename();
-            Log.info(this, "path: %s", path);
             String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
             retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
             retval.setImageCanonical(path);
