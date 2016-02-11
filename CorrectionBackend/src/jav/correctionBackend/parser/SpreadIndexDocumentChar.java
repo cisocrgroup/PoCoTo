@@ -5,25 +5,30 @@
  */
 package jav.correctionBackend.parser;
 
-import jav.correctionBackend.Document;
+import jav.correctionBackend.Token;
 
 /**
  *
  * @author flo
  */
-public class SpreadIndexDocumentChar implements Char {
+public class SpreadIndexDocumentChar extends AbstractBaseChar {
 
-    private final int codepoint;
-    private final Document document;
+    private int codepoint;
+    private final Token token;
 
-    public SpreadIndexDocumentChar(Document document, int codepoint) {
+    public SpreadIndexDocumentChar(Line line, Token token, int codepoint) {
+        super(line);
         this.codepoint = codepoint;
-        this.document = document;
+        this.token = token;
+    }
+
+    public Token getToken() {
+        return token;
     }
 
     @Override
     public BoundingBox getBoundingBox() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new BoundingBox();
     }
 
     @Override
@@ -37,23 +42,13 @@ public class SpreadIndexDocumentChar implements Char {
     }
 
     @Override
-    public Char getPrev() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Char getNext() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public void delete() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void substitute(int c) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        codepoint = codepoint;
     }
 
     @Override
