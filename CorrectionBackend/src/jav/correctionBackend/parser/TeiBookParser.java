@@ -5,15 +5,14 @@
  */
 package jav.correctionBackend.parser;
 
-import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Stack;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -37,46 +36,39 @@ public class TeiBookParser {
         document = parseXml(file);
     }
 
-    public Book parse() throws XPathExpressionException {
+    public Book parse() throws Exception {
         XPathExpression xpath = XPathFactory.newInstance().newXPath().compile("/TEI/text");
         Node text = (Node) xpath.evaluate(document, XPathConstants.NODE);
-        forEach(text);
         book = new TeiBook(document, file);
+        Stack<Node> stack = new Stack<>();
+        stack.push(text);
+        while (!stack.isEmpty()) {
+            Node top = stack.pop();
+            forEach(top);
+            if (top.hasChildNodes()) {
+                NodeList children = top.getChildNodes();
+                final int n = children.getLength();
+                for (int i = n; i > 0; --i) {
+                    stack.push(children.item(i - 1));
+                }
+            }
+        }
         return book;
     }
 
-    private void forEach(Node node) {
-        callback(node);
-        if (node.hasChildNodes()) {
-            NodeList children = node.getChildNodes();
-            for (int i = 0; i < children.getLength(); ++i) {
-                forEach(children.item(i));
-            }
-        }
-        for (Node sibling = node.getNextSibling();
-                sibling != null;
-                sibling = sibling.getNextSibling()) {
-            forEach(sibling);
-        }
-    }
-
-    private void callback(Node node) {
-        Log.debug(this, "callback %s", node.getLocalName());
-        if ("pb".equals(node.getLocalName())) {
-            File facs = null;
-            if (node.hasAttributes()
-                    && node.getAttributes().getNamedItem("facs") != null) {
-                facs = new File(
-                        node.getAttributes().getNamedItem("facs").getNodeValue()
-                );
-            }
-            book.add(new Page(facs, file));
-        } else if ("p".equals(node.getLocalName())) {
-            book.get(book.size() - 1).add(new Paragraph());
-        } else if ("lb".equals(node.getLocalName())) {
+    private void forEach(Node node) throws Exception {
+        assert (node != null);
+        if ("pb".equals(node.getNodeName())) {
+            book.add(new Page(getFacs(node), file));
+        } else if ("p".equals(node.getNodeName())) {
+            getLastPage().add(new Paragraph());
+        } else if ("lb".equals(node.getNodeName())) {
             if (currentLine != null) {
-                Page page = book.get(book.size() - 1);
-                Paragraph p = page.get(page.size() - 1);
+                Paragraph p = getLastParagraph();
+                StringBuilder builder = new StringBuilder();
+                for (Char c : currentLine) {
+                    builder.appendCodePoint(c.getChar());
+                }
                 p.add(currentLine);
             }
             currentLine = null;
@@ -86,6 +78,33 @@ public class TeiBookParser {
             }
             currentLine.add(node.getNodeValue());
         }
+    }
+
+    private Page getLastPage() throws Exception {
+        assert (book != null);
+        if (book.isEmpty()) {
+            throw new Exception("Missing `pb` tag in tei file");
+        }
+        return book.get(book.size() - 1);
+    }
+
+    private Paragraph getLastParagraph() throws Exception {
+        assert (book != null);
+        if (getLastPage().isEmpty()) {
+            getLastPage().add(new Paragraph());
+        }
+        return getLastPage().get(getLastPage().size() - 1);
+    }
+
+    private File getFacs(Node node) {
+        if (node.hasAttributes()) {
+            if (node.getAttributes().getNamedItem("facs") != null) {
+                return new File(
+                        node.getAttributes().getNamedItem("facs").getNodeValue()
+                );
+            }
+        }
+        return null;
     }
 
     private static org.w3c.dom.Document parseXml(File file)
