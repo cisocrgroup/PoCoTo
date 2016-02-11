@@ -34,14 +34,19 @@ public class Corrector {
         }
     }
 
-    public static void correct(Line correct, Line incorrect) {
+    public static int correct(Line correct, Line incorrect) {
         final WagnerFischer wf = new WagnerFischer(
                 getStringFromLine(correct),
                 getStringFromLine(incorrect)
         );
-        if (wf.calculate() <= 0) { // skip if Levenshteindistance <= 0
-            return;
+        final int res = wf.calculate();
+        if (res > 0) {
+            correct(wf, correct, incorrect);
         }
+        return res;
+    }
+
+    public static void correct(WagnerFischer wf, Line correct, Line incorrect) {
         for (int i = 0, j = 0; i < wf.getTrace().size();) {
             switch (wf.getTrace().get(i)) {
                 case Deletion:
