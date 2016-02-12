@@ -60,7 +60,12 @@ public class SpreadIndexDocumentLine extends Line {
 
     @Override
     public void delete(int idx) {
-        get(idx).substitute(0); // 0 means that this token will be deleted
+        final Token token = doGet(idx).getToken();
+        remove(idx);
+        String correction = gatherAll(token.getID());
+        if (correction.isEmpty()) {
+            delete(token);
+        }
     }
 
     @Override
@@ -87,10 +92,7 @@ public class SpreadIndexDocumentLine extends Line {
         String correction = gatherAll(token.getID());
 
         try {
-            if (correction.isEmpty()) {
-                Log.debug(this, "deleting Token(%d, `%s`)", token.getID(), token.getWOCR());
-                document.deleteToken(token.getID(), token.getID());
-            } else if (!token.getWOCR().equals(correction)) {
+            if (!token.getWOCR().equals(correction)) {
                 Log.debug(this, "correct Token(%d, `%s`) with `%s`", token.getID(), token.getWOCR(), correction);
                 token.setWCOR(correction);
                 document.correctTokenByString(token.getID(), correction);
@@ -110,5 +112,15 @@ public class SpreadIndexDocumentLine extends Line {
             }
         }
         return builder.toString();
+    }
+
+    private void delete(Token token) {
+        Log.debug(this, "deleting Token(%d, `%s`)", token.getID(), token.getWOCR());
+        try {
+            document.deleteToken(token.getID());
+        } catch (SQLException e) {
+            Log.error(this, e);
+            throw new RuntimeException(e);
+        }
     }
 }
