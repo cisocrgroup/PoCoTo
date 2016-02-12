@@ -40,7 +40,7 @@ public class Infuser {
                 res.nlines++;
                 final int lev = wf.calculate();
                 res.nlev += lev;
-                Log.debug(this, "Levenshtein(%d):\n%s", lev, wf.toString());
+                //Log.debug(this, "Levenshtein(%d):\n%s", lev, wf.toString());
             }
         });
         return res;
