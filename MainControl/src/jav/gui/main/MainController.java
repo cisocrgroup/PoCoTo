@@ -901,10 +901,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
         }
     }
 
-    public void importTei(File teifile) throws Exception {
-        getCorrectionSystem().infuseTei(teifile);
-    }
-
     private class DocumentCreator implements ProgressRunnable<Document> {
 
         private final String doc;
