@@ -5,7 +5,6 @@
  */
 package jav.correctionBackend.parser;
 
-import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -80,7 +79,7 @@ public class HocrPageParser implements PageParser {
     @Override
     public Page parse() throws IOException, Exception {
         parseXml();
-        Log.info(this, "ocr-capabilities: %s", meta);
+        //Log.info(this, "ocr-capabilities: %s", meta);
         Page page = parsePage();
         if (meta.isOcropus) {
             page = new OcropusBoundingBoxAdjuster(page).adjust();

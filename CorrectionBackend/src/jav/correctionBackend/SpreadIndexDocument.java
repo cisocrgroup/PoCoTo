@@ -199,7 +199,7 @@ public class SpreadIndexDocument extends Document {
     @Override
     public ArrayList<Integer> deleteToken(int iDFrom, int iDTo)
             throws SQLException {
-        Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
+        //Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
         Connection conn = jcp.getConnection();
         ArrayList<Integer> retval = new ArrayList<>();
         PreparedStatement setIndex = null;

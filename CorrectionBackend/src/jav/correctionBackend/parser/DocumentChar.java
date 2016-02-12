@@ -29,6 +29,10 @@ public class DocumentChar extends AbstractBaseChar {
         this.bb = bb;
     }
 
+    public DocumentToken getDocumentToken() {
+        return token;
+    }
+
     @Override
     public BoundingBox getBoundingBox() {
         return bb;
@@ -68,14 +72,14 @@ public class DocumentChar extends AbstractBaseChar {
 
     @Override
     public DocumentChar prepend(int c) {
-        DocumentChar newChar = new DocumentChar(getLine(), token, codepoint, bb);
+        DocumentChar newChar = new DocumentChar(getLine(), token, c, bb);
         token.prepend(this, newChar);
         return newChar;
     }
 
     @Override
     public DocumentChar append(int c) {
-        DocumentChar newChar = new DocumentChar(getLine(), token, codepoint, bb);
+        DocumentChar newChar = new DocumentChar(getLine(), token, c, bb);
         token.append(this, newChar);
         return newChar;
     }

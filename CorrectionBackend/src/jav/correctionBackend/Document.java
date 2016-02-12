@@ -1583,7 +1583,7 @@ public abstract class Document {
             return this.deleteToken(tokenID, tokenID);
         } else {
             Token prev = this.getPreviousTokenByIndex(index);
-            if (prev.getWDisplay().equals(" ") && next.getWDisplay().equals(" ")) {
+            if (prev != null && " ".equals(prev.getWDisplay()) && " ".equals(next.getWDisplay())) {
                 return this.deleteToken(tokenID, next.getID());
             } else {
                 return this.deleteToken(tokenID, tokenID);

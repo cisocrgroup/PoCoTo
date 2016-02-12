@@ -7,7 +7,6 @@ package jav.correctionBackend.parser;
 
 import jav.correctionBackend.FileType;
 import jav.correctionBackend.SpreadIndexDocument;
-import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import org.h2.jdbcx.JdbcConnectionPool;
@@ -71,6 +70,6 @@ public class DocumentParser {
                 n
         );
         ph.progress(msg);
-        Log.info(this, msg);
+        //Log.info(this, msg);
     }
 }

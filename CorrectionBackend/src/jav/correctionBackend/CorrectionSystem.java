@@ -185,9 +185,6 @@ public class CorrectionSystem {
         infuser.setGroundTruth(tei);
         infuser.setOCR(doc);
         infuser.setProgressHandle(ph);
-        Infuser.Statistics stats = infuser.gatherStatistics();
-        double levPerLine = (double) stats.nlev / (double) stats.nlines;
-        Log.debug(this, "lines: %d, lev: %d levPerLine: %f", stats.nlines, stats.nlev, levPerLine);
         infuser.infuse();
     }
 }
