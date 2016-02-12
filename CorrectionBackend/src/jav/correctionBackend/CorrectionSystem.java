@@ -1,9 +1,9 @@
 package jav.correctionBackend;
 
 import jav.correctionBackend.parser.Book;
+import jav.correctionBackend.parser.DocumentBook;
 import jav.correctionBackend.parser.DocumentParser;
 import jav.correctionBackend.parser.Infuser;
-import jav.correctionBackend.parser.DocumentBook;
 import jav.correctionBackend.parser.TeiBookParser;
 import jav.logging.log4j.Log;
 import java.io.File;
@@ -177,13 +177,14 @@ public class CorrectionSystem {
         return this.document;
     }
 
-    public void infuseTei(File teifile) throws Exception {
+    public void infuseTei(File teifile, ProgressHandle ph) throws Exception {
         Book tei = new TeiBookParser(teifile).parse();
         final DocumentBook doc = new DocumentBook(document);
 
         final Infuser infuser = new Infuser();
         infuser.setGroundTruth(tei);
         infuser.setOCR(doc);
+        infuser.setProgressHandle(ph);
         Infuser.Statistics stats = infuser.gatherStatistics();
         double levPerLine = (double) stats.nlev / (double) stats.nlines;
         Log.debug(this, "lines: %d, lev: %d levPerLine: %f", stats.nlines, stats.nlev, levPerLine);

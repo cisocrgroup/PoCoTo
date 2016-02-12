@@ -140,7 +140,7 @@ public class ImportTei extends ContextAction<DocumentLoadedCookie> {
             try {
                 ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing"));
                 ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("importing"));
-                MainController.findInstance().importTei(teifile);
+                MainController.findInstance().getCorrectionSystem().infuseTei(teifile, ph);
                 return 1;
             } catch (Exception e) {
                 Log.error(this, e);

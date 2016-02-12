@@ -8,6 +8,7 @@ package jav.correctionBackend.parser;
 import jav.correctionBackend.util.WagnerFischer;
 import jav.logging.log4j.Log;
 import java.util.ArrayList;
+import org.netbeans.api.progress.ProgressHandle;
 
 /**
  * This class infuses a ground truth into an OCR document.
@@ -17,6 +18,11 @@ import java.util.ArrayList;
 public class Infuser {
 
     private Book gt, ocr;
+    private ProgressHandle ph;
+
+    public void setProgressHandle(ProgressHandle ph) {
+        this.ph = ph;
+    }
 
     public void setGroundTruth(Book gt) {
         this.gt = gt;
@@ -64,10 +70,10 @@ public class Infuser {
             ArrayList<Line> gtlines = gt.get(i).getAllLines();
             ArrayList<Line> ocrlines = ocr.get(i).getAllLines();
             final int offset = getOffset(gtlines, ocrlines);
+            log(String.format("importing page %d from %d", i + 1, gt.size()), false);
             if (offset == -1) {
                 String msg = String.format("OCR page %d is too different from ground truth", i + 1);
-                Log.error(this, "%s", msg);
-                //throw new Exception(msg);
+                log(msg, true);
                 continue;
             }
             for (int j = 0; j < gtlines.size() && j + offset < ocrlines.size(); ++j) {
@@ -100,9 +106,18 @@ public class Infuser {
         }
     }
 
+    private void log(String msg, boolean isError) {
+        if (isError) {
+            Log.error(this, msg);
+        } else if (ph != null) {
+            ph.progress(msg);
+        }
+    }
+
     private interface Callback {
 
         public void apply(Line gt, Line ocr);
+
     }
 
 }
