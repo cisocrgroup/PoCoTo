@@ -14,12 +14,12 @@ import jav.correctionBackend.Token;
  *
  * @author flo
  */
-public class SpreadIndexDocumentPage extends Page {
+public class DocumentPage extends Page {
 
     private final Document document;
     private final jav.correctionBackend.Page page;
 
-    public SpreadIndexDocumentPage(jav.correctionBackend.Page page, Document doc) {
+    public DocumentPage(jav.correctionBackend.Page page, Document doc) {
         this.page = page;
         this.document = doc;
         parse();
@@ -28,18 +28,18 @@ public class SpreadIndexDocumentPage extends Page {
     private void parse() {
         MyIterator<Token> it = document.tokenIterator(page);
         boolean prevWasNewline = false;
-        SpreadIndexDocumentParagraph paragraph = new SpreadIndexDocumentParagraph(document);
-        SpreadIndexDocumentLine line = new SpreadIndexDocumentLine(document);
+        DocumentParagraph paragraph = new DocumentParagraph(document);
+        DocumentLine line = new DocumentLine(document);
         while (it.hasNext()) {
             Token token = it.next();
             if (SpecialSequenceType.NEWLINE.equals(token.getSpecialSeq())) {
                 if (prevWasNewline) { // end of paragraph
                     this.add(paragraph);
-                    paragraph = new SpreadIndexDocumentParagraph(document);
+                    paragraph = new DocumentParagraph(document);
                 } else {
                     prevWasNewline = true;
                     paragraph.add(line);
-                    line = new SpreadIndexDocumentLine(document);
+                    line = new DocumentLine(document);
                 }
             } else {
                 prevWasNewline = false;

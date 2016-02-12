@@ -6,16 +6,25 @@
 package jav.correctionBackend.parser;
 
 import jav.correctionBackend.Document;
+import jav.correctionBackend.MyIterator;
 
 /**
  *
  * @author flo
  */
-public class SpreadIndexDocumentParagraph extends Paragraph {
+public class DocumentBook extends Book {
 
     private final Document document;
 
-    public SpreadIndexDocumentParagraph(Document document) {
+    public DocumentBook(Document document) {
         this.document = document;
+        parse();
+    }
+
+    private void parse() {
+        MyIterator<jav.correctionBackend.Page> it = document.pageIterator();
+        while (it.hasNext()) {
+            this.add(new DocumentPage(it.next(), document));
+        }
     }
 }

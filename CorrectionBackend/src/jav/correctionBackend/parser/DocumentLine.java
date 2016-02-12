@@ -15,11 +15,11 @@ import java.util.HashMap;
  *
  * @author flo
  */
-public class SpreadIndexDocumentLine extends Line {
+public class DocumentLine extends Line {
 
     private final Document document;
 
-    public SpreadIndexDocumentLine(Document document) {
+    public DocumentLine(Document document) {
         this.document = document;
     }
 
@@ -33,14 +33,14 @@ public class SpreadIndexDocumentLine extends Line {
         final int n = str.length();
         for (int offset = 0; offset < n;) {
             final int codepoint = str.codePointAt(offset);
-            this.add(new SpreadIndexDocumentChar(this, token, codepoint));
+            this.add(new DocumentChar(this, token, codepoint));
             offset += Character.charCount(codepoint);
         }
     }
 
     @Override
     public void substitute(int idx, int codepoint) {
-        final SpreadIndexDocumentChar c = doGet(idx);
+        final DocumentChar c = doGet(idx);
         c.substitute(codepoint);
     }
 
@@ -55,7 +55,7 @@ public class SpreadIndexDocumentLine extends Line {
         } else {
             token = doGet(idx).getToken();
         }
-        this.add(idx, new SpreadIndexDocumentChar(this, token, codepoint));
+        this.add(idx, new DocumentChar(this, token, codepoint));
     }
 
     @Override
@@ -84,8 +84,8 @@ public class SpreadIndexDocumentLine extends Line {
         }
     }
 
-    private SpreadIndexDocumentChar doGet(int idx) {
-        return (SpreadIndexDocumentChar) this.get(idx);
+    private DocumentChar doGet(int idx) {
+        return (DocumentChar) this.get(idx);
     }
 
     private void correct(Token token) {
@@ -106,7 +106,7 @@ public class SpreadIndexDocumentLine extends Line {
     private String gatherAll(int id) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < this.size(); ++i) {
-            final SpreadIndexDocumentChar cc = doGet(i);
+            final DocumentChar cc = doGet(i);
             if (cc.getToken().getID() == id && cc.getChar() != 0) {
                 builder.appendCodePoint(cc.getChar());
             }

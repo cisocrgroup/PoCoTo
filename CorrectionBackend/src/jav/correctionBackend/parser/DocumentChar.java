@@ -15,12 +15,12 @@ import jav.correctionBackend.Token;
  *
  * @author flo
  */
-public class SpreadIndexDocumentChar extends AbstractBaseChar {
+public class DocumentChar extends AbstractBaseChar {
 
     private int codepoint;
     private final Token token;
 
-    public SpreadIndexDocumentChar(Line line, Token token, int codepoint) {
+    public DocumentChar(Line line, Token token, int codepoint) {
         super(line);
         this.codepoint = codepoint;
         this.token = token;

@@ -3,7 +3,7 @@ package jav.correctionBackend;
 import jav.correctionBackend.parser.Book;
 import jav.correctionBackend.parser.DocumentParser;
 import jav.correctionBackend.parser.Infuser;
-import jav.correctionBackend.parser.SpreadIndexDocumentBook;
+import jav.correctionBackend.parser.DocumentBook;
 import jav.correctionBackend.parser.TeiBookParser;
 import jav.logging.log4j.Log;
 import java.io.File;
@@ -179,7 +179,7 @@ public class CorrectionSystem {
 
     public void infuseTei(File teifile) throws Exception {
         Book tei = new TeiBookParser(teifile).parse();
-        final SpreadIndexDocumentBook doc = new SpreadIndexDocumentBook(document);
+        final DocumentBook doc = new DocumentBook(document);
 
         final Infuser infuser = new Infuser();
         infuser.setGroundTruth(tei);

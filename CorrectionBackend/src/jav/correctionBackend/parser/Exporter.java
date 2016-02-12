@@ -37,7 +37,7 @@ public class Exporter {
     public void export(Document document) throws Exception {
         Page page = pageParser.parse();
         Corrector.correct(
-                new SpreadIndexDocumentPage(document.getPage(src), document),
+                new DocumentPage(document.getPage(src), document),
                 page
         );
         pageParser.write(dest);
