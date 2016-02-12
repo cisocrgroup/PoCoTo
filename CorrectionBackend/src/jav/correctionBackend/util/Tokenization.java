@@ -49,4 +49,8 @@ public class Tokenization {
     public static boolean isNonWordCharacter(int codepoint) {
         return !isWordCharacter(codepoint) && !isWhitespaceCharacter(codepoint);
     }
+
+    public static boolean isNonSpacingMark(int codepoint) {
+        return Character.getType(codepoint) == Character.NON_SPACING_MARK;
+    }
 }
