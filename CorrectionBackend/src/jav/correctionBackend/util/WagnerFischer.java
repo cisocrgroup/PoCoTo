@@ -52,7 +52,7 @@ public class WagnerFischer {
             }
             return builder.toString();
         }
-    };
+    }
 
     public WagnerFischer(String truth, String test) {
         this.truth = toArray(truth);
@@ -117,7 +117,7 @@ public class WagnerFischer {
     }
 
     private void backtrack() {
-        for (int i = test.length, j = truth.length; i > 0 && j > 0;) {
+        for (int i = test.length, j = truth.length; i > 0 || j > 0;) {
             MinArg minArg = setTrace(i, j);
             i = minArg.i;
             j = minArg.j;
@@ -142,20 +142,24 @@ public class WagnerFischer {
     }
 
     private MinArg getMinArg(int i, int j) {
-        assert (i > 0);
-        assert (j > 0);
-        int choices[] = {matrix[i - 1][j - 1], matrix[i - 1][j], matrix[i][j - 1]};
-        int min = Collections.min(Arrays.asList(ArrayUtils.toObject(choices)));
-        int index = Arrays.asList(ArrayUtils.toObject(choices)).indexOf(min);
-        switch (index) {
-            case 0:
-                return new MinArg(i - 1, j - 1);
-            case 1:
-                return new MinArg(i - 1, j);
-            case 2:
-                return new MinArg(i, j - 1);
-            default:
-                throw new IllegalArgumentException("Index out of bounds: " + index);
+        if (i > 0 && j > 0) {
+            int choices[] = {matrix[i - 1][j - 1], matrix[i - 1][j], matrix[i][j - 1]};
+            int min = Collections.min(Arrays.asList(ArrayUtils.toObject(choices)));
+            int index = Arrays.asList(ArrayUtils.toObject(choices)).indexOf(min);
+            switch (index) {
+                case 0:
+                    return new MinArg(i - 1, j - 1);
+                case 1:
+                    return new MinArg(i - 1, j);
+                case 2:
+                    return new MinArg(i, j - 1);
+                default:
+                    throw new IllegalArgumentException("Index out of bounds: " + index);
+            }
+        } else if (i > 0) {
+            return new MinArg(i - 1, j);
+        } else { // j > 0
+            return new MinArg(i, j - 1);
         }
     }
 
@@ -183,24 +187,66 @@ public class WagnerFischer {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        for (int i = 0, j = 0; i < trace.size() && j < test.length; ++i) {
+        for (int i = 0, j = 0; i < trace.size(); ++i) {
             if (trace.get(i).equals(EditOperation.Insertion)) {
                 builder.append('_');
             } else {
                 builder.appendCodePoint(test[j]);
+                if (Tokenization.isNonSpacingMark(test[j])) {
+                    builder.append('_');
+                }
                 ++j;
             }
         }
         builder.append('\n');
         builder.append(trace.toString());
         builder.append('\n');
-        for (int i = 0, j = 0; i < trace.size() && j < truth.length; ++i) {
+        for (int i = 0, j = 0; i < trace.size(); ++i) {
             if (trace.get(i).equals(EditOperation.Deletion)) {
                 builder.append('_');
             } else {
                 builder.appendCodePoint(truth[j]);
+                if (Tokenization.isNonSpacingMark(truth[j])) {
+                    builder.append('_');
+                }
                 ++j;
             }
+        }
+        return builder.toString();
+    }
+
+    public String matrixToString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("   ");
+        for (int i = 0; i < matrix[0].length; ++i) {
+            if (i > 0) {
+                if (Tokenization.isNonSpacingMark(truth[i - 1])) {
+                    builder.append('_');
+                }
+                builder.appendCodePoint(truth[i - 1]).append("  ");
+            } else {
+                builder.append("   ");
+            }
+        }
+        builder.append('\n');
+
+        for (int i = 0; i < matrix.length; ++i) {
+            if (i > 0) {
+                if (Tokenization.isNonSpacingMark(test[i - 1])) {
+                    builder.append('_');
+                }
+                builder.appendCodePoint(test[i - 1]).append("  ");
+            } else {
+                builder.append("   ");
+            }
+            for (int j = 0; j < matrix[i].length; ++j) {
+                if (matrix[i][j] < 10) {
+                    builder.append(matrix[i][j]).append("  ");
+                } else {
+                    builder.append(matrix[i][j]).append(" ");
+                }
+            }
+            builder.append('\n');
         }
         return builder.toString();
     }
