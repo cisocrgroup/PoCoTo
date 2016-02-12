@@ -8,6 +8,10 @@ package jav.correctionBackend.parser;
 import jav.correctionBackend.Token;
 
 /**
+ * This class is a Character that is linked to a Token of the correction
+ * backend. Most operations of the Character class are not implemented. It is an
+ * error to call them. The SpreadIndexDocumentLine class should implement those
+ * methods.
  *
  * @author flo
  */
@@ -48,8 +52,8 @@ public class SpreadIndexDocumentChar extends AbstractBaseChar {
     }
 
     @Override
-    public void substitute(int c) {
-        codepoint = codepoint;
+    public void substitute(int codepoint) {
+        this.codepoint = codepoint;
     }
 
     @Override
