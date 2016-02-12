@@ -69,16 +69,15 @@ public class HocrWhitespaceChar extends AbstractBaseChar {
 
     /**
      * This call can only happen if WhitespaceChar is the last char on line,
-     * which is illegeal, since WhitespaceChar must allways lie between two
-     * token.
+     * which is illegal, since WhitespaceChar must always lie between two token.
      */
     @Override
-    public void append(int c) {
+    public Char append(int c) {
         throw new UnsupportedOperationException("Append called on HocrWhitespaceChar");
     }
 
     @Override
-    public void prepend(int c) {
-        prevToken.getLastChar().append(c);
+    public Char prepend(int c) {
+        return prevToken.getLastChar().append(c);
     }
 }

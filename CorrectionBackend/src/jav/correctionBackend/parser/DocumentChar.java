@@ -5,7 +5,8 @@
  */
 package jav.correctionBackend.parser;
 
-import jav.correctionBackend.Token;
+import jav.correctionBackend.SpecialSequenceType;
+import jav.correctionBackend.util.Tokenization;
 
 /**
  * This class is a Character that is linked to a Token of the correction
@@ -18,21 +19,19 @@ import jav.correctionBackend.Token;
 public class DocumentChar extends AbstractBaseChar {
 
     private int codepoint;
-    private final Token token;
+    private DocumentToken token;
+    private final BoundingBox bb;
 
-    public DocumentChar(Line line, Token token, int codepoint) {
+    public DocumentChar(Line line, DocumentToken token, int codepoint, BoundingBox bb) {
         super(line);
         this.codepoint = codepoint;
         this.token = token;
-    }
-
-    public Token getToken() {
-        return token;
+        this.bb = bb;
     }
 
     @Override
     public BoundingBox getBoundingBox() {
-        return new BoundingBox();
+        return bb;
     }
 
     @Override
@@ -42,30 +41,43 @@ public class DocumentChar extends AbstractBaseChar {
 
     @Override
     public boolean isSuspicious() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return token.getToken().isSuspicious();
     }
 
     @Override
     public void delete() {
-        assert (false);
-        throw new UnsupportedOperationException("Not supported yet.");
+        token.delete(this);
     }
 
     @Override
     public void substitute(int codepoint) {
-        this.codepoint = codepoint;
+        if (token.getToken().getSpecialSeq() == SpecialSequenceType.SPACE) {
+            if (!Tokenization.isWhitespaceCharacter(codepoint)) {
+                final DocumentChar prev = (DocumentChar) getPrev();
+                if (prev != null) {
+                    prev.token.append(prev, this);
+                    token.delete(this);
+                    this.token = prev.token;
+                }
+            }
+        } else {
+            this.codepoint = codepoint;
+            token.update();
+        }
     }
 
     @Override
-    public void prepend(int c) {
-        assert (false);
-        throw new UnsupportedOperationException("Not supported yet.");
+    public DocumentChar prepend(int c) {
+        DocumentChar newChar = new DocumentChar(getLine(), token, codepoint, bb);
+        token.prepend(this, newChar);
+        return newChar;
     }
 
     @Override
-    public void append(int c) {
-        assert (false);
-        throw new UnsupportedOperationException("Not supported yet.");
+    public DocumentChar append(int c) {
+        DocumentChar newChar = new DocumentChar(getLine(), token, codepoint, bb);
+        token.append(this, newChar);
+        return newChar;
     }
 
 }

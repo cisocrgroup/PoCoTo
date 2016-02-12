@@ -44,15 +44,16 @@ public class TeiChar extends AbstractBaseChar {
     }
 
     @Override
-    public void prepend(int c) {
+    public TeiChar prepend(int c) {
         final int i = getIndexInLine();
         if (i > 0) {
             getLine().add(i, new TeiChar(codepoint, getLine()));
         }
+        return null;
     }
 
     @Override
-    public void append(int c) {
+    public TeiChar append(int c) {
         final int i = getIndexInLine();
         TeiChar newTeiChar = new TeiChar(codepoint, getLine());
         if (i == (getLine().size() - 1)) {
@@ -60,6 +61,7 @@ public class TeiChar extends AbstractBaseChar {
         } else if (i >= 0) {
             getLine().add(i, newTeiChar);
         }
+        return null;
     }
 
 }

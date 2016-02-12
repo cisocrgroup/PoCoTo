@@ -41,12 +41,16 @@ public class Line extends ArrayList<Char> {
     }
 
     public void insert(int idx, int codepoint) {
-        if (0 < size()) {
-            if (idx < size()) {
-                get(idx).prepend(codepoint);
-            } else {
-                get(size() - 1).append(codepoint);
-            }
+        if (this.isEmpty()) {
+            throw new RuntimeException("Cannot insert into empty line");
+        }
+
+        if (idx < size()) {
+            Char newChar = get(idx).prepend(codepoint);
+            add(idx, newChar);
+        } else {
+            Char newChar = get(size() - 1).append(codepoint);
+            add(newChar);
         }
     }
 

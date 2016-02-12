@@ -63,13 +63,15 @@ public interface Char {
      * Prepend a new Character before this character.
      *
      * @param c the code point for the new Char.
+     * @return the new Char to append.
      */
-    public void prepend(int c);
+    public Char prepend(int c);
 
     /**
      * Append a new character after this one.
      *
      * @param c the code point for the new Char.
+     * @return the new Char to append
      */
-    public void append(int c);
+    public Char append(int c);
 }

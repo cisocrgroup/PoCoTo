@@ -63,13 +63,17 @@ public class HocrChar extends AbstractBaseChar {
     }
 
     @Override
-    public void append(int c) {
-        token.append(this, new HocrChar(getLine(), token, bb, c));
+    public HocrChar append(int c) {
+        HocrChar newChar = new HocrChar(getLine(), token, bb, c);
+        token.append(this, newChar);
+        return newChar;
     }
 
     @Override
-    public void prepend(int c) {
-        token.prepend(this, new HocrChar(getLine(), token, bb, c));
+    public HocrChar prepend(int c) {
+        HocrChar newChar = new HocrChar(getLine(), token, bb, c);
+        token.prepend(this, newChar);
+        return newChar;
     }
 
 }

@@ -5,6 +5,8 @@
  */
 package jav.correctionBackend.parser;
 
+import jav.correctionBackend.TokenImageInfoBox;
+
 /**
  *
  * @author flo
@@ -12,6 +14,11 @@ package jav.correctionBackend.parser;
 public class BoundingBox {
 
     private int l, t, r, b;
+
+    public BoundingBox(TokenImageInfoBox tiib) {
+        this(tiib.getCoordinateLeft(), tiib.getCoordinateTop(),
+                tiib.getCoordinateRight(), tiib.getCoordinateBottom());
+    }
 
     public BoundingBox(int l, int t, int r, int b) {
         this.l = l;

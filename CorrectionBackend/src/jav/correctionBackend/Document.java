@@ -442,7 +442,9 @@ public abstract class Document {
             conn.close();
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
-            Logger.getLogger(DefaultDocument.class.getName()).log(Level.SEVERE, null, ex);
+            Logger
+                    .getLogger(DefaultDocument.class
+                            .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -460,7 +462,9 @@ public abstract class Document {
             conn.close();
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
-            Logger.getLogger(DefaultDocument.class.getName()).log(Level.SEVERE, null, ex);
+            Logger
+                    .getLogger(DefaultDocument.class
+                            .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
