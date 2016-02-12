@@ -3,6 +3,8 @@ package jav.gui.actions;
 import jav.gui.cookies.DocumentLoadedCookie;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.UnsavedChangesDialog;
+import jav.gui.events.MessageCenter;
+import jav.gui.events.documentChanged.DocumentChangedEvent;
 import jav.gui.main.MainController;
 import jav.logging.log4j.Log;
 import java.io.File;
@@ -99,6 +101,8 @@ public class ImportTei extends ContextAction<DocumentLoadedCookie> {
                             "Error while importing the document: %s\n",
                             runner.getErrorMessage())
             );
+        } else {
+            MessageCenter.getInstance().fireDocumentChangedEvent(new DocumentChangedEvent(this, MainController.findInstance().getDocument()));
         }
     }
 
