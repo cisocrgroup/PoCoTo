@@ -18,10 +18,12 @@ public class DocumentToken extends AbstractToken<DocumentChar> {
 
     private final Token token;
     private final Document document;
+    private boolean needsUpdate;
 
     public DocumentToken(Line line, Token token, Document document) {
         this.token = token;
         this.document = document;
+        this.needsUpdate = false;
         parse(line);
     }
 
@@ -36,6 +38,17 @@ public class DocumentToken extends AbstractToken<DocumentChar> {
 
     @Override
     public void update() {
+        needsUpdate = true;
+    }
+
+    public void finish() {
+        if (needsUpdate) {
+            doUpdate();
+        }
+        needsUpdate = false;
+    }
+
+    private void doUpdate() {
         String corr = toString();
         try {
             //Log.debug(this, "correct token(%d, '%s') with '%s'", token.getID(), token.getWOCR(), corr);

@@ -32,6 +32,9 @@ public class DocumentLine extends Line {
     @Override
     public void finishCorrection() {
         StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < this.size(); ++i) {
+            getDocumentCharAt(i).getDocumentToken().finish();
+        }
         for (int i = 0; i < this.size();) {
             final int e = findEndOf(i);
             builder.setLength(0);
