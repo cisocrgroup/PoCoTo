@@ -51,7 +51,7 @@ public class DocumentParser {
         );
         documentBuilder.init();
         int i = 0;
-        final int n = mappings.length();
+        final int n = mappings.size();
         for (OcrToImageFileMapping.Mapping mapping : mappings) {
             progress(mapping, ++i, n);
             PageParser pageParser = fileType.getPageParser();
