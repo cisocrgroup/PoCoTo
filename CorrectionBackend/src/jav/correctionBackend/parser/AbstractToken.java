@@ -103,4 +103,13 @@ public abstract class AbstractToken<T extends Char> extends ArrayList<T> {
             update();
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        for (Char c : this) {
+            builder.appendCodePoint(c.getChar());
+        }
+        return builder.toString();
+    }
 }

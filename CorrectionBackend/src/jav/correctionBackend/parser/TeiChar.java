@@ -9,13 +9,14 @@ package jav.correctionBackend.parser;
  *
  * @author finkf
  */
-public class TeiChar extends AbstractBaseChar {
+public class TeiChar implements Char {
 
     private int codepoint;
+    private final TeiToken teiToken;
     private BoundingBox bb;
 
-    public TeiChar(int codepoint, Line line) {
-        super(line);
+    public TeiChar(int codepoint, TeiToken teiToken) {
+        this.teiToken = teiToken;
         this.codepoint = codepoint;
         this.bb = new BoundingBox();
     }
@@ -36,35 +37,38 @@ public class TeiChar extends AbstractBaseChar {
     }
 
     @Override
-    public void delete() {
-        getLine().remove(getIndexInLine());
-    }
-
-    @Override
     public void substitute(Char c) {
         this.codepoint = c.getChar();
         this.bb = c.getBoundingBox();
+        teiToken.update();
+    }
+
+    @Override
+    public void delete() {
+        teiToken.delete(this);
     }
 
     @Override
     public TeiChar prepend(int c) {
-        final int i = getIndexInLine();
-        if (i > 0) {
-            getLine().add(i, new TeiChar(codepoint, getLine()));
-        }
-        return null;
+        TeiChar newChar = new TeiChar(c, teiToken);
+        teiToken.prepend(this, newChar);
+        return newChar;
     }
 
     @Override
     public TeiChar append(int c) {
-        final int i = getIndexInLine();
-        TeiChar newTeiChar = new TeiChar(codepoint, getLine());
-        if (i == (getLine().size() - 1)) {
-            getLine().add(newTeiChar);
-        } else if (i >= 0) {
-            getLine().add(i, newTeiChar);
-        }
-        return null;
+        TeiChar newChar = new TeiChar(c, teiToken);
+        teiToken.append(this, newChar);
+        return newChar;
     }
 
+    @Override
+    public Char getPrev() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Char getNext() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

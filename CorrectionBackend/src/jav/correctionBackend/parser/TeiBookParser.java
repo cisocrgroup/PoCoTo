@@ -29,7 +29,7 @@ public class TeiBookParser {
     private final File file;
     private final org.w3c.dom.Document document;
     private TeiBook book;
-    private TeiLine currentLine;
+    private Line currentLine;
 
     public TeiBookParser(File file) throws SAXException, IOException, ParserConfigurationException {
         this.file = file;
@@ -74,9 +74,9 @@ public class TeiBookParser {
             currentLine = null;
         } else if (node.getNodeType() == Node.TEXT_NODE) {
             if (currentLine == null) {
-                currentLine = new TeiLine(node);
+                currentLine = new Line();
             }
-            currentLine.add(node.getNodeValue());
+            currentLine.addAll(new TeiToken(node));
         }
     }
 
