@@ -9,13 +9,14 @@ package jav.correctionBackend.parser;
  *
  * @author finkf
  */
-public class TeiChar implements Char {
+public class TeiChar extends AbstractBaseChar {
 
     private int codepoint;
     private final TeiToken teiToken;
     private BoundingBox bb;
 
-    public TeiChar(int codepoint, TeiToken teiToken) {
+    public TeiChar(Line line, int codepoint, TeiToken teiToken) {
+        super(line);
         this.teiToken = teiToken;
         this.codepoint = codepoint;
         this.bb = new BoundingBox();
@@ -50,25 +51,15 @@ public class TeiChar implements Char {
 
     @Override
     public TeiChar prepend(int c) {
-        TeiChar newChar = new TeiChar(c, teiToken);
+        TeiChar newChar = new TeiChar(getLine(), c, teiToken);
         teiToken.prepend(this, newChar);
         return newChar;
     }
 
     @Override
     public TeiChar append(int c) {
-        TeiChar newChar = new TeiChar(c, teiToken);
+        TeiChar newChar = new TeiChar(getLine(), c, teiToken);
         teiToken.append(this, newChar);
         return newChar;
-    }
-
-    @Override
-    public Char getPrev() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Char getNext() {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

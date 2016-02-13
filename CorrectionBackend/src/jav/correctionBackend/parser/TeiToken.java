@@ -15,9 +15,9 @@ public class TeiToken extends AbstractToken {
 
     private final Node node;
 
-    public TeiToken(Node node) {
+    public TeiToken(Node node, Line line) {
         this.node = node;
-        parse();
+        parse(line);
     }
 
     @Override
@@ -30,12 +30,12 @@ public class TeiToken extends AbstractToken {
         node.getParentNode().removeChild(node);
     }
 
-    private void parse() {
+    private void parse(Line line) {
         final String str = node.getNodeValue();
         final int n = str.length();
         for (int i = 0; i < n;) {
             final int codepoint = str.codePointAt(i);
-            add(new TeiChar(codepoint, this));
+            add(new TeiChar(line, codepoint, this));
             i += Character.charCount(codepoint);
         }
     }

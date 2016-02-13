@@ -76,7 +76,7 @@ public class TeiBookParser {
             if (currentLine == null) {
                 currentLine = new Line();
             }
-            currentLine.addAll(new TeiToken(node));
+            currentLine.addAll(new TeiToken(node, currentLine));
         }
     }
 
