@@ -35,35 +35,56 @@ public class Infuser {
     public void infuse() throws Exception {
         checkPageSizes();
         for (int i = 0; i < gt.size(); ++i) {
+            log(String.format("infusing page %d/%d", i, gt.size()), false);
             ArrayList<Line> gtlines = gt.get(i).getAllLines();
             ArrayList<Line> ocrlines = ocr.get(i).getAllLines();
-
             final int on = ocrlines.size();
             final int gn = gtlines.size();
-            for (int o = 0, g = 0; o < on && g < gn;) {
-                log(String.format("infusing line %d/%d on page %d/%d", o + 1, on, i, gt.size()), false);
-                if (lineLengthsAreTooDifferent(ocrlines.get(o).size(), gtlines.get(g).size())) {
-                    log(String.format("Skipping line %d on page %d", o + 1, i + 1), true);
-                    ++o;
-                    continue;
+
+            for (Index idx = new Index(0, 0); idx.g < gn && idx.o < on; idx.inc()) {
+                WagnerFischer wf = allign(gtlines, ocrlines, idx);
+                if (wf == null) {
+                    break;
                 }
-                final WagnerFischer wf = new WagnerFischer(
-                        gtlines.get(g).toString(),
-                        ocrlines.get(o).toString()
-                );
-                final int lev = wf.calculate();
-                //Log.debug(this, "levenshtein(%d):\n%s", lev, wf.toString());
-                //Log.debug(this, "matrix:\n%s", wf.matrixToString());
-                if (levenshteinDistanceIsToLarge(lev, ocrlines.get(o).size())) {
-                    log(String.format("Skipping line %d on page %d", o + 1, i + 1), true);
-                    ++o;
-                    continue;
-                }
-                Corrector.correct(wf, gtlines.get(g), ocrlines.get(o));
-                ++g;
-                ++o;
+                Corrector.correct(wf, gtlines.get(idx.g), ocrlines.get(idx.o));
             }
         }
+    }
+
+    private class Index {
+
+        int g, o;
+
+        public Index(int g, int o) {
+            this.g = g;
+            this.o = o;
+        }
+
+        public void inc() {
+            g++;
+            o++;
+        }
+    }
+
+    private WagnerFischer allign(ArrayList<Line> gt, ArrayList<Line> ocr, Index idx) {
+        for (int gg = idx.g; gg < gt.size(); ++gg) {
+            Line gtline = gt.get(gg);
+            for (int oo = idx.o; oo < ocr.size(); ++oo) {
+                Line ocrline = ocr.get(oo);
+                log(String.format("testing %d %d\n%s\nand\nd%s", gg, oo, gtline, ocrline), true);
+                if (!lineLengthsAreTooDifferent(ocrline.size(), gtline.size())) {
+                    WagnerFischer wf = new WagnerFischer(gtline.toString(), ocrline.toString());
+                    final int lev = wf.calculate();
+                    if (!levenshteinDistanceIsToLarge(lev, ocrline.size())) {
+                        log(String.format("alligning %d %d\n%s\nand\n%s", gg, oo, gtline, ocrline), true);
+                        idx.g = gg;
+                        idx.o = oo;
+                        return wf;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private boolean lineLengthsAreTooDifferent(int on, int gn) {
@@ -90,8 +111,7 @@ public class Infuser {
     private void log(String msg, boolean isError) {
         if (isError) {
             Log.error(this, msg);
-        }
-        if (ph != null) {
+        } else if (ph != null) {
             ph.progress(msg);
         }
     }
