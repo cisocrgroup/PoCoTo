@@ -34,10 +34,11 @@ public class Infuser {
 
     public void infuse() throws Exception {
         checkPageSizes();
-        for (int i = 0; i < gt.size(); ++i) {
-            log(String.format("infusing page %d/%d", i, gt.size()), false);
-            ArrayList<Line> gtlines = gt.get(i).getAllLines();
-            ArrayList<Line> ocrlines = ocr.get(i).getAllLines();
+        final int pn = gt.getNumberOfPages();
+        for (int i = 0; i < pn; ++i) {
+            log(String.format("infusing page %d/%d", i, pn), false);
+            ArrayList<Line> gtlines = gt.getPageAt(i).getAllLines();
+            ArrayList<Line> ocrlines = ocr.getPageAt(i).getAllLines();
             final int on = ocrlines.size();
             final int gn = gtlines.size();
 
@@ -97,12 +98,12 @@ public class Infuser {
     }
 
     private void checkPageSizes() throws Exception {
-        if (gt.size() != ocr.size()) {
+        if (gt.getNumberOfPages() != ocr.getNumberOfPages()) {
             throw new Exception(
                     String.format(
                             "Page count differ: ocr: %d, gt: %d",
-                            ocr.size(),
-                            gt.size()
+                            ocr.getNumberOfPages(),
+                            gt.getNumberOfPages()
                     )
             );
         }

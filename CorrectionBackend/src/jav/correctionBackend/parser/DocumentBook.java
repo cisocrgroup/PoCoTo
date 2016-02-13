@@ -7,6 +7,7 @@ package jav.correctionBackend.parser;
 
 import jav.correctionBackend.Document;
 import jav.correctionBackend.MyIterator;
+import java.util.ArrayList;
 
 /**
  *
@@ -15,16 +16,28 @@ import jav.correctionBackend.MyIterator;
 public class DocumentBook extends Book {
 
     private final Document document;
+    private final ArrayList<DocumentPage> pages;
 
     public DocumentBook(Document document) {
         this.document = document;
+        pages = new ArrayList<>();
         parse();
+    }
+
+    @Override
+    public int getNumberOfPages() {
+        return pages.size();
+    }
+
+    @Override
+    public DocumentPage getPageAt(int i) {
+        return pages.get(i);
     }
 
     private void parse() {
         MyIterator<jav.correctionBackend.Page> it = document.pageIterator();
         while (it.hasNext()) {
-            this.add(new DocumentPage(it.next(), document));
+            pages.add(new DocumentPage(it.next(), document));
         }
     }
 }

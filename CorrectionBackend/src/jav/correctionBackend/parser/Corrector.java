@@ -14,9 +14,12 @@ import jav.correctionBackend.util.WagnerFischer;
 public class Corrector {
 
     public static void correct(Book correct, Book incorrect) {
-        final int n = Math.min(correct.size(), incorrect.size());
+        final int n = Math.min(
+                correct.getNumberOfPages(),
+                incorrect.getNumberOfPages()
+        );
         for (int i = 0; i < n; ++i) {
-            correct(correct.get(i), incorrect.get(i));
+            correct(correct.getPageAt(i), incorrect.getPageAt(i));
         }
     }
 

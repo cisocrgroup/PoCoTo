@@ -85,7 +85,7 @@ public class TeiBookParser {
         if (book.isEmpty()) {
             throw new Exception("Missing `pb` tag in tei file");
         }
-        return book.get(book.size() - 1);
+        return book.getPageAt(book.getNumberOfPages() - 1);
     }
 
     private Paragraph getLastParagraph() throws Exception {

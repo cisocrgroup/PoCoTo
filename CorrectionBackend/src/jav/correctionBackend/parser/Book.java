@@ -6,7 +6,6 @@
 package jav.correctionBackend.parser;
 
 import java.io.File;
-import java.util.ArrayList;
 
 /**
  * A list of pages. It is called `book` to avoid confusion with `document` in
@@ -14,7 +13,7 @@ import java.util.ArrayList;
  *
  * @author flo
  */
-public class Book extends ArrayList<Page> {
+public abstract class Book {
 
     private static final File EMPTY_FILE = new File("");
 
@@ -44,5 +43,20 @@ public class Book extends ArrayList<Page> {
     public File getImageDir() {
         return imageDir;
     }
+
+    /**
+     * Get the total number of pages of this book.
+     *
+     * @return the number of pages
+     */
+    public abstract int getNumberOfPages();
+
+    /**
+     * Get the page at index i.
+     *
+     * @param i the index of the page
+     * @return the page at index i
+     */
+    public abstract Page getPageAt(int i);
 
 }
