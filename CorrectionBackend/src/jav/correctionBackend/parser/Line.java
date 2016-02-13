@@ -31,8 +31,8 @@ public class Line extends ArrayList<Char> {
         this.bb = bb;
     }
 
-    public void substitute(int idx, int codepoint) {
-        get(idx).substitute(codepoint);
+    public void substitute(int idx, Char c) {
+        get(idx).substitute(c);
     }
 
     public void delete(int idx) {

@@ -56,11 +56,11 @@ public class HocrWhitespaceChar extends AbstractBaseChar {
     }
 
     @Override
-    public void substitute(int c) {
-        if (!Character.isWhitespace(c)) {
+    public void substitute(Char c) {
+        if (!Character.isWhitespace(c.getChar())) {
             final int i = getIndexInLine();
             if (i != -1) {
-                HocrChar newChar = new HocrChar(getLine(), c);
+                HocrChar newChar = new HocrChar(getLine(), c.getChar());
                 prevToken.mergeRightward(newChar, nextToken);
                 getLine().set(i, newChar);
             }

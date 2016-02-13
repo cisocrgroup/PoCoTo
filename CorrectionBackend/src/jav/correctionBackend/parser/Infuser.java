@@ -5,7 +5,6 @@
  */
 package jav.correctionBackend.parser;
 
-import jav.correctionBackend.util.WagnerFischer;
 import jav.logging.log4j.Log;
 import java.util.ArrayList;
 import org.netbeans.api.progress.ProgressHandle;
@@ -74,7 +73,7 @@ public class Infuser {
                 Line ocrline = ocr.get(oo);
                 //log(String.format("testing %d %d\n%s\nand\nd%s", gg, oo, gtline, ocrline), true);
                 if (!lineLengthsAreTooDifferent(ocrline.size(), gtline.size())) {
-                    WagnerFischer wf = new WagnerFischer(gtline.toString(), ocrline.toString());
+                    WagnerFischer wf = new WagnerFischer(gtline, ocrline);
                     final int lev = wf.calculate();
                     if (!levenshteinDistanceIsToLarge(lev, ocrline.size())) {
                         //log(String.format("alligning %d %d\n%s\nand\n%s", gg, oo, gtline, ocrline), true);

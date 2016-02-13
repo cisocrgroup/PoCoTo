@@ -12,15 +12,17 @@ package jav.correctionBackend.parser;
 public class TeiChar extends AbstractBaseChar {
 
     private int codepoint;
+    private BoundingBox bb;
 
     public TeiChar(int codepoint, Line line) {
         super(line);
         this.codepoint = codepoint;
+        this.bb = new BoundingBox();
     }
 
     @Override
     public BoundingBox getBoundingBox() {
-        return new BoundingBox();
+        return bb;
     }
 
     @Override
@@ -39,8 +41,9 @@ public class TeiChar extends AbstractBaseChar {
     }
 
     @Override
-    public void substitute(int c) {
-        this.codepoint = c;
+    public void substitute(Char c) {
+        this.codepoint = c.getChar();
+        this.bb = c.getBoundingBox();
     }
 
     @Override

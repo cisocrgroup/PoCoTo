@@ -54,18 +54,20 @@ public class DocumentChar extends AbstractBaseChar {
     }
 
     @Override
-    public void substitute(int codepoint) {
+    public void substitute(Char c) {
         if (token.getToken().getSpecialSeq() == SpecialSequenceType.SPACE) {
-            if (!Tokenization.isWhitespaceCharacter(codepoint)) {
+            if (!Tokenization.isWhitespaceCharacter(c.getChar())) {
                 final DocumentChar prev = (DocumentChar) getPrev();
                 if (prev != null) {
+                    this.codepoint = c.getChar();
                     prev.token.append(prev, this);
                     token.delete(this);
                     this.token = prev.token;
+                    this.token.update();
                 }
             }
         } else {
-            this.codepoint = codepoint;
+            this.codepoint = c.getChar();
             token.update();
         }
     }

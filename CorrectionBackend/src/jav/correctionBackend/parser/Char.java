@@ -53,11 +53,11 @@ public interface Char {
     public void delete();
 
     /**
-     * Substitute the code point of this Character with another code point.
+     * Substitute the code point of this Character with another character.
      *
-     * @param c the new code point
+     * @param c the new character
      */
-    public void substitute(int c);
+    public void substitute(Char c);
 
     /**
      * Prepend a new Character before this character.

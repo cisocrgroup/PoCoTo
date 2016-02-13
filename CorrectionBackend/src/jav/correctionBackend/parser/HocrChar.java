@@ -57,8 +57,8 @@ public class HocrChar extends AbstractBaseChar {
     }
 
     @Override
-    public void substitute(int c) {
-        letter = c;
+    public void substitute(Char c) {
+        letter = c.getChar();
         token.update();
     }
 

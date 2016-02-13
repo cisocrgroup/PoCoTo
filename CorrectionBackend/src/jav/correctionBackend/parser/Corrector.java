@@ -5,8 +5,6 @@
  */
 package jav.correctionBackend.parser;
 
-import jav.correctionBackend.util.WagnerFischer;
-
 /**
  *
  * @author finkf
@@ -38,10 +36,7 @@ public class Corrector {
     }
 
     public static int correct(Line correct, Line incorrect) {
-        final WagnerFischer wf = new WagnerFischer(
-                getStringFromLine(correct),
-                getStringFromLine(incorrect)
-        );
+        final WagnerFischer wf = new WagnerFischer(correct, incorrect);
         final int res = wf.calculate();
         if (res > 0) {
             correct(wf, correct, incorrect);
@@ -57,12 +52,12 @@ public class Corrector {
                     ++i;
                     break;
                 case Substitution:
-                    incorrect.substitute(j, wf.getTruth()[j]);
+                    incorrect.substitute(j, wf.getGroundTruth().get(j));
                     ++j;
                     ++i;
                     break;
                 case Insertion:
-                    incorrect.insert(j, wf.getTruth()[j]);
+                    incorrect.insert(j, wf.getGroundTruth().get(j).getChar());
                     ++j;
                     ++i;
                     break;
@@ -73,14 +68,6 @@ public class Corrector {
             }
         }
         incorrect.finishCorrection();
-    }
-
-    private static String getStringFromLine(Line line) {
-        StringBuilder builder = new StringBuilder();
-        for (Char c : line) {
-            builder.appendCodePoint(c.getChar());
-        }
-        return builder.toString();
     }
 
     private Corrector() {
