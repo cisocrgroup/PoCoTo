@@ -72,12 +72,12 @@ public class Infuser {
             Line gtline = gt.get(gg);
             for (int oo = idx.o; oo < ocr.size(); ++oo) {
                 Line ocrline = ocr.get(oo);
-                log(String.format("testing %d %d\n%s\nand\nd%s", gg, oo, gtline, ocrline), true);
+                //log(String.format("testing %d %d\n%s\nand\nd%s", gg, oo, gtline, ocrline), true);
                 if (!lineLengthsAreTooDifferent(ocrline.size(), gtline.size())) {
                     WagnerFischer wf = new WagnerFischer(gtline.toString(), ocrline.toString());
                     final int lev = wf.calculate();
                     if (!levenshteinDistanceIsToLarge(lev, ocrline.size())) {
-                        log(String.format("alligning %d %d\n%s\nand\n%s", gg, oo, gtline, ocrline), true);
+                        //log(String.format("alligning %d %d\n%s\nand\n%s", gg, oo, gtline, ocrline), true);
                         idx.g = gg;
                         idx.o = oo;
                         return wf;
