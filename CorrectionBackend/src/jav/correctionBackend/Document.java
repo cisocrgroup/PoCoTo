@@ -128,6 +128,7 @@ public abstract class Document {
 
     protected void addPattern(Pattern p) {
         Connection conn = null;
+        //Log.debug(this, "adding pattern: %s", p);
         try {
             conn = jcp.getConnection();
             PreparedStatement prep = conn.prepareStatement("INSERT INTO pattern VALUES( null, ?, ?, ?, ? )");
@@ -147,6 +148,7 @@ public abstract class Document {
 
     protected void addPatternOccurrence(PatternOccurrence po) {
         Connection conn = null;
+        //Log.debug(this, "adding pattern occoruence %s", po);
         try {
             conn = jcp.getConnection();
             PreparedStatement prep = conn.prepareStatement("INSERT INTO patternoccurrence VALUES( ?, ?, ?, ?, ?, ? )");
@@ -171,6 +173,8 @@ public abstract class Document {
         try {
             conn = jcp.getConnection();
             Statement s = conn.createStatement();
+            // reset the auto_increment counter to 0
+            s.executeUpdate("ALTER TABLE pattern ALTER COLUMN patternID RESTART WITH 0");
             s.executeUpdate("TRUNCATE TABLE pattern");
             s.executeUpdate("TRUNCATE TABLE patternoccurrence");
             s.close();
@@ -1567,7 +1571,7 @@ public abstract class Document {
     }
 
     public ArrayList<Integer> deleteToken(int tokenID) throws SQLException {
-        Log.info(this, "deleteToken(%d)", tokenID);
+        //Log.info(this, "deleteToken(%d)", tokenID);
         Token thisT = this.getTokenByID(tokenID);
         Page page = this.getPage(thisT.getPageIndex());
         int index = thisT.getIndexInDocument();
@@ -1677,7 +1681,7 @@ public abstract class Document {
 
     public void exportAll(String fromDir, String toDir, String t) {
         FileType fileType = FileType.fromString(t);
-        Log.info(this, "exporting %s %s %s", fromDir, toDir, t);
+        //Log.info(this, "exporting %s %s %s", fromDir, toDir, t);
         String[] sources = new File(fromDir).list(fileType.getFilenameFilter());
         OverwriteFileDialog.Result doOverwrite = OverwriteFileDialog.Result.YES;
         for (String fileName : sources) {
