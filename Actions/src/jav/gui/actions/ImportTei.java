@@ -98,7 +98,7 @@ public class ImportTei extends ContextAction<DocumentLoadedCookie> {
         if (retval == 0) {
             new CustomErrorDialog().showDialog(
                     String.format(
-                            "Error while importing the document: %s\n",
+                            "Error while importing the document: %s",
                             runner.getErrorMessage())
             );
         } else {
