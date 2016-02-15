@@ -31,7 +31,7 @@ public class TeiToken extends AbstractToken {
     }
 
     private void parse(Line line) {
-        final String str = node.getNodeValue();
+        final String str = node.getNodeValue().trim();
         final int n = str.length();
         for (int i = 0; i < n;) {
             final int codepoint = str.codePointAt(i);
