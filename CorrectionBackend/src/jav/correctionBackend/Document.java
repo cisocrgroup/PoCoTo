@@ -1,6 +1,10 @@
 package jav.correctionBackend;
 
+import jav.correctionBackend.parser.Book;
+import jav.correctionBackend.parser.DocumentBook;
 import jav.correctionBackend.parser.Exporter;
+import jav.correctionBackend.parser.Infuser;
+import jav.correctionBackend.parser.TeiBookParser;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.OverwriteFileDialog;
 import jav.logging.log4j.Log;
@@ -1669,12 +1673,18 @@ public abstract class Document {
         }
     }
 
-    public void exportAsTei(String filename) {
-        try {
+    public void exportAsTei(File file) throws Exception {
+        if (!file.exists()) {
             TeiXmlExporter teiXmlExporter = new TeiXmlExporter(this);
-            teiXmlExporter.export(new File(filename));
-        } catch (Exception e) {
-            Log.error(this, "%s", e.toString());
+            teiXmlExporter.export(file);
+        } else {
+            final Book existing = new TeiBookParser(file).parse();
+            final Book project = new DocumentBook(this);
+            final Infuser infuser = new Infuser();
+            infuser.setGroundTruth(project);
+            infuser.setOCR(existing);
+            infuser.infuse();
+            existing.write(file);
         }
     }
 
