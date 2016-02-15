@@ -136,7 +136,6 @@ public abstract class Document {
             prep.setString(2, p.getRight());
             prep.setInt(3, p.getOccurencesN());
             prep.setInt(4, p.getCorrected());
-
             prep.addBatch();
             prep.executeBatch();
             prep.close();
