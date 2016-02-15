@@ -418,7 +418,7 @@ public class DefaultDocument extends Document {
 
     @Override
     public ArrayList<Integer> mergeRightward(int tokenID, int numTok) throws SQLException {
-        System.out.println("Beginning database transaction");
+        //System.out.println("Beginning database transaction");
         long now = System.currentTimeMillis();
 
         Connection conn = null;
@@ -567,7 +567,7 @@ public class DefaultDocument extends Document {
             undo_redo.executeBatch();
             conn.commit();
             long then = System.currentTimeMillis();
-            System.out.println("Database transaction finished. Time taken: " + (then - now));
+            //System.out.println("Database transaction finished. Time taken: " + (then - now));
             return retval;
         } catch (SQLException ex) {
             ex.printStackTrace();

@@ -413,7 +413,7 @@ public class SpreadIndexDocument extends Document {
             undo_redo.executeBatch();
             conn.commit();
             long then = System.currentTimeMillis();
-            System.out.println("Database transaction finished. Time taken: " + (then - now));
+            //System.out.println("Database transaction finished. Time taken: " + (then - now));
             return retval;
         } catch (SQLException ex) {
             ex.printStackTrace();
