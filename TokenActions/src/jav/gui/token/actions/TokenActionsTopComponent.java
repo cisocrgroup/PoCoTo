@@ -35,46 +35,47 @@ import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 @ConvertAsProperties(dtd = "-//jav.gui.token.actions//TokenActions//EN",
-autostore = false)
+        autostore = false)
 @TopComponent.Description(preferredID = "TokenActionsTopComponent",
-//iconBase="SET/PATH/TO/ICON/HERE", 
-persistenceType = TopComponent.PERSISTENCE_ALWAYS)
+        //iconBase="SET/PATH/TO/ICON/HERE",
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS)
 @TopComponent.Registration(mode = "explorer", openAtStartup = true)
 @ActionID(category = "Window", id = "jav.gui.token.actions.TokenActionsTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(displayName = "#CTL_TokenActionsAction",
-preferredID = "TokenActionsTopComponent")
+        preferredID = "TokenActionsTopComponent")
 public final class TokenActionsTopComponent extends TopComponent implements CancelEventSlot, TokenSelectionEventSlot, TokenDeselectionEventSlot, PageChangedEventSlot, TokenMultiSelectionEventSlot, TokenMultiDeselectionEventSlot {
 
     private SwingWorker<Boolean, Object> worker;
@@ -103,7 +104,7 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                MainController.findInstance().mergeRightward( multiToken.get(0), multiToken.size() - 1 );
+                MainController.findInstance().mergeRightward(multiToken.get(0), multiToken.size() - 1);
             }
         });
         jButton3.addActionListener(new ActionListener() {
@@ -112,16 +113,16 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
             public void actionPerformed(ActionEvent ae) {
                 int begin = multiToken.get(0);
                 Token prev = MainController.findInstance().getDocument().getPreviousToken(multiToken.get(0));
-                Token next = MainController.findInstance().getDocument().getPreviousToken(multiToken.get(multiToken.size()-1));
+                Token next = MainController.findInstance().getDocument().getPreviousToken(multiToken.get(multiToken.size() - 1));
 
-                if( prev.getWDisplay().equals(" ") && next.getWDisplay().equals(" ") && prev.getPageIndex() == next.getPageIndex()) {
+                if (prev.getWDisplay().equals(" ") && next.getWDisplay().equals(" ") && prev.getPageIndex() == next.getPageIndex()) {
                     multiToken.add(next.getID());
                 }
-                
+
 //                if( MainController.findInstance().getDocument().getTokenByID(multiToken.get(0)-1).getWDisplay().equals(" ") && MainController.findInstance().getDocument().getTokenByID(multiToken.get(multiToken.size()-1)+1).getWDisplay().equals(" ")) {
 //                    multiToken.add(MainController.findInstance().getDocument().getTokenByID(multiToken.get(multiToken.size()-1) +1).getIndexInDocument());
 //                }
-                MainController.findInstance().deleteToken(begin, multiToken.get(multiToken.size()-1));
+                MainController.findInstance().deleteToken(begin, multiToken.get(multiToken.size() - 1));
             }
         });
         jButton1.setEnabled(false);
@@ -135,10 +136,10 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
         jXTaskPane2.add(jPanel2);
     }
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -267,16 +268,16 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
             }
         }
         worker = new SwingWorker<Boolean, Object>() {
-            
+
             @Override
             protected Boolean doInBackground() {
 
                 boolean retval = false;
                 try {
-                    DoppelgangerFilter f = new DoppelgangerFilter( MainController.findInstance().getDocument().getTokenByID(currentTokenID), "");
+                    DoppelgangerFilter f = new DoppelgangerFilter(MainController.findInstance().getDocument().getTokenByID(currentTokenID), "");
                     tokenit = MainController.findInstance().getDocument().tokenIterator();
-                    result = f.applyFilter( tokenit );
-                    if( result != null ) {
+                    result = f.applyFilter(tokenit);
+                    if (result != null) {
                         resultSize = result.size();
                         retval = true;
                     } else {
