@@ -1987,6 +1987,19 @@ public abstract class Document {
         }
     }
 
+    public void updateTokenWOCR(Token token) throws SQLException {
+        assert (token != null);
+        final String sqlcmd = "UPDATE token SET wOCR=? WHERE tokenID=?";
+        try (Connection conn = jcp.getConnection();
+                PreparedStatement stmnt = conn.prepareStatement(sqlcmd)) {
+            stmnt.setString(1, token.getWOCR());
+            stmnt.setInt(2, token.getID());
+            stmnt.execute();
+        } catch (SQLException e) {
+            throw e;
+        }
+    }
+
     public HashMap<String, OcrErrorInfo> computeErrorFreqList() {
         HashMap<String, OcrErrorInfo> freqList = new HashMap<>();
         Iterator<Token> it = this.tokenIterator();

@@ -52,9 +52,8 @@ public class DocumentToken extends AbstractToken<DocumentChar> {
         String corr = toString();
         try {
             //Log.debug(this, "correct token(%d, '%s') with '%s'", token.getID(), token.getWOCR(), corr);
-            token.setIsCorrected(true);
-            token.setWCOR(corr);
-            document.correctTokenByString(token.getID(), corr);
+            token.setWOCR(corr);
+            document.updateTokenWOCR(token);
         } catch (SQLException e) {
             Log.error(this, e);
             throw new RuntimeException(e);
