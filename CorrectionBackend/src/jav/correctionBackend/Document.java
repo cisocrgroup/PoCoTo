@@ -179,7 +179,7 @@ public abstract class Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "could not add clear patterns: %s", ex.getMessage());
+            Log.error(this, "could not clear patterns: %s", ex.getMessage());
         }
     }
 
@@ -192,7 +192,7 @@ public abstract class Document {
             s.close();
             conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "could not add clear candidates: %s", ex.getMessage());
+            Log.error(this, "could not clear candidates: %s", ex.getMessage());
         }
     }
 
