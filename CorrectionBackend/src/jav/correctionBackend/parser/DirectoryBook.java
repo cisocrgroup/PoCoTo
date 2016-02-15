@@ -50,4 +50,9 @@ public class DirectoryBook extends Book {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public void write(File out) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

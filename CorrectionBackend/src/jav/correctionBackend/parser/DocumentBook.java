@@ -7,6 +7,7 @@ package jav.correctionBackend.parser;
 
 import jav.correctionBackend.Document;
 import jav.correctionBackend.MyIterator;
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -32,6 +33,11 @@ public class DocumentBook extends Book {
     @Override
     public DocumentPage getPageAt(int i) {
         return pages.get(i);
+    }
+
+    @Override
+    public void write(File out) throws Exception {
+        throw new Exception("Not implemented yet");
     }
 
     private void parse() {

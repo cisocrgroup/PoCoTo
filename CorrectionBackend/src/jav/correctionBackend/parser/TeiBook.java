@@ -6,7 +6,15 @@
 package jav.correctionBackend.parser;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 /**
  *
@@ -39,5 +47,15 @@ class TeiBook extends Book {
 
     public void add(Page page) {
         pages.add(page);
+    }
+
+    public void write(File outfile) throws IOException, TransformerException {
+        Transformer transformer
+                = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        DOMSource domSource = new DOMSource(document);
+        StreamResult out
+                = new StreamResult(new FileOutputStream(outfile));
+        transformer.transform(domSource, out);
     }
 }

@@ -45,6 +45,14 @@ public abstract class Book {
     }
 
     /**
+     * Write the book to an output file or directory
+     *
+     * @param out The path to the output file or directory
+     * @throws Exception on any error
+     */
+    public abstract void write(File out) throws Exception;
+
+    /**
      * Get the total number of pages of this book.
      *
      * @return the number of pages
