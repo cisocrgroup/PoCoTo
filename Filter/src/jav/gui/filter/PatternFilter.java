@@ -51,6 +51,9 @@ public class PatternFilter implements AbstractTokenFilter {
     public PatternFilter(HashMap<String, ?> types, String n) {
         this.name = n;
         patterntypes = new HashMap<>();
+        for (final String s : types.keySet()) {
+            patterntypes.put(s, new ArrayList<Token>());
+        }
     }
 
     @Override
