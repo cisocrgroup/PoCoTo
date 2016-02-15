@@ -4,6 +4,7 @@ import jav.gui.cookies.DocumentLoadedCookie;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.UnsavedChangesDialog;
 import jav.gui.main.MainController;
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.Action;
@@ -84,29 +85,28 @@ public class ExportAsTeiXml extends ContextAction<DocumentLoadedCookie> {
 
     private void doIt() {
         JFileChooser jfc = new JFileChooser();
-//        AbstractButton button = SwingUtils.getDescendantOfType(AbstractButton.class, jfc, "Icon", UIManager.getIcon("FileChooser.detailsViewIcon"));
-//        button.doClick();
+        jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 
         if (jfc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
             try {
                 File f = jfc.getSelectedFile();
-                NativeMethodRunner runner = new NativeMethodRunner(f.getCanonicalPath());
+                NativeMethodRunner runner = new NativeMethodRunner(f);
                 int retval = ProgressUtils.showProgressDialogAndRun(runner, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("exporting"), true);
                 if (retval == 0) {
-                    new CustomErrorDialog().showDialog("Error while exporting the document!\n");
+                    new CustomErrorDialog().showDialog("Error while exporting the document!");
                 }
-            } catch (IOException ex) {
-                new CustomErrorDialog().showDialog("Error while exporting the document!\n" + ex.getLocalizedMessage());
+            } catch (Exception ex) {
+                new CustomErrorDialog().showDialog("Error while exporting the document!" + ex.getLocalizedMessage());
             }
         }
     }
 
     private class NativeMethodRunner implements ProgressRunnable<Integer> {
 
-        private final String filename;
+        private final File file;
 
-        public NativeMethodRunner(String f) {
-            this.filename = f;
+        public NativeMethodRunner(File file) {
+            this.file = file;
         }
 
         @Override
@@ -114,9 +114,10 @@ public class ExportAsTeiXml extends ContextAction<DocumentLoadedCookie> {
             try {
                 ph.progress(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("exporting"));
                 ph.setDisplayName(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("exporting"));
-                MainController.findInstance().getDocument().exportAsTei(filename);
+                MainController.findInstance().getDocument().exportAsTei(file);
                 return 1;
             } catch (Exception e) {
+                Log.error(this, e);
                 return 0;
             }
         }
