@@ -31,6 +31,11 @@ public class Infuser {
         this.ocr = ocr;
     }
 
+    /**
+     * Infuse the ground truth book into the ocr book
+     *
+     * @throws Exception
+     */
     public void infuse() throws Exception {
         checkPageSizes();
         final int pn = gt.getNumberOfPages();
