@@ -50,6 +50,12 @@ public class Tokenization {
         return !isWordCharacter(codepoint) && !isWhitespaceCharacter(codepoint);
     }
 
+    /**
+     * Returns if a given codepoint is a non spacing mark (combining character).
+     *
+     * @param codepoint the given codepoint
+     * @return true if the codepoint is a non spacing mark
+     */
     public static boolean isNonSpacingMark(int codepoint) {
         return Character.getType(codepoint) == Character.NON_SPACING_MARK;
     }
