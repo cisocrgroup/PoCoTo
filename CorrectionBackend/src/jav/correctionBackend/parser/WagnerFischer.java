@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package jav.correctionBackend.util;
+package jav.correctionBackend.parser;
 
+import jav.correctionBackend.util.Tokenization;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,7 +17,7 @@ import org.apache.commons.lang3.ArrayUtils;
  */
 public class WagnerFischer {
 
-    private final int[] truth, test;
+    private final Line gt, ocr;
     private final int[][] matrix;
     private final Trace trace;
 
@@ -52,21 +53,21 @@ public class WagnerFischer {
             }
             return builder.toString();
         }
-    };
+    }
 
-    public WagnerFischer(String truth, String test) {
-        this.truth = toArray(truth);
-        this.test = toArray(test);
-        matrix = new int[this.test.length + 1][this.truth.length + 1];
+    public WagnerFischer(Line gt, Line ocr) {
+        this.gt = gt;
+        this.ocr = ocr;
+        matrix = new int[this.ocr.size() + 1][this.gt.size() + 1];
         trace = new Trace();
     }
 
-    public int[] getTest() {
-        return test;
+    public Line getOcr() {
+        return ocr;
     }
 
-    public int[] getTruth() {
-        return truth;
+    public Line getGroundTruth() {
+        return gt;
     }
 
     public Trace getTrace() {
@@ -80,7 +81,7 @@ public class WagnerFischer {
     /**
      * Calculate the matrix and the trace.
      *
-     * @return the levenshteindistance between test and truth
+     * @return the Levenshtein distance between test and truth
      */
     public int calculate() {
         for (int i = 0; i < matrix.length; ++i) {
@@ -101,10 +102,10 @@ public class WagnerFischer {
     private int getMin(int i, int j) {
         assert (i > 0);
         assert (j > 0);
-        assert ((i - 1) < test.length);
-        assert ((j - 1) < truth.length);
+        assert ((i - 1) < ocr.size());
+        assert ((j - 1) < gt.size());
 
-        if (test[i - 1] == truth[j - 1]) {
+        if (ocr.get(i - 1).getChar() == gt.get(j - 1).getChar()) {
             return matrix[i - 1][j - 1];
         } else {
             int[] tmp = {
@@ -117,7 +118,7 @@ public class WagnerFischer {
     }
 
     private void backtrack() {
-        for (int i = test.length, j = truth.length; i > 0 && j > 0;) {
+        for (int i = ocr.size(), j = gt.size(); i > 0 || j > 0;) {
             MinArg minArg = setTrace(i, j);
             i = minArg.i;
             j = minArg.j;
@@ -142,32 +143,25 @@ public class WagnerFischer {
     }
 
     private MinArg getMinArg(int i, int j) {
-        assert (i > 0);
-        assert (j > 0);
-        int choices[] = {matrix[i - 1][j - 1], matrix[i - 1][j], matrix[i][j - 1]};
-        int min = Collections.min(Arrays.asList(ArrayUtils.toObject(choices)));
-        int index = Arrays.asList(ArrayUtils.toObject(choices)).indexOf(min);
-        switch (index) {
-            case 0:
-                return new MinArg(i - 1, j - 1);
-            case 1:
-                return new MinArg(i - 1, j);
-            case 2:
-                return new MinArg(i, j - 1);
-            default:
-                throw new IllegalArgumentException("Index out of bounds: " + index);
+        if (i > 0 && j > 0) {
+            int choices[] = {matrix[i - 1][j - 1], matrix[i - 1][j], matrix[i][j - 1]};
+            int min = Collections.min(Arrays.asList(ArrayUtils.toObject(choices)));
+            int index = Arrays.asList(ArrayUtils.toObject(choices)).indexOf(min);
+            switch (index) {
+                case 0:
+                    return new MinArg(i - 1, j - 1);
+                case 1:
+                    return new MinArg(i - 1, j);
+                case 2:
+                    return new MinArg(i, j - 1);
+                default:
+                    throw new IllegalArgumentException("Index out of bounds: " + index);
+            }
+        } else if (i > 0) {
+            return new MinArg(i - 1, j);
+        } else { // j > 0
+            return new MinArg(i, j - 1);
         }
-    }
-
-    private static int[] toArray(String str) {
-        final int n = str.codePointCount(0, str.length());
-        int res[] = new int[n];
-        for (int i = 0, j = 0; i < n && j < str.length();) {
-            res[i] = str.codePointAt(j);
-            j += Character.charCount(res[i]);
-            ++i;
-        }
-        return res;
     }
 
     private class MinArg {
@@ -183,24 +177,66 @@ public class WagnerFischer {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        for (int i = 0, j = 0; i < trace.size() && j < test.length; ++i) {
+        for (int i = 0, j = 0; i < trace.size(); ++i) {
             if (trace.get(i).equals(EditOperation.Insertion)) {
                 builder.append('_');
             } else {
-                builder.appendCodePoint(test[j]);
+                builder.appendCodePoint(ocr.get(j).getChar());
+                if (Tokenization.isNonSpacingMark(ocr.get(j).getChar())) {
+                    builder.append('_');
+                }
                 ++j;
             }
         }
         builder.append('\n');
         builder.append(trace.toString());
         builder.append('\n');
-        for (int i = 0, j = 0; i < trace.size() && j < truth.length; ++i) {
+        for (int i = 0, j = 0; i < trace.size(); ++i) {
             if (trace.get(i).equals(EditOperation.Deletion)) {
                 builder.append('_');
             } else {
-                builder.appendCodePoint(truth[j]);
+                builder.appendCodePoint(gt.get(j).getChar());
+                if (Tokenization.isNonSpacingMark(gt.get(j).getChar())) {
+                    builder.append('_');
+                }
                 ++j;
             }
+        }
+        return builder.toString();
+    }
+
+    public String matrixToString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("   ");
+        for (int i = 0; i < matrix[0].length; ++i) {
+            if (i > 0) {
+                if (Tokenization.isNonSpacingMark(gt.get(i - 1).getChar())) {
+                    builder.append('_');
+                }
+                builder.appendCodePoint(gt.get(i - 1).getChar()).append("  ");
+            } else {
+                builder.append("   ");
+            }
+        }
+        builder.append('\n');
+
+        for (int i = 0; i < matrix.length; ++i) {
+            if (i > 0) {
+                if (Tokenization.isNonSpacingMark(ocr.get(i - 1).getChar())) {
+                    builder.append('_');
+                }
+                builder.appendCodePoint(ocr.get(i - 1).getChar()).append("  ");
+            } else {
+                builder.append("   ");
+            }
+            for (int j = 0; j < matrix[i].length; ++j) {
+                if (matrix[i][j] < 10) {
+                    builder.append(matrix[i][j]).append("  ");
+                } else {
+                    builder.append(matrix[i][j]).append(" ");
+                }
+            }
+            builder.append('\n');
         }
         return builder.toString();
     }

@@ -42,9 +42,9 @@ public class AbbyyXmlChar extends AbstractBaseChar {
     }
 
     @Override
-    public void substitute(int c) {
+    public void substitute(Char c) {
         setAttribute("pocotoSubstitution", new String(Character.toChars(letter)));
-        letter = c;
+        letter = c.getChar();
         node.getFirstChild().setNodeValue(new String(Character.toChars(letter)));
     }
 
@@ -58,25 +58,23 @@ public class AbbyyXmlChar extends AbstractBaseChar {
     }
 
     @Override
-    public void prepend(int c) {
+    public AbbyyXmlChar prepend(int c) {
         final int i = getIndexInLine();
-        if (i != -1) {
-            AbbyyXmlChar clone = clone(c);
-            clone.setAttribute("pocotoPrepend", new String(Character.toChars(c)));
-            node.getParentNode().insertBefore(clone.node, this.node);
-            getLine().add(i, clone);
-        }
+        AbbyyXmlChar clone = clone(c);
+        clone.setAttribute("pocotoPrepend", new String(Character.toChars(c)));
+        node.getParentNode().insertBefore(clone.node, this.node);
+        getLine().add(i, clone);
+        return clone;
     }
 
     @Override
-    public void append(int c) {
+    public AbbyyXmlChar append(int c) {
         final int i = getIndexInLine();
-        if (i != -1) {
-            AbbyyXmlChar clone = clone(c);
-            clone.setAttribute("pocotoAppend", new String(Character.toChars(c)));
-            node.getParentNode().appendChild(clone.node);
-            getLine().add(clone);
-        }
+        AbbyyXmlChar clone = clone(c);
+        clone.setAttribute("pocotoAppend", new String(Character.toChars(c)));
+        node.getParentNode().appendChild(clone.node);
+        getLine().add(clone);
+        return clone;
     }
 
     @Override

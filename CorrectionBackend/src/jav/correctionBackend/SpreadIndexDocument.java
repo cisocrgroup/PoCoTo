@@ -51,8 +51,8 @@ import org.netbeans.api.progress.ProgressUtils;
 public class SpreadIndexDocument extends Document {
 
     private int myIndex = 0;
-    private static int NORMINDEXPLUS = 11;
-    private static int PUNCTINDEXPLUS = 3;
+    private static final int NORMINDEXPLUS = 11;
+    private static final int PUNCTINDEXPLUS = 3;
 
     public SpreadIndexDocument(JdbcConnectionPool jc) {
         super(jc);
@@ -199,7 +199,7 @@ public class SpreadIndexDocument extends Document {
     @Override
     public ArrayList<Integer> deleteToken(int iDFrom, int iDTo)
             throws SQLException {
-        Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
+        //Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
         Connection conn = jcp.getConnection();
         ArrayList<Integer> retval = new ArrayList<>();
         PreparedStatement setIndex = null;
@@ -512,18 +512,16 @@ public class SpreadIndexDocument extends Document {
                 if (corr.equals(" ")) {
                     b = null;
                     left += charwidth;
+                } else if (imgwidth == 0) {
+                    b = null;
                 } else {
-                    if (imgwidth == 0) {
-                        b = null;
-                    } else {
-                        b = new TokenImageInfoBox();
-                        b.setImageFileName(atIndex.getImageFilename().substring(atIndex.getImageFilename().lastIndexOf(File.separator) + 1, atIndex.getImageFilename().length()));
-                        b.setCoordinateBottom(atIndex.getTokenImageInfoBox().getCoordinateBottom());
-                        b.setCoordinateTop(atIndex.getTokenImageInfoBox().getCoordinateTop());
-                        b.setCoordinateLeft(left);
-                        left += charwidth * corr.length();
-                        b.setCoordinateRight(left + 2);
-                    }
+                    b = new TokenImageInfoBox();
+                    b.setImageFileName(atIndex.getImageFilename().substring(atIndex.getImageFilename().lastIndexOf(File.separator) + 1, atIndex.getImageFilename().length()));
+                    b.setCoordinateBottom(atIndex.getTokenImageInfoBox().getCoordinateBottom());
+                    b.setCoordinateTop(atIndex.getTokenImageInfoBox().getCoordinateTop());
+                    b.setCoordinateLeft(left);
+                    left += charwidth * corr.length();
+                    b.setCoordinateRight(left + 2);
                 }
 
                 temp = new Token(atIndex.getWOCR());
@@ -625,13 +623,10 @@ public class SpreadIndexDocument extends Document {
 
                         if (tok.getID() == tokenID) {
                             myIndex += indexToAdd;
+                        } else if (tok.isNormal()) {
+                            myIndex += NORMINDEXPLUS;
                         } else {
-                            if (tok.isNormal()) {
-                                myIndex += NORMINDEXPLUS;
-                            } else {
-                                myIndex += PUNCTINDEXPLUS;
-                            }
-
+                            myIndex += PUNCTINDEXPLUS;
                         }
                     }
 

@@ -5,13 +5,17 @@
  */
 package jav.correctionBackend.parser;
 
+import jav.correctionBackend.Document;
+
 /**
  *
- * @author finkf
+ * @author flo
  */
-public interface LineReadeable {
+public class DocumentParagraph extends Paragraph {
 
-    public abstract int getNumberOfLines();
+    private final Document document;
 
-    public abstract String getLineAt(int i);
+    public DocumentParagraph(Document document) {
+        this.document = document;
+    }
 }

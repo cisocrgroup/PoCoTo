@@ -40,12 +40,16 @@ public class OcrToImageFileMapping implements Iterable<OcrToImageFileMapping.Map
         }
     }
 
+    public Mapping get(int i) {
+        return mappings.get(i);
+    }
+
     @Override
     public Iterator<Mapping> iterator() {
         return mappings.iterator();
     }
 
-    public int length() {
+    public int size() {
         return mappings.size();
     }
 

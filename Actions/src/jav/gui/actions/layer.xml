@@ -135,10 +135,16 @@
                 </file>
 
             </folder>
-            <file name="jav-gui-actions-ImportFromDocXml.shadow">
-                <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ImportFromDocXml.instance"/>
-                <attr name="position" intvalue="1400"/>
-            </file>
+            <folder name="Import">
+                <file name="jav-gui-actions-ImportFromDocXml.shadow">
+                    <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ImportFromDocXml.instance"/>
+                    <attr name="position" intvalue="800"/>
+                </file>
+                <file name="jav-gui-actions-ImportTei.shadow">
+                    <attr name="originalFile" stringvalue="Actions/File/jav-gui-actions-ImportTei.instance"/>
+                    <attr name="position" intvalue="900"/>
+                </file>
+            </folder>
         </folder>
 
         <folder name="Profiler">

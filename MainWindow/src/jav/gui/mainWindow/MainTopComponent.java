@@ -24,7 +24,6 @@ import jav.gui.events.tokenStatus.*;
 import jav.gui.layer.MouseDrawingUI;
 import jav.gui.main.*;
 import jav.gui.token.display.TokenVisualization;
-import jav.logging.log4j.Log;
 import java.awt.AWTEvent;
 import java.awt.Component;
 import java.awt.Point;
@@ -32,8 +31,6 @@ import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
@@ -116,7 +113,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
     private int multivertical;
     private LockableUI lockableUI;
     private MouseDrawingUI mouseDrawingUI;
-    
+
     public MainTopComponent() {
 
         MessageCenter.getInstance().addDocumentChangedEventListener(this);
@@ -339,11 +336,11 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
             if (!this.isActive) {
                 this.requestActive();
             }
-            
+
             content.add(this);
             MainController.findInstance().setLastFocusedTopComponent(this);
             MainController.findInstance().addToLookup(globalActions);
-            
+
 //            MainController.findInstance().removeFromLookup(globalActions);
             MessageCenter.getInstance().firePageChangedEvent(new PageChangedEvent(instance, currentPageIndex));
         } catch (Exception | Error ex) {
@@ -434,9 +431,9 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                     Page page = MainController.findInstance().getPage(p);
                     long time = System.currentTimeMillis();
 //                    Log.debug(
-//                            this, 
-//                            "gotoPage page number %d (%s)", 
-//                            page.getIndex(), 
+//                            this,
+//                            "gotoPage page number %d (%s)",
+//                            page.getIndex(),
 //                            page.getImageCanonical()
 //                    );
                     if (page.hasImage()) {
@@ -603,7 +600,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                         pv.getLayoutConstraints().put(newtv, "br");
                     }
                 }
-                
+
                 pv.update(TokenStatusType.DELETE, de.getPOIID(), de.getAffectedTokenIds());
                 pv.revalidate();
                 pv.repaint();
@@ -630,7 +627,6 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
 
 //            this.currentTokenIndex -= ((InsertEvent) e).getNumberOfTokensAffected();
 //            this.goToNextNormalToken();
-
                 if (this.multiToken != null) {
                     if (this.multiToken.size() > 1) {
                         this.multiSelection = null;
@@ -738,7 +734,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
             }
         }
     }
-    
+
     public void goToPreviousToken() {
         /*
          * selects the prev token
@@ -783,7 +779,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
 
             }
         }
-    }    
+    }
 
     public void goToPreviousNormalToken() {
         /*
@@ -850,8 +846,8 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                 toTest = MainController.findInstance().getDocument().getTokenByID(this.currentTokenID);
             }
 
-            while( toTest.getPageIndex() == this.currentPageIndex) {
-                            
+            while (toTest.getPageIndex() == this.currentPageIndex) {
+
                 TokenVisualization testtv = (TokenVisualization) tokenRegistry.getTokenVisualization(toTest.getID());
                 if (!testtv.isNewline() & !testtv.isSpace()) {
 
@@ -917,7 +913,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                 this.vertical = tokenRegistry.getTokenVisualization(MainController.findInstance().getPage(this.currentPageIndex).getEndIndex() - 1).getY() + 1000;
             }
 
-            while( toTest.getPageIndex() == this.currentPageIndex ) {
+            while (toTest.getPageIndex() == this.currentPageIndex) {
 
                 TokenVisualization testtv = (TokenVisualization) tokenRegistry.getTokenVisualization(toTest.getID());
                 if (!testtv.isNewline() & !testtv.isSpace()) {
@@ -1029,7 +1025,6 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                 indextotest = MainController.findInstance().getPage(this.currentPageIndex).getStartIndex();
             }
 
-
             int count = 1;
 
             while (!end && indextotest < MainController.findInstance().getDocument().getNumberOfTokens()) {
@@ -1116,8 +1111,9 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
     }
 
     public void selectToken(TokenVisualization tvToSelect, TokenSelectionType tst) {
-        if (tvToSelect == null)
+        if (tvToSelect == null) {
             return;
+        }
         tvToSelect.setSelected(true);
         tvToSelect.grabFocus();
         Rectangle rect = tvToSelect.getBounds();
@@ -1311,10 +1307,8 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                             this.multivertical = tv.getY();
                             tv.setMultiSelected(true);
                         }
-                    } else {
-                        if (bounds.contains(tv.getCentroid()) && !this.multiSelection.contains(tv) && tv.getY() == this.multivertical) {
-                            tv.setMultiSelected(true);
-                        }
+                    } else if (bounds.contains(tv.getCentroid()) && !this.multiSelection.contains(tv) && tv.getY() == this.multivertical) {
+                        tv.setMultiSelected(true);
                     }
                 } else if (tv.isSpace()) {
                     if (bounds.contains(tv.getBounds())) {

@@ -5,7 +5,6 @@
  */
 package jav.correctionBackend.parser;
 
-import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,6 +20,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
@@ -53,7 +53,6 @@ public class HocrPageParser implements PageParser {
     }
     private org.w3c.dom.Document xml;
     private HocrMeta meta;
-    private int imageHeight;
     private File image, ocr;
 
     @Override
@@ -80,7 +79,7 @@ public class HocrPageParser implements PageParser {
     @Override
     public Page parse() throws IOException, Exception {
         parseXml();
-        Log.info(this, "ocr-capabilities: %s", meta);
+        //Log.info(this, "ocr-capabilities: %s", meta);
         Page page = parsePage();
         if (meta.isOcropus) {
             page = new OcropusBoundingBoxAdjuster(page).adjust();
@@ -248,7 +247,7 @@ public class HocrPageParser implements PageParser {
             if (m.find()) {
                 return Integer.parseInt(m.group(1));
             }
-        } catch (Exception e) {
+        } catch (DOMException | NumberFormatException e) {
             // ignore
         }
         return -1;
@@ -266,7 +265,7 @@ public class HocrPageParser implements PageParser {
                         Integer.parseInt(m.group(4))
                 );
             }
-        } catch (Exception e) {
+        } catch (DOMException | NumberFormatException e) {
             // ignore;
         }
         return new BoundingBox(-1, -1, -1, -1);

@@ -415,7 +415,6 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 //                    MainController.findInstance().getSaver().save();
                     MainController.findInstance().reloadDocument();
                 } else {
-                    System.out.println("ERRROR" + retval);
                     new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/gui/dialogs/Bundle").getString("profile_error"));
                 }
             }
@@ -1168,7 +1167,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                                     dh_prof.getInputStream()
                             );
 
-                            ph.setDisplayName(statusApplyProfile);
+                            ph.progress(statusApplyProfile);
                             Log.info(this, "applying new profile to document");
                             globalDocument.clearPatterns();
                             OcrXmlImporter.importProfile(globalDocument, prof_in);

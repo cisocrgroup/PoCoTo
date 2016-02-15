@@ -14,11 +14,27 @@ import java.util.ArrayList;
  */
 public class Page extends ArrayList<Paragraph> {
 
+    private final static File EMPTY_FILE = new File("");
+
     private final File image, ocr;
 
     public Page(File image, File ocr) {
-        this.image = image;
-        this.ocr = ocr;
+        if (image == null) {
+            this.image = EMPTY_FILE;
+        } else {
+            this.image = image;
+        }
+
+        if (ocr == null) {
+            this.ocr = EMPTY_FILE;
+        } else {
+            this.ocr = ocr;
+        }
+
+    }
+
+    public Page() {
+        this(null, null);
     }
 
     public File getImageFile() {
@@ -28,4 +44,15 @@ public class Page extends ArrayList<Paragraph> {
     public File getOcrFile() {
         return ocr;
     }
+
+    public ArrayList<Line> getAllLines() {
+        ArrayList<Line> allLines = new ArrayList<>();
+        for (Paragraph p : this) {
+            for (Line l : p) {
+                allLines.add(l);
+            }
+        }
+        return allLines;
+    }
+
 }

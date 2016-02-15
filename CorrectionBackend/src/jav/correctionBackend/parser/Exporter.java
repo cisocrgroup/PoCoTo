@@ -6,9 +6,7 @@
 package jav.correctionBackend.parser;
 
 import jav.correctionBackend.Document;
-import jav.correctionBackend.Page;
 import java.io.File;
-import java.io.IOException;
 
 /**
  *
@@ -36,12 +34,13 @@ public class Exporter {
         return src;
     }
 
-    public void export(Document document) throws IOException, Exception {
-        Page page = document.getPage(src);
-        PageLineReader lineReader = new PageLineReader(page, document);
-        DocumentCorrector corrector = new DocumentCorrectorImpl(src, pageParser);
-        corrector.correctThisDocumentWith(lineReader);
-        corrector.write(dest);
+    public void export(Document document) throws Exception {
+        Page page = pageParser.parse();
+        Corrector.correct(
+                new DocumentPage(document.getPage(src), document),
+                page
+        );
+        pageParser.write(dest);
     }
 
 }

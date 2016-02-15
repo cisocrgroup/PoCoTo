@@ -8,6 +8,7 @@ package jav.correctionBackend.parser;
 import jav.correctionBackend.SpreadIndexDocument;
 import jav.correctionBackend.Token;
 import jav.correctionBackend.TokenImageInfoBox;
+import jav.correctionBackend.util.Tokenization;
 import java.io.File;
 import org.h2.jdbcx.JdbcConnectionPool;
 
@@ -146,13 +147,11 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
     }
 
     private static boolean isWordCharacter(int codepoint) {
-        return Character.isAlphabetic(codepoint)
-                || Character.isDigit(codepoint)
-                || Character.getType(codepoint) == Character.NON_SPACING_MARK;
+        return Tokenization.isWordCharacter(codepoint);
     }
 
     private static boolean isWhitespace(int codepoint) {
-        return Character.isWhitespace(codepoint);
+        return Tokenization.isWhitespaceCharacter(codepoint);
     }
 
 }
