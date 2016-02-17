@@ -20,9 +20,20 @@ import jav.gui.events.tokenNavigation.TokenNavigationEventSlot;
 import jav.gui.events.tokenNavigation.TokenNavigationType;
 import jav.gui.events.tokenSelection.TokenSelectionEvent;
 import jav.gui.events.tokenSelection.TokenSelectionType;
-import jav.gui.events.tokenStatus.*;
+import jav.gui.events.tokenStatus.CorrectedEvent;
+import jav.gui.events.tokenStatus.DeleteEvent;
+import jav.gui.events.tokenStatus.InsertEvent;
+import jav.gui.events.tokenStatus.MergeEvent;
+import jav.gui.events.tokenStatus.SetCorrectedEvent;
+import jav.gui.events.tokenStatus.SplitEvent;
+import jav.gui.events.tokenStatus.TokenStatusEvent;
+import jav.gui.events.tokenStatus.TokenStatusType;
 import jav.gui.layer.MouseDrawingUI;
-import jav.gui.main.*;
+import jav.gui.main.AbstractEditorViewTopComponent;
+import jav.gui.main.GlobalActions;
+import jav.gui.main.MainController;
+import jav.gui.main.SortableValueMap;
+import jav.gui.main.TokenVisualizationRegistry;
 import jav.gui.token.display.TokenVisualization;
 import java.awt.AWTEvent;
 import java.awt.Component;
@@ -501,7 +512,13 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
     public void dispatchEvent(TokenSelectionEvent e) {
 //        IOProvider.getDefault().getIO("Nachrichten", false).getOut().println(System.currentTimeMillis() + "select " + e.getTokenIndex());
         if (this.isActive) {
+            //Log.debug(this, "active: %s", this.isActive);
             this.currentTokenID = e.getTokenID();
+            //Log.debug(this, "currentTokenId: %s", this.currentTokenID);
+            //Log.debug(this, "pv: %s", pv);
+            //Log.debug(this, "pv.getVM: %s", pv.getVisualizationMode());
+            //Log.debug(this, "pv.getVM.getstv: %s", pv.getVisualizationMode().getSelectedTokenVisualization());
+            //Log.debug(this, "pv.getVM.getstv.y: %s", pv.getVisualizationMode().getSelectedTokenVisualization().getY());
             this.setVertical(pv.getVisualizationMode().getSelectedTokenVisualization().getY());
 
             if (e.getSelectionType().equals(TokenSelectionType.NORMAL)) {
