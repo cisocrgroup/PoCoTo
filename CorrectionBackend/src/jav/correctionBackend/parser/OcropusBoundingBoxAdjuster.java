@@ -145,17 +145,18 @@ public class OcropusBoundingBoxAdjuster {
     }
 
     private AdjustmentLine getAdjustmentLine(File file) throws Exception {
-        BufferedReader reader = new BufferedReader(
+        AdjustmentLine adjustmentLine;
+        try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(
                         new FileInputStream(file)
                 )
-        );
-        AdjustmentLine adjustmentLine = new AdjustmentLine(file);
-        String line;
-        while ((line = reader.readLine()) != null) {
-            adjustmentLine.add(AdjustmentChar.fromString(line));
+        )) {
+            adjustmentLine = new AdjustmentLine(file);
+            String line;
+            while ((line = reader.readLine()) != null) {
+                adjustmentLine.add(AdjustmentChar.fromString(line));
+            }
         }
-        reader.close();
         return adjustmentLine;
     }
 
