@@ -1,6 +1,6 @@
 # Post Correction Tool PoCoTo
 Source code for the Java-based PoCoTo client enabling fast interactive batch corrections of complete OCR error series in OCR'ed historical documents.
-For a detailed description see the [PoCoTo Manual[pocman].
+For a detailed description see the [PoCoTo Manual][pocman].
 
 [pocman]: https://github.com/cisocrgroup/Resources/blob/master/manuals/pocoto-manual.md
 

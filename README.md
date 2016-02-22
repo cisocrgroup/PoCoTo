@@ -5,7 +5,7 @@ For a detailed description see the [PoCoTo Manual][pocman].
 [pocman]: https://github.com/cisocrgroup/Resources/blob/master/manuals/pocoto-manual.md
 
 ## References
-The profiler has originally been written by Thorsten Vobl as part of his master's thesis in computational linguistics at CIS during the IMPACT project. 
+PoCoTo has originally been written by Thorsten Vobl as part of his master's thesis in computational linguistics at CIS during the IMPACT project. 
 
 It has been further developed as a CLARIN-D Kurationsprojekt by Florian Fink at CIS.
 
