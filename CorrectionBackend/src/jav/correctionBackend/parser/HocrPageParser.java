@@ -158,6 +158,11 @@ public class HocrPageParser implements PageParser {
         if (node.getFirstChild() != null
                 && node.getFirstChild().getTextContent() != null
                 && !node.getFirstChild().getTextContent().isEmpty()) {
+            // replace '\&' and '\<' with '&' '<' (possible error in ocropy)
+            String text = node.getFirstChild().getTextContent();
+            text = text.replace("\\&", "&");
+            text = text.replace("\\<", "<");
+            node.getFirstChild().setTextContent(text);
             HocrToken newToken = new HocrToken(line, node, getBoundingBox(node));
             line.addAll(newToken);
         }

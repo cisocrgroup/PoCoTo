@@ -7,7 +7,6 @@ package jav.correctionBackend.parser;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import jav.correctionBackend.util.FilePathUtils;
-import jav.logging.log4j.Log;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.BufferedReader;
 import java.io.File;
@@ -54,22 +53,39 @@ public class OcropusBoundingBoxAdjuster {
         }
     }
 
-    private void adjust(Line line, AdjustmentLine adj) throws Exception {
+    private void adjust(Line line, AdjustmentLine adjLine) throws Exception {
         adjustHorizontal(line.getBoundingBox());
-        BoundingBox prev = null;
-        for (int i = 0, j = -1; i < line.size(); ++i) {
-            Char c = line.get(i);
-            final int oldj = j;
-            j = adj.findNext(j, c);
-            if (j != -1) {
-                adjust(line.getBoundingBox(), prev, c.getBoundingBox(), adj.get(j));
-            } else {
-                Log.info(this, "skipping `%s`", new String(Character.toChars(c.getChar())));
-                adjust(line.getBoundingBox(), prev, c.getBoundingBox(), null);
-                j = oldj;
-            }
-            prev = c.getBoundingBox();
+        final int left = line.getBoundingBox().getLeft();
+
+        for (int i = 0; i < line.size(); ++i) {
+            Char current = line.get(i);
+            current.getBoundingBox().setTop(line.getBoundingBox().getTop());
+            current.getBoundingBox().setBottom(line.getBoundingBox().getBottom());
+            AdjustmentChar adjChar = findAdjustmentChar(i, current, adjLine);
+            current.getBoundingBox().setRight(left + adjChar.rightadj);
+            current.getBoundingBox().setLeft(left + adjChar.leftadj);
         }
+    }
+
+    private AdjustmentChar findAdjustmentChar(int i, Char current, AdjustmentLine adjLine)
+            throws Exception {
+        for (; i < adjLine.size(); ++i) {
+            AdjustmentChar adjChar = adjLine.get(i);
+            if ((adjChar.codepoint == current.getChar())
+                    || (Character.isWhitespace(adjChar.codepoint)
+                    && Character.isWhitespace(current.getChar()))) {
+                if (i > 0) {
+                    adjChar.leftadj = adjLine.get(i - 1).rightadj + 1;
+                }
+                return adjChar;
+            }
+        }
+        throw new Exception(
+                String.format(
+                        "Could not find `%s`",
+                        new String(Character.toChars(current.getChar()))
+                )
+        );
     }
 
     private void adjustHorizontal(BoundingBox bb) {
@@ -77,21 +93,6 @@ public class OcropusBoundingBoxAdjuster {
         final int y1 = imageHeight - bb.getTop() - 1;
         bb.setTop(y0);
         bb.setBottom(y1);
-    }
-
-    private void adjust(BoundingBox line, BoundingBox prev, BoundingBox current, AdjustmentChar adj) throws Exception {
-        if (adj != null) {
-            current.setLeft(line.getLeft() + adj.adjustment);
-        } else if (prev != null) {
-            current.setLeft(prev.getRight() + 1);
-        } else {
-            current.setLeft(line.getLeft());
-        }
-        current.setTop(line.getTop());
-        current.setBottom(line.getBottom());
-        if (prev != null) {
-            prev.setRight(current.getLeft() - 1);
-        }
     }
 
     private void setOcrFile(File ocr) throws Exception {
@@ -104,7 +105,7 @@ public class OcropusBoundingBoxAdjuster {
         File pp = ocr.getParentFile().getParentFile();
         String book = ocr.getParentFile().getName().replaceFirst("hocr", "book");
         locDir = new File(new File(pp, book), name);
-        Log.info(this, "locDir %s", locDir);
+        //Log.info(this, "locDir %s", locDir);
     }
 
     private void setImageFile(File image) throws Exception {
@@ -184,15 +185,26 @@ public class OcropusBoundingBoxAdjuster {
             }
             return -1;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            for (AdjustmentChar c : this) {
+                builder.appendCodePoint(c.codepoint);
+            }
+            return builder.toString();
+        }
     }
 
     private static class AdjustmentChar {
 
-        private final int adjustment, codepoint;
+        private final int rightadj, codepoint;
+        private int leftadj;
 
-        public AdjustmentChar(int codepoint, int adjustment) {
-            this.adjustment = adjustment;
+        public AdjustmentChar(int codepoint, int rightadj) {
+            this.rightadj = rightadj;
             this.codepoint = codepoint;
+            this.leftadj = 0;
         }
 
         public static AdjustmentChar fromString(String str) throws Exception {
