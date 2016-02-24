@@ -1117,12 +1117,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                 globalDocument.exportAsDocXML(tempFile.getCanonicalPath(), false);
                 File compressedTmpFile = File.createTempFile("document", ".corcxml.gz");
                 compressedTmpFile.deleteOnExit();
-                OutputStream compressedOut = new GZIPOutputStream(
+                try (OutputStream compressedOut = new GZIPOutputStream(
                         new FileOutputStream(compressedTmpFile)
-                );
-                Log.info(this, "compressing document ...");
-                Files.copy(tempFile.toPath(), compressedOut);
-                compressedOut.close();
+                )) {
+                    Log.info(this, "compressing document ...");
+                    Files.copy(tempFile.toPath(), compressedOut);
+                }
                 FileDataSource docoutds = new FileDataSource(
                         compressedTmpFile.getCanonicalPath()
                 );
@@ -1150,29 +1150,30 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                             DataHandler dh_doc = gprest.getDoc_out()
                                     .getBinaryData()
                                     .getBase64Binary();
-                            InputStream doc_in = new GZIPInputStream(
+                            try (InputStream doc_in = new GZIPInputStream(
                                     dh_doc.getInputStream()
-                            );
-                            ph.progress(statusImportCandidates);
-                            Log.info(this, "importing candidates");
-                            globalDocument.clearCandidates();
-                            OcrXmlImporter.importCandidates(
-                                    globalDocument,
-                                    doc_in
-                            );
+                            )) {
+                                ph.progress(statusImportCandidates);
+                                Log.info(this, "importing candidates");
+                                globalDocument.clearCandidates();
+                                OcrXmlImporter.importCandidates(
+                                        globalDocument,
+                                        doc_in
+                                );
+                            }
                             Log.info(this, "done importing candidates");
                             DataHandler dh_prof = gprest.getProfile_out()
                                     .getBinaryData()
                                     .getBase64Binary();
-                            InputStream prof_in = new GZIPInputStream(
+                            try (InputStream prof_in = new GZIPInputStream(
                                     dh_prof.getInputStream()
-                            );
-
-                            ph.progress(statusApplyProfile);
-                            Log.info(this, "applying new profile to document");
-                            globalDocument.clearPatterns();
-                            OcrXmlImporter.importProfile(globalDocument, prof_in);
-                            Log.info(this, "done applying new profile to document");
+                            )) {
+                                ph.progress(statusApplyProfile);
+                                Log.info(this, "applying new profile to document");
+                                globalDocument.clearPatterns();
+                                OcrXmlImporter.importProfile(globalDocument, prof_in);
+                                Log.info(this, "done applying new profile to document");
+                            }
                             retval = 0;
                         } catch (IOException | SAXException ex) {
                             retval = -1;
@@ -1194,13 +1195,12 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
                         try {
                             AbortProfilingResponse aps = stub.abortProfiling(apr);
                             AbortProfilingResponseType apst = aps.getAbortProfilingResponse();
-
                         } catch (RemoteException ex) {
                             Exceptions.printStackTrace(ex);
                             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("not_possible"));
                         }
                         retval = -1;
-                        Log.error(this, "ReceiveError " + e.getMessage());
+                        Log.error(this, e);
                         done = true;
                     }
                 };
