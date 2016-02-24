@@ -1,8 +1,10 @@
 package jav.correctionBackend;
 
+import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import org.xml.sax.Attributes;
@@ -134,16 +136,17 @@ class SimpleImporter extends OcrXmlImporter {
 
 class CandidateImporter extends OcrXmlImporter {
 
-    private String content = "";
-    private int rank;
+    private final StringBuilder content;
     private int tokenID;
     private String susp;
+    private final ArrayList<Candidate> candidates;
     private final java.util.regex.Pattern pattern
             = java.util.regex.Pattern.compile("(.*):\\{(.*),voteWeight=(.*),levDistance=(.*)");
-    private Candidate tempcand;
 
     public CandidateImporter(Document doc) {
         super(doc);
+        content = new StringBuilder();
+        candidates = new ArrayList<>();
     }
 
     @Override
@@ -158,7 +161,6 @@ class CandidateImporter extends OcrXmlImporter {
     public void startElement(String uri, String nname, String qname, Attributes atts) {
         switch (nname) {
             case "token":
-                rank = 0;
                 break;
             case "abbyy_suspicious":
                 susp = atts.getValue("value");
@@ -166,43 +168,56 @@ class CandidateImporter extends OcrXmlImporter {
             default:
                 break;
         }
-        content = "";
+        content.setLength(0);
     }
 
     @Override
     public void endElement(String uri, String nname, String qname) {
-        if (nname.equals("cand")) {
-            Matcher matcher = pattern.matcher(content);
-            if (matcher.matches()) {
-                rank++;
-                tempcand = new Candidate(
-                        tokenID,
-                        rank,
-                        matcher.group(1),
-                        matcher.group(2),
-                        Double.parseDouble(matcher.group(3)),
-                        Integer.parseInt(matcher.group(4))
-                );
-                doc.addCandidate(tempcand);
-                if (rank == 1) {
-                    doc.setTopCandDLev(tokenID, Integer.parseInt(matcher.group(4)));
-                    doc.setTopSuggestion(tokenID, matcher.group(1));
+        switch (nname) {
+            case "cand":
+                appendNewCandidate();
+                break;
+            case "token":
+                insertAllCandidates();
+                break;
+            case "ext_id":
+                if (content.length() > 0) {
+                    tokenID = Integer.parseInt(content.toString());
                 }
-            }
-        } else if (nname.equals("token")) {
-            doc.setNumCandidates(tokenID, rank);
-            doc.setSuspicious(tokenID, susp);
-        } else if (nname.equals("ext_id")) {
-            if (!content.equals("")) {
-                tokenID = Integer.parseInt(content);
-            }
+                break;
         }
-        content = "";
     }
 
     @Override
     public void characters(char ch[], int start, int length) {
-        content += new String(ch, start, length);
+        content.append(ch, start, length);
+    }
+
+    private void appendNewCandidate() {
+        final Matcher matcher = pattern.matcher(content);
+        if (matcher.matches()) {
+            final String cand = matcher.group(1);
+            final String pat = matcher.group(2);
+            final double weight = Double.parseDouble(matcher.group(3));
+            final int lev = Integer.parseInt(matcher.group(4));
+            final int rank = candidates.size() + 1;
+            candidates.add(new Candidate(tokenID, rank, cand, pat, weight, lev));
+        }
+    }
+
+    private void insertAllCandidates() {
+        if (!candidates.isEmpty()) {
+            doc.setTopSuggestion(tokenID, candidates.get(0).getSuggestion());
+            doc.setTopSuggestion(tokenID, candidates.get(0).getSuggestion());
+            doc.setTopCandDLev(tokenID, candidates.get(0).getDlev());
+            doc.setNumCandidates(tokenID, candidates.size());
+            doc.setSuspicious(tokenID, susp);
+            for (int i = 1; i < candidates.size(); ++i) {
+                doc.addCandidate(candidates.get(i));
+            }
+            candidates.clear();
+        }
+
     }
 }
 
@@ -288,8 +303,8 @@ class OCRCXMLImporter extends DefaultHandler {
                 xr.setContentHandler(this);
                 xr.setErrorHandler(this);
                 xr.parse(docfile);
-            } catch (SAXException ex) {
-            } catch (IOException e) {
+            } catch (SAXException | IOException ex) {
+                Log.error(this, ex);
             }
         } else {
             throw new NullPointerException();
