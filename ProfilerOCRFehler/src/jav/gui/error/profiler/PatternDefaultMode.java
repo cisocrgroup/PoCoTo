@@ -202,7 +202,7 @@ public class PatternDefaultMode implements PatternMode {
                 try {
                     ArrayList<Token> result = get();
                     if (result != null) {
-                        Log.debug(this, "HERE");
+                        //Log.debug(this, "HERE");
                         MessageCenter.getInstance().fireConcordanceEvent(new ConcordanceEvent(this, ConcordanceType.DIVERSE, result, lastSelectedPattern.getPattern().getLeft() + " --> " + lastSelectedPattern.getPattern().getRight()));
                     } else {
                     }
