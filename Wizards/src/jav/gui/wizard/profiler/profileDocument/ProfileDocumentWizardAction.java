@@ -4,7 +4,6 @@ import cis.profiler.client.ProfilerWebServiceStub;
 import cis.profiler.client.ProfilerWebServiceStub.GetConfigurationsResponse;
 import jav.gui.actions.ContextAction;
 import jav.gui.cookies.DocumentLoadedCookie;
-import jav.gui.cookies.ProfilerIDCookie;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.UnsavedChangesDialog;
 import jav.gui.main.MainController;
@@ -15,8 +14,6 @@ import java.rmi.RemoteException;
 import java.text.MessageFormat;
 import javax.swing.Action;
 import javax.swing.JComponent;
-import org.netbeans.api.progress.ProgressRunnable;
-import org.netbeans.api.progress.ProgressUtils;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.WizardDescriptor;
@@ -29,38 +26,39 @@ import org.openide.util.Lookup;
 import org.openide.util.Utilities;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 @ActionID(category = "Profiler",
-id = "jav.gui.wizard.profiler.ProfileDocument")
+        id = "jav.gui.wizard.profiler.ProfileDocument")
 @ActionRegistration(displayName = "#CTL_ProfileDocument")
 @ActionReferences({
     @ActionReference(path = "Menu/Profiler", position = 1011, separatorBefore = 1010)
@@ -83,9 +81,9 @@ public final class ProfileDocumentWizardAction extends ContextAction<DocumentLoa
             ProfilerWebServiceStub stub = MainController.findInstance().newProfilerWebServiceStub();
             GetConfigurationsResponse gcr = stub.getConfigurations();
             configurations = gcr.getGetConfigurationsResponse().getConfigurations();
-            
+
             WizardDescriptor wizardDescriptor = new WizardDescriptor(getPanels(configurations));
-            wizardDescriptor.setOptions(new Object[] {WizardDescriptor.FINISH_OPTION,WizardDescriptor.CANCEL_OPTION});
+            wizardDescriptor.setOptions(new Object[]{WizardDescriptor.FINISH_OPTION, WizardDescriptor.CANCEL_OPTION});
             wizardDescriptor.setTitleFormat(new MessageFormat("{0}"));
             wizardDescriptor.setTitle("Your wizard dialog title here");
             Dialog dialog = DialogDisplayer.getDefault().createDialog(wizardDescriptor);
@@ -100,10 +98,9 @@ public final class ProfileDocumentWizardAction extends ContextAction<DocumentLoa
         }
     }
 
-
     /**
-     * Initialize panels representing individual wizard's steps and sets
-     * various properties for them influencing wizard appearance.
+     * Initialize panels representing individual wizard's steps and sets various
+     * properties for them influencing wizard appearance.
      */
     private WizardDescriptor.Panel[] getPanels(String[] configurations) {
         panels = new WizardDescriptor.Panel[]{
@@ -119,7 +116,7 @@ public final class ProfileDocumentWizardAction extends ContextAction<DocumentLoa
             if (c instanceof JComponent) { // assume Swing components
                 JComponent jc = (JComponent) c;
                 // Sets step number of a component
-                // TODO if using org.openide.dialogs >= 7.8, can use WizardDescriptor.PROP_*:                
+                // TODO if using org.openide.dialogs >= 7.8, can use WizardDescriptor.PROP_*:
                 jc.putClientProperty("WizardPanel_contentSelectedIndex", i);
                 // Sets steps names for a panel
                 jc.putClientProperty("WizardPanel_contentData", steps);

@@ -8,6 +8,7 @@ import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.regex.Pattern;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
@@ -18,40 +19,47 @@ import org.openide.util.Exceptions;
 import org.openide.util.NbBundle;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public final class NewProjectVisualPanel1 extends JPanel implements DocumentListener, ItemListener {
 
+    private static final Pattern ABBYYRE
+            = Pattern.compile("abbyy", Pattern.CASE_INSENSITIVE);
+    private static final Pattern HOCRRE
+            = Pattern.compile("hocr", Pattern.CASE_INSENSITIVE);
+
     public static final String PROP_XML_DIRNAME = "XMLDIRName";
-    private static String DEFAULT_ENCODING = "UTF-8";
+    private static final String DEFAULT_ENCODING = "UTF-8";
+
     /**
      * Creates new form NewProjectVisualPanel1
      */
@@ -66,11 +74,11 @@ public final class NewProjectVisualPanel1 extends JPanel implements DocumentList
                 break;
             }
         }
-        
+
         jComboBox2.setModel(new DefaultComboBoxModel(encodingNames));
         jComboBox2.setSelectedItem(def);
         jComboBox2.addItemListener(this);
-        
+
         jTextField1.setText("");
         jTextField1.getDocument().addDocumentListener(this);
 
@@ -104,6 +112,11 @@ public final class NewProjectVisualPanel1 extends JPanel implements DocumentList
                         File file = fileChooser.getSelectedFile();
                         jTextField1.setText(file.getCanonicalPath());
                         fileChooser.setCurrentDirectory(file.getParentFile());
+                        if (ABBYYRE.matcher(file.getCanonicalPath()).find()) {
+                            jComboBox1.setSelectedItem(FileType.ABBYY_XML_DIR);
+                        } else if (HOCRRE.matcher(file.getCanonicalPath()).find()) {
+                            jComboBox1.setSelectedItem(FileType.HOCR);
+                        }
                     } catch (IOException ex) {
                         Exceptions.printStackTrace(ex);
                     }
@@ -128,14 +141,14 @@ public final class NewProjectVisualPanel1 extends JPanel implements DocumentList
             return (FileType) jComboBox1.getSelectedItem();
         }
     }
-    
+
     public String getEncoding() {
         if (jComboBox2.getSelectedItem() == null) {
             return null;
         } else {
             return (String) jComboBox2.getSelectedItem();
         }
-        
+
     }
 
     /**
@@ -221,7 +234,7 @@ public final class NewProjectVisualPanel1 extends JPanel implements DocumentList
     private javax.swing.JTextField jTextField1;
     // End of variables declaration//GEN-END:variables
     private JFileChooser fileChooser;
-    
+
     @Override
     public void insertUpdate(DocumentEvent e) {
         if (jTextField1.getDocument() == e.getDocument()) {
@@ -245,7 +258,7 @@ public final class NewProjectVisualPanel1 extends JPanel implements DocumentList
 
     @Override
     public void itemStateChanged(ItemEvent e) {
-        if( e.getSource().equals(jComboBox1)) {
+        if (e.getSource().equals(jComboBox1)) {
             this.firePropertyChange("InputType", 0, 1);
         } else {
             this.firePropertyChange("Encoding", 0, 1);

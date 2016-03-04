@@ -3,11 +3,10 @@ package jav.gui.actions;
 import jav.correctionBackend.OcrXmlImporter;
 import jav.gui.filter.LevDistance_1_Filter;
 import jav.gui.main.MainController;
+import jav.logging.log4j.Log;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
-import org.openide.util.Exceptions;
 import org.xml.sax.SAXException;
 
 /**
@@ -52,8 +51,8 @@ public final class OCRErrorKonkordance implements ActionListener {
                 LevDistance_1_Filter f = new LevDistance_1_Filter("OCRErrors");
                 MainController.findInstance().applyFilter(f);
             }
-        } catch (IOException|SAXException ex) {
-            ex.printStackTrace();
+        } catch (IOException | SAXException ex) {
+            Log.error(this, ex);
         }
     }
 }

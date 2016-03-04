@@ -4,48 +4,50 @@ import jav.logging.log4j.Log;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class OcrXmlImporter extends DefaultHandler {
+
     public static void simpleUpdateDocument(Document doc, String documentfile) throws IOException, SAXException {
         new SimpleImporter(doc).parse(documentfile);
     }
@@ -60,34 +62,35 @@ public class OcrXmlImporter extends DefaultHandler {
 
     public static void importCandidates(Document doc, InputStream is) throws IOException, SAXException {
         new CandidateImporter(doc).parse(is);
-    }    
+    }
 
     public static void importProfile(Document doc, String profilefile) throws IOException, SAXException {
         new ProfileImporter(doc).parse(profilefile);
     }
-    
+
     public static void importProfile(Document doc, InputStream is) throws IOException, SAXException {
         new ProfileImporter(doc).parse(is);
     }
-    
+
     protected final Document doc;
+
     protected OcrXmlImporter(Document doc) {
-        assert(doc != null);
+        assert (doc != null);
         this.doc = doc;
     }
-    
+
     private XMLReader setupXMLReader() throws SAXException {
         XMLReader xr = XMLReaderFactory.createXMLReader();
         xr.setContentHandler(this);
         xr.setErrorHandler(this);
         return xr;
     }
-    
+
     public final void parse(String filename) throws IOException, SAXException {
         XMLReader xr = setupXMLReader();
         xr.parse(filename);
     }
-    
+
     public final void parse(InputStream is) throws IOException, SAXException {
         XMLReader xr = setupXMLReader();
         xr.parse(new InputSource(is));
@@ -95,6 +98,7 @@ public class OcrXmlImporter extends DefaultHandler {
 }
 
 class SimpleImporter extends OcrXmlImporter {
+
     private int tokenID;
     private String susp;
     private String norm;
@@ -132,16 +136,17 @@ class SimpleImporter extends OcrXmlImporter {
 
 class CandidateImporter extends OcrXmlImporter {
 
-    private String content = "";
-    private int rank;
+    private final StringBuilder content;
     private int tokenID;
     private String susp;
-    private final java.util.regex.Pattern pattern = 
-            java.util.regex.Pattern.compile("(.*):\\{(.*),voteWeight=(.*),levDistance=(.*)");
-    private Candidate tempcand;
-    
+    private final ArrayList<Candidate> candidates;
+    private final java.util.regex.Pattern pattern
+            = java.util.regex.Pattern.compile("(.*):\\{(.*),voteWeight=(.*),levDistance=(.*)");
+
     public CandidateImporter(Document doc) {
         super(doc);
+        content = new StringBuilder();
+        candidates = new ArrayList<>();
     }
 
     @Override
@@ -156,7 +161,6 @@ class CandidateImporter extends OcrXmlImporter {
     public void startElement(String uri, String nname, String qname, Attributes atts) {
         switch (nname) {
             case "token":
-                rank = 0;
                 break;
             case "abbyy_suspicious":
                 susp = atts.getValue("value");
@@ -164,43 +168,56 @@ class CandidateImporter extends OcrXmlImporter {
             default:
                 break;
         }
-        content = "";
+        content.setLength(0);
     }
 
     @Override
     public void endElement(String uri, String nname, String qname) {
-        if (nname.equals("cand")) {
-            Matcher matcher = pattern.matcher(content);
-            if (matcher.matches()) {
-                rank++;
-                tempcand = new Candidate(
-                        tokenID, 
-                        rank, 
-                        matcher.group(1), 
-                        matcher.group(2), 
-                        Double.parseDouble(matcher.group(3)), 
-                        Integer.parseInt(matcher.group(4))
-                );
-                doc.addCandidate(tempcand);
-                if (rank == 1) {
-                    doc.setTopCandDLev(tokenID, Integer.parseInt(matcher.group(4)));
-                    doc.setTopSuggestion(tokenID, matcher.group(1));
+        switch (nname) {
+            case "cand":
+                appendNewCandidate();
+                break;
+            case "token":
+                insertAllCandidates();
+                break;
+            case "ext_id":
+                if (content.length() > 0) {
+                    tokenID = Integer.parseInt(content.toString());
                 }
-            }
-        } else if (nname.equals("token")) {
-            doc.setNumCandidates(tokenID, rank);
-            doc.setSuspicious(tokenID, susp);
-        } else if( nname.equals("ext_id")) {
-            if( !content.equals("")) {
-                tokenID = Integer.parseInt(content);
-            }
+                break;
         }
-        content = "";
     }
 
     @Override
     public void characters(char ch[], int start, int length) {
-        content += new String(ch, start, length);
+        content.append(ch, start, length);
+    }
+
+    private void appendNewCandidate() {
+        final Matcher matcher = pattern.matcher(content);
+        if (matcher.matches()) {
+            final String cand = matcher.group(1);
+            final String pat = matcher.group(2);
+            final double weight = Double.parseDouble(matcher.group(3));
+            final int lev = Integer.parseInt(matcher.group(4));
+            final int rank = candidates.size() + 1;
+            candidates.add(new Candidate(tokenID, rank, cand, pat, weight, lev));
+        }
+    }
+
+    private void insertAllCandidates() {
+        if (!candidates.isEmpty()) {
+            doc.setTopSuggestion(tokenID, candidates.get(0).getSuggestion());
+            doc.setTopSuggestion(tokenID, candidates.get(0).getSuggestion());
+            doc.setTopCandDLev(tokenID, candidates.get(0).getDlev());
+            doc.setNumCandidates(tokenID, candidates.size());
+            doc.setSuspicious(tokenID, susp);
+            for (int i = 1; i < candidates.size(); ++i) {
+                doc.addCandidate(candidates.get(i));
+            }
+            candidates.clear();
+        }
+
     }
 }
 
@@ -208,7 +225,7 @@ class ProfileImporter extends OcrXmlImporter {
 
     private int patternid;
     private int part;
-    private Pattern temppattern;
+    private Pattern tmppattern;
     private PatternOccurrence tempocc;
     private boolean begin;
 
@@ -216,7 +233,7 @@ class ProfileImporter extends OcrXmlImporter {
         super(doc);
         patternid = 0;
     }
-    
+
     @Override
     public void startDocument() {
     }
@@ -227,30 +244,30 @@ class ProfileImporter extends OcrXmlImporter {
 
     @Override
     public void startElement(String uri, String nname, String qname, Attributes atts) {
-        if( qname.equals("ocr_errors")) {
+        if (qname.equals("ocr_errors")) {
             begin = true;
-        } else if( qname.equals("pattern") && begin) {
+        } else if (qname.equals("pattern") && begin) {
             String left = atts.getValue("left");
             String right = atts.getValue("right");
             this.part = 0;
-            this.temppattern = new Pattern(this.patternid, left, right, 0, 0);
+            this.tmppattern = new Pattern(this.patternid, left, right, 0, 0);
         } else if (qname.equals("type")) {
             String wocr_lc = atts.getValue("wOCR_lc");
             String wsuggest = atts.getValue("wSuggest");
             int freq = Integer.parseInt(atts.getValue("freq"));
             tempocc = new PatternOccurrence(patternid, part, wocr_lc, wsuggest, freq, 0);
             this.part++;
-            temppattern.addOccurence(tempocc, true);
+            tmppattern.addOccurence(tempocc, true);
         }
     }
 
     @Override
     public void endElement(String uri, String nname, String qname) {
-        if (qname.equals("pattern") && begin) {
-            doc.addPattern(temppattern);
-            Iterator<PatternOccurrence> iter = temppattern.getOccurences().iterator();
-            while( iter.hasNext() ) {
-                doc.addPatternOccurrence( iter.next() );
+        if (qname.equals("pattern") && begin && tmppattern.getOccurencesN() > 0) {
+            doc.addPattern(tmppattern);
+            Iterator<PatternOccurrence> iter = tmppattern.getOccurences().iterator();
+            while (iter.hasNext()) {
+                doc.addPatternOccurrence(iter.next());
             }
             this.patternid++;
         }
@@ -286,8 +303,8 @@ class OCRCXMLImporter extends DefaultHandler {
                 xr.setContentHandler(this);
                 xr.setErrorHandler(this);
                 xr.parse(docfile);
-            } catch (SAXException ex) {
-            } catch (IOException e) {
+            } catch (SAXException | IOException ex) {
+                Log.error(this, ex);
             }
         } else {
             throw new NullPointerException();
@@ -357,7 +374,7 @@ class OCRCXMLImporter extends DefaultHandler {
 
     @Override
     public void endElement(String uri, String nname, String qname) {
-        // add wocr wcorr 
+        // add wocr wcorr
         if (nname.equals("cand")) {
             rank++;
             Matcher matcher = candpattern.matcher(content);
@@ -373,7 +390,7 @@ class OCRCXMLImporter extends DefaultHandler {
             temptoken.setNumberOfCandidates(rank);
             doc.addToken(temptoken);
         } else if (nname.equals("wOCR")) {
-            temptoken = new Token( content );
+            temptoken = new Token(content);
             temptoken.setIndexInDocument(tokenIndex);
             temptoken.setIsNormal(isNormal);
             temptoken.setIsCorrected(false);
