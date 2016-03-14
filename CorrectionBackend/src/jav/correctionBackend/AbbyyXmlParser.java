@@ -5,34 +5,35 @@ import java.util.regex.Pattern;
 import org.xml.sax.Attributes;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
 public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
@@ -55,8 +56,10 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
     private boolean isDict_ = false;
     private Token temptoken_ = null;
     private int position_;
-    private final static Pattern myAlnum =
-            Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");;
+    private final static Pattern myAlnum
+            = Pattern.compile("[\\pL\\pM\\p{Nd}\\p{Nl}\\p{Pc}[\\p{InEnclosedAlphanumerics}&&\\p{So}]]+");
+
+    ;
 
     public AbbyyXmlParser(Document d) {
         super(d);
@@ -70,8 +73,8 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
     @Override
     public void endDocument() {
         Log.info(
-                this, 
-                "Loaded Document with %d page(s) and %d tokens", 
+                this,
+                "Loaded Document with %d page(s) and %d tokens",
                 pages,
                 tokensPerPage_
         );
@@ -89,11 +92,11 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
         } else if (qName.equals("par")) {
         } else if (qName.equals("line")) {
             top_ = Integer.parseInt(atts.getValue("t"));
-            if( top_ == -1) {
+            if (top_ == -1) {
                 top_ = 1;
             }
             bottom_ = Integer.parseInt(atts.getValue("b"));
-            if( bottom_ == -1) {
+            if (bottom_ == -1) {
                 bottom_ = 1;
             }
         } else if (qName.equals("variantText")) {
@@ -116,8 +119,8 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
             orig_id = 1;
             if (tokensPerPage_ == 0) {
                 handleEmptyPage(tokenIndex_++, pages);
-                tokensPerPage_ = 0;
             }
+            tokensPerPage_ = 0;
             pages++;
         } else if (qName.equals("block")) {
         } else if (qName.equals("region")) {
@@ -146,13 +149,12 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
         } else if (qName.equals("line")) {
 
             if (!temp_.equals("")) {
-                temptoken_ = new Token( temp_ );
+                temptoken_ = new Token(temp_);
                 if (temp_.matches("^[\\p{Space}]+$")) {
                     temptoken_.setSpecialSeq(SpecialSequenceType.SPACE);
-                }
-//                else if (temp_.matches("^[\\p{Punct}]+$")) {
-//                    temptoken_.setSpecialSeq(SpecialSequenceType.PUNCTUATION);
-//                }
+                } //                else if (temp_.matches("^[\\p{Punct}]+$")) {
+                //                    temptoken_.setSpecialSeq(SpecialSequenceType.PUNCTUATION);
+                //                }
                 else if (temp_.matches("^[\n\r\f]+$")) {
                     temptoken_.setSpecialSeq(SpecialSequenceType.NEWLINE);
                 } else {
@@ -184,7 +186,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
                 tokenIndex_++;
             }
 
-            temptoken_ = new Token( "\n" );
+            temptoken_ = new Token("\n");
             temptoken_.setSpecialSeq(SpecialSequenceType.NEWLINE);
             temptoken_.setIndexInDocument(tokenIndex_);
             temptoken_.setIsSuspicious(false);
@@ -221,7 +223,7 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
                         // previous char non-alnum and actual char alnum -> pushback token, attach thischar_ to tempstring
                     } else if (!myAlnum.matcher(lastchar_).matches() && myAlnum.matcher(thischar_).matches()) {
 
-                        temptoken_ = new Token( temp_ );
+                        temptoken_ = new Token(temp_);
                         if (temp_.matches("^[\\p{Space}]+$")) {
                             temptoken_.setSpecialSeq(SpecialSequenceType.SPACE);
                         } else if (temp_.matches("^[\\p{Punct}]+$")) {
@@ -265,13 +267,12 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
                         // previous char alnum and actual char non-alnum -> pushback token, attach thischar_ to tempstring
                     } else if (myAlnum.matcher(lastchar_).matches() & !myAlnum.matcher(thischar_).matches()) {
 
-                        temptoken_ = new Token( temp_ );
+                        temptoken_ = new Token(temp_);
                         if (temp_.matches("^[\\p{Space}]+$")) {
                             temptoken_.setSpecialSeq(SpecialSequenceType.SPACE);
-                        }
-//                        else if (temp_.matches("^[\\p{Punct}]+$")) {
-//                            temptoken_.setSpecialSeq(SpecialSequenceType.PUNCTUATION);
-//                        }
+                        } //                        else if (temp_.matches("^[\\p{Punct}]+$")) {
+                        //                            temptoken_.setSpecialSeq(SpecialSequenceType.PUNCTUATION);
+                        //                        }
                         else if (temp_.matches("^[\n\r\f]+$")) {
                             temptoken_.setSpecialSeq(SpecialSequenceType.NEWLINE);
                         } else {
@@ -316,8 +317,8 @@ public class AbbyyXmlParser extends BaseSaxOcrDocumentParser {
                 }
                 lastchar_ = thischar_;
             }
-            
-            if( this.isSuspicious_ && !this.isDict_ ) {
+
+            if (this.isSuspicious_ && !this.isDict_) {
                 this.globalIsSuspicious = true;
             }
 

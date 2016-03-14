@@ -1,7 +1,9 @@
 package jav.gui.token.display;
 
 import jav.correctionBackend.Candidate;
+import jav.correctionBackend.SpecialSequenceType;
 import jav.correctionBackend.Token;
+import jav.correctionBackend.TokenImageInfoBox;
 import jav.gui.events.MessageCenter;
 import jav.gui.events.tokenNavigation.TokenNavigationEvent;
 import jav.gui.events.tokenNavigation.TokenNavigationType;
@@ -11,11 +13,13 @@ import jav.gui.token.behaviour.TokenVisualizationMode;
 import jav.gui.token.edit.ComboBoxEntry;
 import jav.gui.token.edit.ComboBoxEntryType;
 import jav.gui.token.edit.MyEditCustomComboBox;
+import jav.gui.token.tools.ImageProcessor;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import javax.swing.JButton;
@@ -24,40 +28,41 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
- * 
- * abstract class for building visual representations of tokens
- * all methods that are independent from implementation are here, all abstract methods
- * have to be implemented
- * 
+ *
+ * abstract class for building visual representations of tokens all methods that
+ * are independent from implementation are here, all abstract methods have to be
+ * implemented
+ *
  */
 public abstract class TokenVisualization extends AbstractTokenVisualization {
 
@@ -116,15 +121,15 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
     public boolean hasImage() {
         return hasImage;
     }
-    
-    public void setTokenID( int i ) {
+
+    public void setTokenID(int i) {
         this.tokenID = i;
     }
-    
+
     public int getTokenID() {
         return this.tokenID;
     }
-    
+
     public void zoomFont(int newSize) {
         if (!tokenTextLabel.isSpace()) {
             Font f = tokenTextLabel.getFont();
@@ -158,7 +163,7 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         this.calculateSizeNormMode();
         this.revalidate();
     }
-    
+
     public void deactivate() {
         if (tvm != null) {
             this.removeMouseListener(tvm.getMouseListener());
@@ -174,7 +179,7 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
             this.setBackground(Color.white);
         }
     }
-    
+
     public void setSelected(boolean b) {
         this.isSelected = b;
         this.grabFocus();
@@ -203,50 +208,50 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
     public String getTokenTextLabelText() {
         return tokenTextLabel.getText();
     }
-    
-    public void update( String newtext ) {
-        tokenTextLabel.setText( newtext );
+
+    public void update(String newtext) {
+        tokenTextLabel.setText(newtext);
         tvm.setTokenVisualizationStyle(instance);
         this.calculateSizeNormMode();
         this.revalidate();
     }
-    
-    public void update( String newtext, boolean corrected ) {
-        tokenTextLabel.setText( newtext );
+
+    public void update(String newtext, boolean corrected) {
+        tokenTextLabel.setText(newtext);
         this.setCorrected(corrected);
         this.calculateSizeNormMode();
-        this.revalidate();        
+        this.revalidate();
     }
-    
-    public void setCorrected( boolean b ) {
+
+    public void setCorrected(boolean b) {
         tvm.setCorrected(instance, b);
     }
 
     public void startTokenEditing() {
 
         this.isEditing = true;
-        
+
         LinkedHashSet<ComboBoxEntry> cands = new LinkedHashSet<>();
-        
-        temptoken = MainController.findInstance().getDocument().getTokenByID( tokenID );
+
+        temptoken = MainController.findInstance().getDocument().getTokenByID(tokenID);
 
         cands.add(new ComboBoxEntry(this.getTokenTextLabelText(), ComboBoxEntryType.NORMAL));
-        
-        Iterator<Candidate> iterator = MainController.findInstance().getDocument().candidateIterator( tokenID );
+
+        Iterator<Candidate> iterator = MainController.findInstance().getDocument().candidateIterator(tokenID);
         int maxcands = 5;
         while (iterator.hasNext() && maxcands > 1) {
             maxcands--;
             cands.add(new ComboBoxEntry(iterator.next().getSuggestion(), ComboBoxEntryType.NORMAL));
         }
-        
+
         cands.add(new ComboBoxEntry(setcorrect, ComboBoxEntryType.SETCORRECTED));
         cands.add(new ComboBoxEntry(delete, ComboBoxEntryType.DELETE));
         cands.add(new ComboBoxEntry(merger, ComboBoxEntryType.MERGE));
 
-        if(tvm.getClass().getSimpleName().equals("TokenVisualizationConcordanceMode")) {
+        if (tvm.getClass().getSimpleName().equals("TokenVisualizationConcordanceMode")) {
             cands.add(new ComboBoxEntry(focusInMain, ComboBoxEntryType.FOCUS_IN_MAIN));
-        }        
-        
+        }
+
         JButton submitButton = new JButton("↵");
         submitButton.setFocusable(false);
         submitButton.addActionListener(new ActionListener() {
@@ -254,10 +259,10 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 endTokenEditing(box.getEditor().getItem().toString());
-            }            
+            }
         });
 
-        box = new MyEditCustomComboBox(cands, tokenTextLabel.getFont(), new Dimension(tokenTextLabel.getPreferredSize().width,tokenTextLabel.getPreferredSize().height), temptoken.getNumberOfCandidates(), submitButton);
+        box = new MyEditCustomComboBox(cands, tokenTextLabel.getFont(), new Dimension(tokenTextLabel.getPreferredSize().width, tokenTextLabel.getPreferredSize().height), temptoken.getNumberOfCandidates(), submitButton);
         box.setWide(true);
         ((JPanel) box.getEditor().getEditorComponent()).getComponent(0).addKeyListener(keyListener);
 //        box.getEditor().getEditorComponent().addKeyListener(keyListener);
@@ -268,7 +273,7 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
             public void focusGained(FocusEvent e) {
                 if (e.getComponent().getParent().getParent().getClass().getName().equals("jav.gui.token.edit.MyEditCustomComboBox")) {
                     JComboBox b = (JComboBox) e.getComponent().getParent().getParent();
-                    if( !b.isPopupVisible()) {
+                    if (!b.isPopupVisible()) {
                         b.showPopup();
                         b.setPopupVisible(true);
                         b.getEditor().selectAll();
@@ -282,9 +287,8 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
             }
         };
         ((JPanel) box.getEditor().getEditorComponent()).getComponent(0).addFocusListener(fl);
-        
-//        box.getEditor().getEditorComponent().addFocusListener(fl);
 
+//        box.getEditor().getEditorComponent().addFocusListener(fl);
 //        BoundsPopupMenuListener lis = new BoundsPopupMenuListener( false , true ) {
 //            @Override
 //            public void popupMenuCanceled(PopupMenuEvent e) {
@@ -292,7 +296,6 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
 //            }
 //        };
 //        box.addPopupMenuListener( lis );
-        
 //        box.addPopupMenuListener(new PopupMenuListener() {
 //
 //            @Override
@@ -316,7 +319,7 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         this.calculateSizeEditMode();
         this.repaint();
         this.revalidate();
-        ((JTextField)((JPanel) box.getEditor().getEditorComponent()).getComponent(0)).grabFocus();
+        ((JTextField) ((JPanel) box.getEditor().getEditorComponent()).getComponent(0)).grabFocus();
     }
 
     /*
@@ -326,12 +329,12 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         // TODO check implementation
 //        boolean b = Pattern.matches("([^ ]+ [^ ]+)*", editString);
 //        if (b) {
-        if( editString.contains(" ")) {
-            MainController.findInstance().splitToken( this.tokenID, editString);
+        if (editString.contains(" ")) {
+            MainController.findInstance().splitToken(this.tokenID, editString);
 //            MainController.findInstance().addToLog(MainController.findInstance().getLastFocusedTCName() + " # split # " + temptoken.getWOCR() + " # " + retval);
         } else {
             //if (!editString.equals(tokenTextLabel.getText())) {
-            MainController.findInstance().correctTokenByString( this.tokenID, editString);
+            MainController.findInstance().correctTokenByString(this.tokenID, editString);
 //            MainController.findInstance().addToLog(MainController.findInstance().getLastFocusedTCName() + " # correct # " + temptoken.getWOCR() + " # " + editString);
 //            } else {
 //                abortTokenEditing();
@@ -378,12 +381,12 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
             endTokenEditing(box.getEditor().getItem().toString());
         } else if (cbe.getType() == ComboBoxEntryType.MERGE) {
             abortTokenEditing();
-            MainController.findInstance().mergeRightward( tokenID );
+            MainController.findInstance().mergeRightward(tokenID);
             MainController.findInstance().addToLog(MainController.findInstance().getLastFocusedTCName() + " # merge # " + " # " + temptoken.getWOCR() + " # " + temptoken.getWOCR());
         } else if (cbe.getType() == ComboBoxEntryType.SETCORRECTED) {
             abortTokenEditing();
-            if( !temptoken.isCorrected()) {
-                MainController.findInstance().setCorrected( tokenID, true );
+            if (!temptoken.isCorrected()) {
+                MainController.findInstance().setCorrected(tokenID, true);
             }
             instance.revalidate();
             MainController.findInstance().addToLog(MainController.findInstance().getLastFocusedTCName() + " # set as corrected # " + temptoken.getWOCR());
@@ -392,9 +395,9 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         } else if (cbe.getType() == ComboBoxEntryType.DELETE) {
 
             abortTokenEditing();
-            MainController.findInstance().deleteToken( tokenID );
-            
-        } else if(cbe.getType() == ComboBoxEntryType.FOCUS_IN_MAIN) {
+            MainController.findInstance().deleteToken(tokenID);
+
+        } else if (cbe.getType() == ComboBoxEntryType.FOCUS_IN_MAIN) {
             abortTokenEditing();
             MessageCenter.getInstance().fireTokenNavigationEvent(new TokenNavigationEvent(this, tokenID, TokenNavigationType.FOCUS_IN_MAIN));
         }
@@ -426,5 +429,48 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         @Override
         public void keyReleased(KeyEvent ke) {
         }
+    }
+
+    /**
+     * Creates a new TokenVisualization Instance.
+     *
+     * @param token The token
+     * @param scale the scale of the image
+     * @param fontSize the size of the font
+     * @param lineHeight the height of the line
+     * @param ip the image processor
+     * @return the appropriate TokeVisualization instance for the given token
+     */
+    public static TokenVisualization fromToken(
+            Token token,
+            double scale,
+            int fontSize,
+            int lineHeight,
+            ImageProcessor ip
+    ) {
+        assert (token != null);
+        TokenImageInfoBox tiib = token.getTokenImageInfoBox();
+        TokenVisualization tv;
+        if (tiib == null) {
+            if (token.isNormal()) {
+                tv = new PseudoImageTokenVisualization(token, fontSize, lineHeight);
+            } else {
+                tv = new OnlyTextTokenVisualization(token, fontSize);
+            }
+        } else if (SpecialSequenceType.NEWLINE.equals(token.getSpecialSeq())
+                || SpecialSequenceType.SPACE.equals(token.getSpecialSeq())) {
+            tv = new OnlyTextTokenVisualization(token, fontSize);
+        } else {
+            assert (tiib != null);
+            final int left = tiib.getCoordinateLeft();
+            final int right = tiib.getCoordinateRight();
+            final int top = tiib.getCoordinateTop();
+            final int bottom = tiib.getCoordinateBottom();
+            final int width = right - left;
+            final int height = bottom - top;
+            BufferedImage bi = ip.getTokenImage(left, top, width, height, scale);
+            tv = new ImageTokenVisualization(bi, token, fontSize);
+        }
+        return tv;
     }
 }

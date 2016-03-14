@@ -11,7 +11,12 @@ import jav.gui.main.MainController;
 import jav.gui.token.display.TokenVisualization;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.prefs.Preferences;
@@ -21,34 +26,35 @@ import javax.swing.Timer;
 import org.openide.util.NbPreferences;
 
 /**
- *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- *All rights reserved.
-
- *Redistribution and use in source and binary forms, with or without
- *modification, are permitted provided that the following conditions are met:
-
- *Redistributions of source code must retain the above copyright
- *notice, this list of conditions and the following disclaimer.
- *Redistributions in binary form must reproduce the above copyright
- *notice, this list of conditions and the following disclaimer in the
- *documentation and/or other materials provided with the distribution.
-
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- *IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- *TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- *PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- *HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- *LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- *DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- *THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- *OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * This file is part of the ocr-postcorrection tool developed
- * by the IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
- * For further information and contacts visit http://ocr.cis.uni-muenchen.de/
- * 
+ * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
+ * Sprachverarbeitung, University of Munich. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This file is part of the ocr-postcorrection tool developed by the IMPACT
+ * working group at the Centrum für Informations- und Sprachverarbeitung,
+ * University of Munich. For further information and contacts visit
+ * http://ocr.cis.uni-muenchen.de/
+ *
  * @author thorsten (thorsten.vobl@googlemail.com)
  *
  * default implementation of TokenVisualisation behaviour, also showcase of how
@@ -122,12 +128,12 @@ public class TokenVisualizationDefaultMode implements TokenVisualizationMode {
                         else if (e.getButton() == MouseEvent.BUTTON3) {
                             if (lastSelectedTv != null) {
 //                                if (!lastSelectedTv.equals(tv)) {
-                                    // selecting other token while last one still selected
+                                // selecting other token while last one still selected
 //                                    MessageCenter.getInstance().fireTokenDeselectionEvent(new TokenDeselectionEvent(this, lastSelectedTv.getToken().getIndexInDocument()));
-                                    lastSelectedTv.setSelected(false);
-                                    if( lastSelectedTv.isEditing()) {
-                                        lastSelectedTv.abortTokenEditing();
-                                    }
+                                lastSelectedTv.setSelected(false);
+                                if (lastSelectedTv.isEditing()) {
+                                    lastSelectedTv.abortTokenEditing();
+                                }
 //                                }
                             }
 
@@ -148,7 +154,6 @@ public class TokenVisualizationDefaultMode implements TokenVisualizationMode {
                                     lastSelectedTv.setSelected(false);
                                 }
                             }
-
                             tv.setSelected(true);
                             lastSelectedTv = tv;
                             MessageCenter.getInstance().fireTokenSelectionEvent(new TokenSelectionEvent(lastSelectedTv, tv.getTokenID(), TokenSelectionType.NORMAL));
@@ -332,7 +337,6 @@ public class TokenVisualizationDefaultMode implements TokenVisualizationMode {
         menu.add(editItem);
         menu.addSeparator();
 
-
         JMenuItem cor = new JMenuItem(java.util.ResourceBundle.getBundle("jav/gui/token/display/Bundle").getString("setcorr"));
         cor.addActionListener(new ActionListener() {
 
@@ -372,7 +376,6 @@ public class TokenVisualizationDefaultMode implements TokenVisualizationMode {
             }
 
         }
-
 
         //////////////// add menu entry for merge to right
         menu.addSeparator();

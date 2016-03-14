@@ -51,8 +51,8 @@ import org.netbeans.api.progress.ProgressUtils;
 public class SpreadIndexDocument extends Document {
 
     private int myIndex = 0;
-    private static int NORMINDEXPLUS = 11;
-    private static int PUNCTINDEXPLUS = 3;
+    private static final int NORMINDEXPLUS = 11;
+    private static final int PUNCTINDEXPLUS = 3;
 
     public SpreadIndexDocument(JdbcConnectionPool jc) {
         super(jc);
@@ -168,7 +168,7 @@ public class SpreadIndexDocument extends Document {
     }
 
     @Override
-    protected int addToken(Token t) {
+    public int addToken(Token t) {
         try {
             Connection conn = jcp.getConnection();
             return this.addToken(t, conn);
@@ -197,9 +197,9 @@ public class SpreadIndexDocument extends Document {
     }
 
     @Override
-    public ArrayList<Integer> deleteToken(int iDFrom, int iDTo) 
+    public ArrayList<Integer> deleteToken(int iDFrom, int iDTo)
             throws SQLException {
-        Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
+        //Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
         Connection conn = jcp.getConnection();
         ArrayList<Integer> retval = new ArrayList<>();
         PreparedStatement setIndex = null;
@@ -229,7 +229,6 @@ public class SpreadIndexDocument extends Document {
             conn.setAutoCommit(false);
 
             //reserve undo_redo_parts for the starting token
-
             setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=-1 WHERE tokenID=?");
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
 
@@ -414,7 +413,7 @@ public class SpreadIndexDocument extends Document {
             undo_redo.executeBatch();
             conn.commit();
             long then = System.currentTimeMillis();
-            System.out.println("Database transaction finished. Time taken: " + (then - now));
+            //System.out.println("Database transaction finished. Time taken: " + (then - now));
             return retval;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -472,7 +471,7 @@ public class SpreadIndexDocument extends Document {
             int normals = tokensToAdd - spaces;
 
             int indicesNeeded = (normals * 3) + spaces;
-            
+
             if (freeIndexPlaces < indicesNeeded) {
                 this.spreadIndex(tokenID, indicesNeeded);
                 atIndex = this.getTokenByID(tokenID);
@@ -513,18 +512,16 @@ public class SpreadIndexDocument extends Document {
                 if (corr.equals(" ")) {
                     b = null;
                     left += charwidth;
+                } else if (imgwidth == 0) {
+                    b = null;
                 } else {
-                    if (imgwidth == 0) {
-                        b = null;
-                    } else {
-                        b = new TokenImageInfoBox();
-                        b.setImageFileName(atIndex.getImageFilename().substring(atIndex.getImageFilename().lastIndexOf(File.separator) + 1, atIndex.getImageFilename().length()));
-                        b.setCoordinateBottom(atIndex.getTokenImageInfoBox().getCoordinateBottom());
-                        b.setCoordinateTop(atIndex.getTokenImageInfoBox().getCoordinateTop());
-                        b.setCoordinateLeft(left);
-                        left += charwidth * corr.length();
-                        b.setCoordinateRight(left + 2);
-                    }
+                    b = new TokenImageInfoBox();
+                    b.setImageFileName(atIndex.getImageFilename().substring(atIndex.getImageFilename().lastIndexOf(File.separator) + 1, atIndex.getImageFilename().length()));
+                    b.setCoordinateBottom(atIndex.getTokenImageInfoBox().getCoordinateBottom());
+                    b.setCoordinateTop(atIndex.getTokenImageInfoBox().getCoordinateTop());
+                    b.setCoordinateLeft(left);
+                    left += charwidth * corr.length();
+                    b.setCoordinateRight(left + 2);
                 }
 
                 temp = new Token(atIndex.getWOCR());
@@ -626,19 +623,16 @@ public class SpreadIndexDocument extends Document {
 
                         if (tok.getID() == tokenID) {
                             myIndex += indexToAdd;
+                        } else if (tok.isNormal()) {
+                            myIndex += NORMINDEXPLUS;
                         } else {
-                            if (tok.isNormal()) {
-                                myIndex += NORMINDEXPLUS;
-                            } else {
-                                myIndex += PUNCTINDEXPLUS;
-                            }
-
+                            myIndex += PUNCTINDEXPLUS;
                         }
                     }
 
                     setIndex.executeBatch();
                     conn.commit();
-                    
+
                     truncateUndoRedo();
 
 //                    while (rs.next()) {
@@ -647,9 +641,9 @@ public class SpreadIndexDocument extends Document {
 //                        String part = rs.getString(2);
 //                        String type = rs.getString(3);
 //                        String command = rs.getString(5);
-//                        
+//
 //                        System.out.println("OLD: " + operation_id + " " + part + " " + type + " " + command);
-//                        
+//
 //                        Matcher m = tokidp.matcher(command);
 //                        if (m.matches()) {
 //                            int tokenID = Integer.parseInt(m.group(1));

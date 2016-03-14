@@ -91,9 +91,8 @@ public class ConcordancePage extends JPanel {
 
     ConcordancePage(final ConcordanceTopComponent par, int start, int len) {
         super();
-        
-        //System.out.println("Page construction " + begintime);
 
+        //System.out.println("Page construction " + begintime);
         tvMode = new TokenVisualizationConcordanceMode();
 
         this.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -153,7 +152,6 @@ public class ConcordancePage extends JPanel {
                 }
             }
         };
-
 
         int counter = 0;
         Object[] data = parent.getEntryRegistry().keySet().toArray();
@@ -371,7 +369,7 @@ public class ConcordancePage extends JPanel {
 
     private TokenVisualization createTokenVisualization(Token t) {
 
-        long time = System.currentTimeMillis();
+        //long time = System.currentTimeMillis();
         TokenVisualization tv;
         TokenImageInfoBox tiib = t.getTokenImageInfoBox();
         if (tiib != null && parent.showImage() && parent.hasImage()) {
@@ -379,21 +377,20 @@ public class ConcordancePage extends JPanel {
             if (ipc.getImageString() == null || !ipc.getImageString().equals(t.getImageFilename())) {
                 ipc.setImageInput(t.getImageFilename());
             }
+            tv = TokenVisualization.fromToken(t, parent.getScale(), parent.getFontSize(), 0, ipc);
 
-            int left = tiib.getCoordinateLeft();
-            int right = tiib.getCoordinateRight();
-            int top = tiib.getCoordinateTop();
-            int bottom = tiib.getCoordinateBottom();
-            int width = right - left;
-            int height = bottom - top;
-
-            BufferedImage bi = ipc.getTokenImage(left, top, width, height, parent.getScale());
-
-            if (t.getWOCR().equals(" ")) {
-                tv = new OnlyTextTokenVisualization(t, parent.getFontSize());
-            } else {
-                tv = new ImageTokenVisualization(bi, t, parent.getFontSize());
-            }
+            //int left = tiib.getCoordinateLeft();
+            //int right = tiib.getCoordinateRight();
+            //int top = tiib.getCoordinateTop();
+            //int bottom = tiib.getCoordinateBottom();
+            //int width = right - left;
+            //int height = bottom - top;
+            //BufferedImage bi = ipc.getTokenImage(left, top, width, height, parent.getScale());
+            //if (t.getWOCR().equals(" ")) {
+            //    tv = new OnlyTextTokenVisualization(t, parent.getFontSize());
+            //} else {
+            //    tv = new ImageTokenVisualization(bi, t, parent.getFontSize());
+            //}
         } else {
             tv = new OnlyTextTokenVisualization(t, parent.getFontSize());
         }
@@ -447,7 +444,6 @@ public class ConcordancePage extends JPanel {
                             tv.setImage(ipc.getTokenImage(left, top, width, height, scale));
                         }
 
-
                     }
                 }
             }
@@ -474,10 +470,8 @@ public class ConcordancePage extends JPanel {
                                 BufferedImage bi = ipc.getTokenImage(left, top, width, height, parent.getScale());
                                 tv.setImage(bi);
                             }
-                        } else {
-                            if (tv.hasImage()) {
-                                tv.clearImage();
-                            }
+                        } else if (tv.hasImage()) {
+                            tv.clearImage();
                         }
                     } else if (cb instanceof PseudoImageTokenVisualization) {
                         ((PseudoImageTokenVisualization) cb).toggleImage(on);
@@ -528,11 +522,11 @@ public class ConcordancePage extends JPanel {
             word.setBorder(inactiveCenter);
             rightC.setBorder(inactiveLeft);
 
-            if( b.isSelected()) {
+            if (b.isSelected()) {
                 b.setSelected(false);
                 b.setEnabled(false);
             }
-            
+
             for (Component ca : leftC.getComponents()) {
                 if (ca instanceof TokenVisualization) {
                     ca.setBackground(new Color(229, 236, 255));
@@ -560,11 +554,11 @@ public class ConcordancePage extends JPanel {
             word.setBorder(activeCenter);
             rightC.setBorder(activeLeft);
 
-            if( b.isSelected()) {
+            if (b.isSelected()) {
                 b.setSelected(false);
                 b.setEnabled(true);
             }
-            
+
             for (Component ca : leftC.getComponents()) {
                 if (ca instanceof TokenVisualization) {
                     ca.setBackground(Color.white);
@@ -658,7 +652,6 @@ public class ConcordancePage extends JPanel {
         rowpa.get(1).addMouseListener(listener);
         rowpa.get(2).addMouseListener(listener);
 
-
         rowpa.get(0).setBorder(inactiveRight);
         rowpa.get(1).setBorder(inactiveCenter);
         rowpa.get(2).setBorder(inactiveLeft);
@@ -750,7 +743,6 @@ public class ConcordancePage extends JPanel {
         rowpa.get(1).removeMouseListener(listener);
         rowpa.get(2).removeMouseListener(listener);
 
-
         rowpa.get(0).setBorder(activeRight);
         rowpa.get(1).setBorder(activeCenter);
         rowpa.get(2).setBorder(activeLeft);
@@ -787,17 +779,12 @@ public class ConcordancePage extends JPanel {
 //            for( int i = 0; i<affectedTokens.size();i++) {
 //                System.out.println("AFFECTED " + affectedTokens.get(i));
 //            }
-            
             if (parent.getEntryRegistry().containsKey(tokid)) {
                 Token to = MainController.findInstance().getDocument().getTokenByID(tokid);
                 if (to.isCorrected()) {
                 }
             }
         }
-
-
-
-
 
     }
 //    @Deprecated
@@ -831,7 +818,7 @@ public class ConcordancePage extends JPanel {
 //                                }
 //
 //                                this.updateTokenRegistry();
-//                                //if the merging is inside the left context of the entry, update the context   
+//                                //if the merging is inside the left context of the entry, update the context
 //                            } else {
 //                                rowpa.get(0).removeAll();
 //                                this.updateTokenVisualizationIndices(tokenIndex, 0 - numAffected);
