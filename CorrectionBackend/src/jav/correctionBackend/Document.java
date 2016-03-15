@@ -1694,6 +1694,7 @@ public abstract class Document {
         String[] sources = new File(fromDir).list(fileType.getFilenameFilter());
         OverwriteFileDialog.Result doOverwrite = OverwriteFileDialog.Result.YES;
         for (String fileName : sources) {
+            //Log.debug(this, "exporting %s", fileName);
             Exporter exporter = new Exporter(
                     new File(fromDir, fileName),
                     new File(toDir, fileName),
