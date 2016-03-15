@@ -36,11 +36,13 @@ public class DocumentPage extends Page {
                 if (prevWasNewline) { // end of paragraph
                     this.add(paragraph);
                     paragraph = new DocumentParagraph(document);
+                    prevWasNewline = false;
                 } else {
                     prevWasNewline = true;
                     paragraph.add(line);
                     line = new DocumentLine(document);
                 }
+
             } else {
                 prevWasNewline = false;
                 line.add(token);
