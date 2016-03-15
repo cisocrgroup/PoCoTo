@@ -46,7 +46,12 @@ public class OcropusBoundingBoxAdjuster {
     private void adjust(ArrayList<Line> lines) throws Exception {
         Adjustments adjs = getAdjustments();
         if (lines.size() != adjs.size()) {
-            throw new Exception("Invalid ocropus: lines and llocs differ");
+            throw new Exception(
+                    String.format(
+                            "Invalid ocropus directory %s: number of lines in hOCR differ from number of llocs files",
+                            locDir
+                    )
+            );
         }
         for (int i = 0; i < lines.size(); ++i) {
             adjust(lines.get(i), adjs.get(i));
