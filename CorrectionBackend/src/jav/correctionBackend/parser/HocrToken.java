@@ -82,6 +82,7 @@ public class HocrToken extends AbstractToken<HocrChar> {
             }
 
         }
+        //Log.debug(this, "update %s", this);
     }
 
     @Override

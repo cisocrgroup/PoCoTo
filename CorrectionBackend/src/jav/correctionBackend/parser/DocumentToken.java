@@ -89,11 +89,13 @@ public class DocumentToken extends AbstractToken<DocumentChar> {
         }
         final int n = str.length();
         final int nn = str.codePointCount(0, str.length());
-        final BoundingBox[] splits = new BoundingBox(token.getTokenImageInfoBox()).getVerticalSplits(nn);
-        for (int offset = 0, i = 0; offset < n; ++i) {
-            final int codepoint = str.codePointAt(offset);
-            this.add(new DocumentChar(line, this, codepoint, splits[i]));
-            offset += Character.charCount(codepoint);
+        if (n > 0 && nn > 0) {
+            final BoundingBox[] splits = new BoundingBox(token.getTokenImageInfoBox()).getVerticalSplits(nn);
+            for (int offset = 0, i = 0; offset < n; ++i) {
+                final int codepoint = str.codePointAt(offset);
+                this.add(new DocumentChar(line, this, codepoint, splits[i]));
+                offset += Character.charCount(codepoint);
+            }
         }
     }
 

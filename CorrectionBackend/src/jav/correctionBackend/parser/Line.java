@@ -36,8 +36,10 @@ public class Line extends ArrayList<Char> {
     }
 
     public void delete(int idx) {
-        get(idx).delete();
-        remove(idx);
+        if (idx < size()) {
+            get(idx).delete();
+            remove(idx);
+        }
     }
 
     public void insert(int idx, int codepoint) {
