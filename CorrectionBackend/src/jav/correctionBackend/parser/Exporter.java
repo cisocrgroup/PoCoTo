@@ -24,6 +24,7 @@ public class Exporter {
         this.src = src;
         this.dest = dest;
         this.pageParser = pageParser;
+        pageParser.setOcrFile(src);
     }
 
     public final File getDestinationFile() {
