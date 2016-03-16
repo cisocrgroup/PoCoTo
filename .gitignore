@@ -17,6 +17,7 @@ private.xml
 
 # Others #
 log.txt
+*~
 pocoto.log
 .svn/
 /MainWindow/nbproject/private/
