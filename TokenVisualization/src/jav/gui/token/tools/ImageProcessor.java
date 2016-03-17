@@ -69,12 +69,14 @@ public class ImageProcessor {
         ParameterBlock pb = new ParameterBlock();
         pb.add(fss);
         this.imageString = filename;
-        if (filename.endsWith("tif")) {
+        if (filename.endsWith("tif") || filename.endsWith("tiff")) {
             rop = JAI.create("tiff", pb);
         } else if (filename.endsWith("jpg") || filename.endsWith("jpeg")) {
             rop = JAI.create("jpeg", pb);
+        } else if (filename.endsWith("png")) {
+            rop = JAI.create("png", pb);
         } else {
-            throw new NullPointerException();
+            throw new RuntimeException("unkown image file format");
         }
     }
 
