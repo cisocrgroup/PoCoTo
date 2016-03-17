@@ -73,12 +73,16 @@ public class AbbyyXmlPageParser implements PageParser {
     private void appendParagraphs(Node pagenode, Page page) throws Exception {
         XPathExpression xpar = makeXpath(".//par");
         NodeList ps = (NodeList) xpar.evaluate(pagenode, XPathConstants.NODESET);
-        if (ps != null) {
+        if (ps != null && ps.getLength() > 0) {
             for (int i = 0; i < ps.getLength(); ++i) {
                 Paragraph p = new Paragraph();
                 appendLines(ps.item(i), p);
                 page.add(p);
             }
+        } else { // no `par` tags; try to load lines instead
+            Paragraph p = new Paragraph();
+            appendLines(pagenode, p);
+            page.add(p);
         }
     }
 
