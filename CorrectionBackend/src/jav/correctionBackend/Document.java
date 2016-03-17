@@ -1348,41 +1348,40 @@ public abstract class Document {
         Token token = null;
 
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument);
-            while (rs.next()) {
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement()) {
+                ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument);
+                while (rs.next()) {
 
-                token = new Token(rs.getString(4));
-                token.setId(rs.getInt(1));
-                token.setIndexInDocument(rs.getInt(2));
-                token.setOrigID(rs.getInt(3));
-                token.setWCOR(rs.getString(5));
-                token.setIsSuspicious(rs.getBoolean(15));
-                token.setIsCorrected(rs.getBoolean(7));
-                token.setIsNormal(rs.getBoolean(6));
-                token.setNumberOfCandidates(rs.getInt(8));
-                token.setPageIndex(rs.getInt(16));
-                token.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                token.setTopSuggestion(rs.getString(17));
-                token.setTopCandDLev(rs.getInt(18));
+                    token = new Token(rs.getString(4));
+                    token.setId(rs.getInt(1));
+                    token.setIndexInDocument(rs.getInt(2));
+                    token.setOrigID(rs.getInt(3));
+                    token.setWCOR(rs.getString(5));
+                    token.setIsSuspicious(rs.getBoolean(15));
+                    token.setIsCorrected(rs.getBoolean(7));
+                    token.setIsNormal(rs.getBoolean(6));
+                    token.setNumberOfCandidates(rs.getInt(8));
+                    token.setPageIndex(rs.getInt(16));
+                    token.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    token.setTopSuggestion(rs.getString(17));
+                    token.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    token.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    token.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        token.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        token.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
-            Log.error(this, ex.getMessage());
+            Log.error(this, ex);
         }
         //Log.debug(this, "getTokenByIndex(%d) = %s", indexInDocument, token);
         return token;
@@ -1437,29 +1436,28 @@ public abstract class Document {
     public Page getPage(int index) {
         Page page = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery(
-                    "SELECT MIN(indexInDocument) as min, "
-                    + "MAX(indexInDocument) as max from token WHERE pageIndex = "
-                    + index
-                    + "AND indexInDocument <> -1"
-            );
-            if (rs.next()) {
-                page = new Page(index);
-                int startIndex = rs.getInt(1);
-                int endIndex = rs.getInt(2);
-                page.setStartIndex(startIndex);
-                page.setEndIndex(endIndex);
-                String path = this.getTokenByIndex(startIndex).getImageFilename();
-                String filename = getFileName(path);
-                page.setImageFilename(filename);
-                page.setImageCanonical(path);
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement()) {
+                ResultSet rs = s.executeQuery(
+                        "SELECT MIN(indexInDocument) as min, "
+                        + "MAX(indexInDocument) as max from token WHERE pageIndex = "
+                        + index
+                        + "AND indexInDocument <> -1"
+                );
+                if (rs.next()) {
+                    page = new Page(index);
+                    int startIndex = rs.getInt(1);
+                    int endIndex = rs.getInt(2);
+                    page.setStartIndex(startIndex);
+                    page.setEndIndex(endIndex);
+                    String path = this.getTokenByIndex(startIndex).getImageFilename();
+                    String filename = getFileName(path);
+                    page.setImageFilename(filename);
+                    page.setImageCanonical(path);
+                }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "error getting page %d: %s", index, ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
         }
         return page;
