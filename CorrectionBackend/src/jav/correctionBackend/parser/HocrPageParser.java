@@ -71,6 +71,7 @@ public class HocrPageParser implements PageParser {
         Transformer transformer
                 = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         DOMSource domSource = new DOMSource(xml);
         StreamResult out
                 = new StreamResult(new FileOutputStream(output));
