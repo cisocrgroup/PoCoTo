@@ -114,6 +114,12 @@ public class OcropusBoundingBoxAdjuster {
     }
 
     private void setImageFile(File image) throws Exception {
+        // Log.debug(this, "setImageFile: %s", image);
+        if (image == null || image.getName().isEmpty()) {
+            // ignore if file name is empty (when exporting)
+            imageHeight = 0;
+            return;
+        }
         FileSeekableStream fss = new FileSeekableStream(image);
         ParameterBlock pb = new ParameterBlock();
         pb.add(fss);
@@ -124,7 +130,7 @@ public class OcropusBoundingBoxAdjuster {
                 || image.getName().endsWith("jpg")) {
             imageHeight = JAI.create("jpeg", pb).getHeight();
         } else {
-            throw new Exception("Invalid ocropus image file: " + image.getCanonicalPath());
+            throw new Exception("Invalid image");
         }
     }
 
