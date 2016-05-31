@@ -43,9 +43,15 @@ public class AbbyyXmlChar extends AbstractBaseChar {
 
     @Override
     public void substitute(Char c) {
-        setAttribute("pocotoSubstitution", new String(Character.toChars(letter)));
+        addPocotoSubstitutionAttribute(letter, c.getChar());
         letter = c.getChar();
         node.getFirstChild().setNodeValue(new String(Character.toChars(letter)));
+    }
+
+    private void addPocotoSubstitutionAttribute(int oldchar, int newchar) {
+        StringBuilder b = new StringBuilder();
+        b.appendCodePoint(oldchar).append(':').appendCodePoint(newchar);
+        setAttribute("pocotoSubstitution", b.toString());
     }
 
     @Override
