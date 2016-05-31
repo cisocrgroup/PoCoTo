@@ -52,20 +52,20 @@ public class Corrector {
         //Log.debug(Corrector.class, "incorrect: %s", incorrect);
         for (int i = 0, j = 0; i < wf.getTrace().size();) {
             switch (wf.getTrace().get(i)) {
-                case Deletion:
+                case DELETION:
                     //Log.debug(Corrector.class, "delete_1 %d: '%s'", j, incorrect);
                     incorrect.delete(j);
                     //Log.debug(Corrector.class, "delete_2 %d:  '%s'", j, incorrect);
                     ++i;
                     break;
-                case Substitution:
+                case SUBSTITUTION:
                     //Log.debug(Corrector.class, "subst_1 %d: '%s'", j, incorrect);
                     incorrect.substitute(j, wf.getGroundTruth().get(j));
                     //Log.debug(Corrector.class, "subst_2 %d: '%s'", j, incorrect);
                     ++j;
                     ++i;
                     break;
-                case Insertion:
+                case INSERTION:
                     //Log.debug(Corrector.class, "insert_1 %d: '%s'", j, incorrect);
                     incorrect.insert(j, wf.getGroundTruth().get(j).getChar());
                     //Log.debug(Corrector.class, "insert_2 %d: '%s'", j, incorrect);
