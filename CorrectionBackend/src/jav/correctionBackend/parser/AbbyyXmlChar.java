@@ -53,7 +53,6 @@ public class AbbyyXmlChar extends AbstractBaseChar {
         final int i = getIndexInLine();
         if (i != -1) {
             node.getParentNode().removeChild(node);
-            getLine().remove(i);
         }
     }
 
