@@ -68,7 +68,6 @@ public class AbbyyXmlChar extends AbstractBaseChar {
         AbbyyXmlChar clone = clone(c);
         clone.setAttribute("pocotoPrepend", new String(Character.toChars(c)));
         node.getParentNode().insertBefore(clone.node, this.node);
-        getLine().add(i, clone);
         return clone;
     }
 
@@ -78,7 +77,6 @@ public class AbbyyXmlChar extends AbstractBaseChar {
         AbbyyXmlChar clone = clone(c);
         clone.setAttribute("pocotoAppend", new String(Character.toChars(c)));
         node.getParentNode().appendChild(clone.node);
-        getLine().add(clone);
         return clone;
     }
 
