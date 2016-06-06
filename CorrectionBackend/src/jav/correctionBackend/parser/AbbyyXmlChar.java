@@ -43,9 +43,15 @@ public class AbbyyXmlChar extends AbstractBaseChar {
 
     @Override
     public void substitute(Char c) {
-        setAttribute("pocotoSubstitution", new String(Character.toChars(letter)));
+        addPocotoSubstitutionAttribute(letter, c.getChar());
         letter = c.getChar();
         node.getFirstChild().setNodeValue(new String(Character.toChars(letter)));
+    }
+
+    private void addPocotoSubstitutionAttribute(int oldchar, int newchar) {
+        StringBuilder b = new StringBuilder();
+        b.appendCodePoint(oldchar).append(':').appendCodePoint(newchar);
+        setAttribute("pocotoSubstitution", b.toString());
     }
 
     @Override
@@ -53,7 +59,6 @@ public class AbbyyXmlChar extends AbstractBaseChar {
         final int i = getIndexInLine();
         if (i != -1) {
             node.getParentNode().removeChild(node);
-            getLine().remove(i);
         }
     }
 
@@ -63,7 +68,6 @@ public class AbbyyXmlChar extends AbstractBaseChar {
         AbbyyXmlChar clone = clone(c);
         clone.setAttribute("pocotoPrepend", new String(Character.toChars(c)));
         node.getParentNode().insertBefore(clone.node, this.node);
-        getLine().add(i, clone);
         return clone;
     }
 
@@ -73,7 +77,6 @@ public class AbbyyXmlChar extends AbstractBaseChar {
         AbbyyXmlChar clone = clone(c);
         clone.setAttribute("pocotoAppend", new String(Character.toChars(c)));
         node.getParentNode().appendChild(clone.node);
-        getLine().add(clone);
         return clone;
     }
 

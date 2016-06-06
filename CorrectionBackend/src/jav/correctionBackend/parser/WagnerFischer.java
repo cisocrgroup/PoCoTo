@@ -23,10 +23,10 @@ public class WagnerFischer {
 
     public enum EditOperation {
 
-        Noop,
-        Substitution,
-        Deletion,
-        Insertion
+        NOOP, // No operation
+        SUBSTITUTION,
+        DELETION,
+        INSERTION
     };
 
     public class Trace extends ArrayList<EditOperation> {
@@ -36,16 +36,16 @@ public class WagnerFischer {
             StringBuilder builder = new StringBuilder();
             for (EditOperation e : this) {
                 switch (e) {
-                    case Deletion:
+                    case DELETION:
                         builder.append('-');
                         break;
-                    case Insertion:
+                    case INSERTION:
                         builder.append('+');
                         break;
-                    case Substitution:
+                    case SUBSTITUTION:
                         builder.append('#');
                         break;
-                    case Noop: // fall through
+                    case NOOP: // fall through
                     default:
                         builder.append('|');
                         break;
@@ -130,14 +130,14 @@ public class WagnerFischer {
         MinArg minArg = getMinArg(i, j);
         if (minArg.i == i - 1 && minArg.j == j - 1) {
             if (matrix[i - 1][j - 1] == matrix[i][j]) {
-                trace.add(EditOperation.Noop);
+                trace.add(EditOperation.NOOP);
             } else {
-                trace.add(EditOperation.Substitution);
+                trace.add(EditOperation.SUBSTITUTION);
             }
         } else if (minArg.i == i && minArg.j == j - 1) {
-            trace.add(EditOperation.Insertion);
+            trace.add(EditOperation.INSERTION);
         } else {
-            trace.add(EditOperation.Deletion);
+            trace.add(EditOperation.DELETION);
         }
         return minArg;
     }
@@ -178,7 +178,7 @@ public class WagnerFischer {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         for (int i = 0, j = 0; i < trace.size(); ++i) {
-            if (trace.get(i).equals(EditOperation.Insertion)) {
+            if (trace.get(i).equals(EditOperation.INSERTION)) {
                 builder.append('_');
             } else {
                 builder.appendCodePoint(ocr.get(j).getChar());
@@ -192,7 +192,7 @@ public class WagnerFischer {
         builder.append(trace.toString());
         builder.append('\n');
         for (int i = 0, j = 0; i < trace.size(); ++i) {
-            if (trace.get(i).equals(EditOperation.Deletion)) {
+            if (trace.get(i).equals(EditOperation.DELETION)) {
                 builder.append('_');
             } else {
                 builder.appendCodePoint(gt.get(j).getChar());

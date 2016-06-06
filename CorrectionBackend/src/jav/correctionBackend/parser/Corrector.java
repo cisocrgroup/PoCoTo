@@ -46,39 +46,40 @@ public class Corrector {
         return res;
     }
 
-    public static void correct(WagnerFischer wf, Line correct, Line incorrect) {
-        //Log.debug(Corrector.class, "correct:   %s", correct);
-        //Log.debug(Corrector.class, "trace:     %s", wf.getTrace());
-        //Log.debug(Corrector.class, "incorrect: %s", incorrect);
-        for (int i = 0, j = 0; i < wf.getTrace().size();) {
-            switch (wf.getTrace().get(i)) {
-                case Deletion:
-                    //Log.debug(Corrector.class, "delete_1 %d: '%s'", j, incorrect);
-                    incorrect.delete(j);
-                    //Log.debug(Corrector.class, "delete_2 %d:  '%s'", j, incorrect);
-                    ++i;
+    public static void correct(WagnerFischer wf, Line gt, Line pred) {
+        final WagnerFischer.Trace trace = wf.getTrace();
+        // Log.debug(Corrector.class, "correct:   %s", gt);
+        // Log.debug(Corrector.class, "trace:     %s", trace);
+        // Log.debug(Corrector.class, "incorrect: %s", pred);
+
+        for (int g = 0, p = 0, i = 0; i < trace.size(); ++i) {
+            switch (trace.get(i)) {
+                case DELETION:
+                    // Log.debug(Corrector.class, "delete_1 %d: '%s'", p, pred);
+                    pred.delete(p);
+                    // Log.debug(Corrector.class, "delete_2 %d: '%s'", p, pred);
                     break;
-                case Substitution:
-                    //Log.debug(Corrector.class, "subst_1 %d: '%s'", j, incorrect);
-                    incorrect.substitute(j, wf.getGroundTruth().get(j));
-                    //Log.debug(Corrector.class, "subst_2 %d: '%s'", j, incorrect);
-                    ++j;
-                    ++i;
+                case SUBSTITUTION:
+                    // Log.debug(Corrector.class, "subst_1 %d:  '%s'", p, pred);
+                    pred.substitute(p, gt.get(g));
+                    // Log.debug(Corrector.class, "subst_2 %d:  '%s'", p, pred);
+                    ++p;
+                    ++g;
                     break;
-                case Insertion:
-                    //Log.debug(Corrector.class, "insert_1 %d: '%s'", j, incorrect);
-                    incorrect.insert(j, wf.getGroundTruth().get(j).getChar());
-                    //Log.debug(Corrector.class, "insert_2 %d: '%s'", j, incorrect);
-                    ++j;
-                    ++i;
+                case INSERTION:
+                    // Log.debug(Corrector.class, "insert_1 %d:  '%s'", p, pred);
+                    pred.insert(p, gt.get(g).getChar());
+                    // Log.debug(Corrector.class, "insert_2 %d:  '%s'", p, pred);
+                    ++p;
+                    ++g;
                     break;
                 default:
-                    ++j;
-                    ++i;
+                    ++g;
+                    ++p;
                     break;
             }
         }
-        incorrect.finishCorrection();
+        pred.finishCorrection();
     }
 
     private Corrector() {
