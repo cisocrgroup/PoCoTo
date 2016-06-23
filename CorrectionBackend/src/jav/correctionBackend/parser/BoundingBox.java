@@ -16,8 +16,12 @@ public class BoundingBox {
     private int l, t, r, b;
 
     public BoundingBox(TokenImageInfoBox tiib) {
-        this(tiib.getCoordinateLeft(), tiib.getCoordinateTop(),
-                tiib.getCoordinateRight(), tiib.getCoordinateBottom());
+        this(
+                tiib == null ? -1 : tiib.getCoordinateLeft(),
+                tiib == null ? -1 : tiib.getCoordinateTop(),
+                tiib == null ? -1 : tiib.getCoordinateRight(),
+                tiib == null ? -1 : tiib.getCoordinateBottom()
+        );
     }
 
     public BoundingBox(int l, int t, int r, int b) {
