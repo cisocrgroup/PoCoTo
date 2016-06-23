@@ -48,9 +48,9 @@ public class Corrector {
 
     public static void correct(WagnerFischer wf, Line groundtruth, Line prediction) {
         final WagnerFischer.Trace trace = wf.getTrace();
-        // Log.debug(Corrector.class, "correct:   %s", groundtruth);
-        // Log.debug(Corrector.class, "trace:     %s", trace);
-        // Log.debug(Corrector.class, "incorrect: %s", prediction);
+        // Log.debug(Corrector.class, "groundtruth: %s", groundtruth);
+        // Log.debug(Corrector.class, "      trace: %s", trace);
+        // Log.debug(Corrector.class, " prediction: %s", prediction);
 
         for (int g = 0, p = 0, i = 0; i < trace.size(); ++i) {
             switch (trace.get(i)) {
