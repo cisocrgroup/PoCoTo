@@ -81,12 +81,8 @@ public class DocumentToken extends AbstractToken<DocumentChar> {
     }
 
     private void parse(Line line) {
-        String str;
-        if (token.isCorrected()) {
-            str = token.getWCOR();
-        } else {
-            str = token.getWOCR();
-        }
+        final String str = token.getWCOR(); // either the correction or the original (uncorrected token)
+
         final int n = str.length();
         final int nn = str.codePointCount(0, str.length());
         if (n > 0 && nn > 0) {
