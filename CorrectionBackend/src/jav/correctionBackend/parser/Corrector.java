@@ -46,30 +46,30 @@ public class Corrector {
         return res;
     }
 
-    public static void correct(WagnerFischer wf, Line gt, Line pred) {
+    public static void correct(WagnerFischer wf, Line groundtruth, Line prediction) {
         final WagnerFischer.Trace trace = wf.getTrace();
-        // Log.debug(Corrector.class, "correct:   %s", gt);
+        // Log.debug(Corrector.class, "correct:   %s", groundtruth);
         // Log.debug(Corrector.class, "trace:     %s", trace);
-        // Log.debug(Corrector.class, "incorrect: %s", pred);
+        // Log.debug(Corrector.class, "incorrect: %s", prediction);
 
         for (int g = 0, p = 0, i = 0; i < trace.size(); ++i) {
             switch (trace.get(i)) {
                 case DELETION:
-                    // Log.debug(Corrector.class, "delete_1 %d: '%s'", p, pred);
-                    pred.delete(p);
-                    // Log.debug(Corrector.class, "delete_2 %d: '%s'", p, pred);
+                    // Log.debug(Corrector.class, "delete_1 %d: '%s'", p, prediction);
+                    prediction.delete(p);
+                    // Log.debug(Corrector.class, "delete_2 %d: '%s'", p, prediction);
                     break;
                 case SUBSTITUTION:
-                    // Log.debug(Corrector.class, "subst_1 %d:  '%s'", p, pred);
-                    pred.substitute(p, gt.get(g));
-                    // Log.debug(Corrector.class, "subst_2 %d:  '%s'", p, pred);
+                    // Log.debug(Corrector.class, "subst_1 %d:  '%s'", p, prediction);
+                    prediction.substitute(p, groundtruth.get(g));
+                    // Log.debug(Corrector.class, "subst_2 %d:  '%s'", p, prediction);
                     ++p;
                     ++g;
                     break;
                 case INSERTION:
-                    // Log.debug(Corrector.class, "insert_1 %d:  '%s'", p, pred);
-                    pred.insert(p, gt.get(g).getChar());
-                    // Log.debug(Corrector.class, "insert_2 %d:  '%s'", p, pred);
+                    // Log.debug(Corrector.class, "insert_1 %d:  '%s'", p, prediction);
+                    prediction.insert(p, groundtruth.get(g).getChar());
+                    // Log.debug(Corrector.class, "insert_2 %d:  '%s'", p, prediction);
                     ++p;
                     ++g;
                     break;
@@ -79,7 +79,7 @@ public class Corrector {
                     break;
             }
         }
-        pred.finishCorrection();
+        prediction.finishCorrection();
     }
 
     private Corrector() {
