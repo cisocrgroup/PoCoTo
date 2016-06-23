@@ -127,11 +127,15 @@ public class Token {
         return this.wOCR;
     }
 
+    /*
+     * In order to enance usabillity this function returns either wocr if the
+     * is not corrected or the corrected token.
+     */
     public String getWCOR() {
-        if (wCOR == null) {
-            return "";
+        if (wCOR.isEmpty() || wCOR == null) {
+            return wOCR;
         } else {
-            return this.wCOR;
+            return wCOR;
         }
     }
 
@@ -144,11 +148,7 @@ public class Token {
     }
 
     public String getWCOR_lc() {
-        if (wCOR == null) {
-            return "";
-        } else {
-            return this.wCOR.toLowerCase();
-        }
+        return getWCOR().toLowerCase();
     }
 
     public boolean isNormal() {
