@@ -2,11 +2,11 @@
 Source code for the Java-based PoCoTo client enabling fast interactive batch corrections of complete OCR error series in OCR'ed historical documents.
 For a detailed description see the [PoCoTo Manual][pocman].
 
-[pocman]: https://github.com/cisocrgroup/Resources/blob/master/manuals/pocoto-manual.md
+[pocman]: https://github.com/cisocrgroup/Resources/blob/master/manuals/
 
 The lastest compiled binary can be downloaded [here].
 
-[here]: http://www.cis.lmu.de/ocrworkshop/data/pocoto/ocrcorrection.zip
+[here]: http://www.cis.lmu.de/ocrworkshop/data/pocoto/
 
 ## References
 PoCoTo has originally been written by Thorsten Vobl as part of his master's thesis in computational linguistics at CIS during the IMPACT project. 
