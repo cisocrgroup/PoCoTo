@@ -7,6 +7,7 @@ package jav.correctionBackend.parser;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import jav.correctionBackend.util.FilePathUtils;
+import jav.logging.log4j.Log;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.BufferedReader;
 import java.io.File;
@@ -114,7 +115,7 @@ public class OcropusBoundingBoxAdjuster {
     }
 
     private void setImageFile(File image) throws Exception {
-        // Log.debug(this, "setImageFile: %s", image);
+        Log.debug(this, "setImageFile: %s", image);
         if (image == null || image.getName().isEmpty()) {
             // ignore if file name is empty (when exporting)
             imageHeight = 0;
@@ -129,6 +130,8 @@ public class OcropusBoundingBoxAdjuster {
         } else if (image.getName().endsWith("jpeg")
                 || image.getName().endsWith("jpg")) {
             imageHeight = JAI.create("jpeg", pb).getHeight();
+        } else if (image.getName().endsWith("png")) {
+            imageHeight = JAI.create("png", pb).getHeight();
         } else {
             throw new Exception("Invalid image");
         }
