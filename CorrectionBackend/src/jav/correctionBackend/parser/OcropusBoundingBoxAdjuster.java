@@ -7,7 +7,6 @@ package jav.correctionBackend.parser;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import jav.correctionBackend.util.FilePathUtils;
-import jav.logging.log4j.Log;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.BufferedReader;
 import java.io.File;
@@ -61,15 +60,18 @@ public class OcropusBoundingBoxAdjuster {
 
     private void adjust(Line line, AdjustmentLine adjLine) throws Exception {
         adjustHorizontal(line.getBoundingBox());
-        final int left = line.getBoundingBox().getLeft();
+        setRightAdjustments(adjLine, line.getBoundingBox().getRight());
+        final int base = line.getBoundingBox().getLeft();
+        AdjustmentChar adjChar = null;
 
         for (int i = 0; i < line.size(); ++i) {
             Char current = line.get(i);
             current.getBoundingBox().setTop(line.getBoundingBox().getTop());
             current.getBoundingBox().setBottom(line.getBoundingBox().getBottom());
-            AdjustmentChar adjChar = findAdjustmentChar(i, current, adjLine);
-            current.getBoundingBox().setRight(left + adjChar.rightadj);
-            current.getBoundingBox().setLeft(left + adjChar.leftadj);
+            int iadjust = adjChar == null ? 0 : adjChar.iadjust;
+            adjChar = findAdjustmentChar(iadjust, current, adjLine);
+            current.getBoundingBox().setRight(base + adjChar.rightadj);
+            current.getBoundingBox().setLeft(base + adjChar.leftadj);
         }
     }
 
@@ -80,10 +82,11 @@ public class OcropusBoundingBoxAdjuster {
             if ((adjChar.codepoint == current.getChar())
                     || (Character.isWhitespace(adjChar.codepoint)
                     && Character.isWhitespace(current.getChar()))) {
-                if (i > 0) {
-                    adjChar.leftadj = adjLine.get(i - 1).rightadj + 1;
-                }
-                return adjChar;
+                adjChar.iadjust = i + 1;
+                AdjustmentChar prev = i == 0 ? null : adjLine.get(i - 1);
+                AdjustmentChar next = (i + 1) < adjLine.size()
+                        ? adjLine.get(i + 1) : null;
+                return doAdjustChar(prev, adjChar, next);
             }
         }
         throw new Exception(
@@ -94,11 +97,42 @@ public class OcropusBoundingBoxAdjuster {
         );
     }
 
+    private AdjustmentChar doAdjustChar(AdjustmentChar p, AdjustmentChar c, AdjustmentChar n) {
+        assert (c != null);
+        if (p != null && Character.isWhitespace(p.codepoint)) {
+            int w = p.rightadj - p.leftadj;
+            if (w > 0) {
+                c.leftadj -= w / 2;
+            }
+            //c.leftadj -= 10;
+        }
+
+        if (n != null && Character.isWhitespace(n.codepoint)) {
+            int w = n.rightadj - n.leftadj;
+            if (w > 0) {
+                c.rightadj += w / 2;
+            }
+            // c.rightadj += 10;
+        }
+        return c;
+    }
+
     private void adjustHorizontal(BoundingBox bb) {
         final int y0 = imageHeight - bb.getBottom() - 1;
         final int y1 = imageHeight - bb.getTop() - 1;
         bb.setTop(y0);
         bb.setBottom(y1);
+    }
+
+    private void setRightAdjustments(AdjustmentLine line, int r) {
+        final int n = line.size();
+        for (int i = 0; i < n; ++i) {
+            if ((i + 1) < n) {
+                line.get(i).rightadj = line.get(i + 1).leftadj;
+            } else {
+                line.get(i).rightadj = r;
+            }
+        }
     }
 
     private void setOcrFile(File ocr) throws Exception {
@@ -115,7 +149,7 @@ public class OcropusBoundingBoxAdjuster {
     }
 
     private void setImageFile(File image) throws Exception {
-        Log.debug(this, "setImageFile: %s", image);
+        // Log.debug(this, "setImageFile: %s", image);
         if (image == null || image.getName().isEmpty()) {
             // ignore if file name is empty (when exporting)
             imageHeight = 0;
@@ -173,6 +207,7 @@ public class OcropusBoundingBoxAdjuster {
             }
         }
         return adjustmentLine;
+
     }
 
     private static class Adjustments extends ArrayList<AdjustmentLine> {
@@ -212,13 +247,14 @@ public class OcropusBoundingBoxAdjuster {
 
     private static class AdjustmentChar {
 
-        private final int rightadj, codepoint;
-        private int leftadj;
+        private final int codepoint;
+        private int leftadj, rightadj, iadjust;
 
-        public AdjustmentChar(int codepoint, int rightadj) {
-            this.rightadj = rightadj;
+        public AdjustmentChar(int codepoint, int adj) {
+            this.leftadj = adj;
             this.codepoint = codepoint;
-            this.leftadj = 0;
+            this.rightadj = 0;
+            this.iadjust = 0;
         }
 
         public static AdjustmentChar fromString(String str) throws Exception {
