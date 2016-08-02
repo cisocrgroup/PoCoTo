@@ -7,7 +7,6 @@ package jav.correctionBackend.parser;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import jav.correctionBackend.util.FilePathUtils;
-import jav.logging.log4j.Log;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,7 +39,7 @@ public class OcropusBoundingBoxAdjuster {
         int n = 0;
         for (int i = 0; i < page.size(); ++i) {
             for (int j = 0; j < page.get(i).size(); ++j, ++n) {
-                page.get(i).add(j, readLlocs(n, page.get(i).get(j), adjs));
+                page.get(i).set(j, readLlocs(n, page.get(i).get(j), adjs));
             }
         }
         return page;
