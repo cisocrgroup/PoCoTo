@@ -7,6 +7,7 @@ package jav.correctionBackend.parser;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import jav.correctionBackend.util.FilePathUtils;
+import jav.logging.log4j.Log;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,86 +36,53 @@ public class OcropusBoundingBoxAdjuster {
     }
 
     public Page adjust() throws Exception {
-        ArrayList<Line> lines = new ArrayList<>();
-        for (Paragraph p : page) {
-            lines.addAll(p);
+        Adjustments adjs = getAdjustments();
+        int n = 0;
+        for (int i = 0; i < page.size(); ++i) {
+            for (int j = 0; j < page.get(i).size(); ++j, ++n) {
+                page.get(i).add(j, readLlocs(n, page.get(i).get(j), adjs));
+            }
         }
-        adjust(lines);
         return page;
     }
 
-    private void adjust(ArrayList<Line> lines) throws Exception {
-        Adjustments adjs = getAdjustments();
-        if (lines.size() != adjs.size()) {
-            throw new Exception(
-                    String.format(
-                            "Invalid ocropus directory %s: number of lines in hOCR differ from number of llocs files",
-                            locDir
-                    )
-            );
+    private Line readLlocs(int n, Line line, Adjustments adjs) throws Exception {
+        if (line.isEmpty()) {
+            return line;
         }
-        for (int i = 0; i < lines.size(); ++i) {
-            adjust(lines.get(i), adjs.get(i));
+        if (n >= adjs.size()) {
+            throw new Exception(String.format("Invalid llocs number: %d", n));
         }
+        Log.debug(this, "locDir: %s", locDir.getCanonicalPath());
+        Log.debug(this, "number of lines: %s", page.size());
+        Log.debug(this, "[%d] [%s]", n, adjs.get(n).file.getCanonicalPath());
+        return adjust(adjs.get(n), line);
     }
 
-    private void adjust(Line line, AdjustmentLine adjLine) throws Exception {
+    private Line adjust(AdjustmentLine adj, Line line) {
+        assert (!line.isEmpty());
+        final int left = line.getBoundingBox().getLeft();
+        final int right = line.getBoundingBox().getRight();
+        final int top = line.getBoundingBox().getTop();
+        final int bottom = line.getBoundingBox().getBottom();
+        final HocrChar firstChar = (HocrChar) line.get(0);
+        final AbstractToken token = firstChar.getToken();
+
         adjustHorizontal(line.getBoundingBox());
-        setRightAdjustments(adjLine, line.getBoundingBox().getRight());
-        final int base = line.getBoundingBox().getLeft();
-        AdjustmentChar adjChar = null;
+        adjustRight(adj, right);
+        Line newLine = new Line();
 
-        for (int i = 0; i < line.size(); ++i) {
-            Char current = line.get(i);
-            current.getBoundingBox().setTop(line.getBoundingBox().getTop());
-            current.getBoundingBox().setBottom(line.getBoundingBox().getBottom());
-            int iadjust = adjChar == null ? 0 : adjChar.iadjust;
-            adjChar = findAdjustmentChar(iadjust, current, adjLine);
-            current.getBoundingBox().setRight(base + adjChar.rightadj);
-            current.getBoundingBox().setLeft(base + adjChar.leftadj);
+        for (AdjustmentChar c : adj) {
+            HocrChar newChar = new HocrChar(newLine, c.codepoint);
+            newChar.setBoundingBox(new BoundingBox());
+            newChar.getBoundingBox().setLeft(left + c.leftadj);
+            newChar.getBoundingBox().setRight(left + c.rightadj);
+            newChar.getBoundingBox().setTop(top);
+            newChar.getBoundingBox().setBottom(bottom);
+            newChar.setToken(token);
+            newLine.add(newChar);
         }
-    }
-
-    private AdjustmentChar findAdjustmentChar(int i, Char current, AdjustmentLine adjLine)
-            throws Exception {
-        for (; i < adjLine.size(); ++i) {
-            AdjustmentChar adjChar = adjLine.get(i);
-            if ((adjChar.codepoint == current.getChar())
-                    || (Character.isWhitespace(adjChar.codepoint)
-                    && Character.isWhitespace(current.getChar()))) {
-                adjChar.iadjust = i + 1;
-                AdjustmentChar prev = i == 0 ? null : adjLine.get(i - 1);
-                AdjustmentChar next = (i + 1) < adjLine.size()
-                        ? adjLine.get(i + 1) : null;
-                return doAdjustChar(prev, adjChar, next);
-            }
-        }
-        throw new Exception(
-                String.format(
-                        "Could not find `%s`",
-                        new String(Character.toChars(current.getChar()))
-                )
-        );
-    }
-
-    private AdjustmentChar doAdjustChar(AdjustmentChar p, AdjustmentChar c, AdjustmentChar n) {
-        assert (c != null);
-        if (p != null && Character.isWhitespace(p.codepoint)) {
-            int w = p.rightadj - p.leftadj;
-            if (w > 0) {
-                c.leftadj -= w / 2;
-            }
-            //c.leftadj -= 10;
-        }
-
-        if (n != null && Character.isWhitespace(n.codepoint)) {
-            int w = n.rightadj - n.leftadj;
-            if (w > 0) {
-                c.rightadj += w / 2;
-            }
-            // c.rightadj += 10;
-        }
-        return c;
+        return newLine;
     }
 
     private void adjustHorizontal(BoundingBox bb) {
@@ -124,13 +92,24 @@ public class OcropusBoundingBoxAdjuster {
         bb.setBottom(y1);
     }
 
-    private void setRightAdjustments(AdjustmentLine line, int r) {
+    private void adjustRight(AdjustmentLine line, int r) {
         final int n = line.size();
         for (int i = 0; i < n; ++i) {
             if ((i + 1) < n) {
                 line.get(i).rightadj = line.get(i + 1).leftadj;
             } else {
                 line.get(i).rightadj = r;
+            }
+        }
+
+        for (int i = 0; i < n; ++i) {
+            if (i > 0 && Character.isWhitespace(line.get(i - 1).codepoint)) {
+                final int width = line.get(i - 1).rightadj - line.get(i - 1).leftadj;
+                line.get(i).leftadj -= width / 2;
+            }
+            if ((i + 1) < n && Character.isWhitespace(line.get(i + 1).codepoint)) {
+                final int width = line.get(i + 1).rightadj - line.get(i + 1).leftadj;
+                line.get(i).rightadj += width / 2;
             }
         }
     }
@@ -252,7 +231,7 @@ public class OcropusBoundingBoxAdjuster {
 
         public AdjustmentChar(int codepoint, int adj) {
             this.leftadj = adj;
-            this.codepoint = codepoint;
+            this.codepoint = codepoint == 0 ? ' ' : codepoint;
             this.rightadj = 0;
             this.iadjust = 0;
         }
