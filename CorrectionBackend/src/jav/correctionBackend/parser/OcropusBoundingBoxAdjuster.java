@@ -180,7 +180,10 @@ public class OcropusBoundingBoxAdjuster {
             adjustmentLine = new AdjustmentLine(file);
             String line;
             while ((line = reader.readLine()) != null) {
-                adjustmentLine.add(AdjustmentChar.fromString(line));
+                AdjustmentChar adjChar = AdjustmentChar.fromString(line);
+                if (adjChar != null) {
+                    adjustmentLine.add(adjChar);
+                }
             }
         }
         return adjustmentLine;
@@ -238,6 +241,10 @@ public class OcropusBoundingBoxAdjuster {
             final int i = str.indexOf('\t');
             if (str.isEmpty() || i == -1) {
                 throw new Exception("Invalid ocropus llocs adjustment: " + str);
+            }
+            // if llocs file contains 0-class -> ... 0a 09 ... or ... 0a 00 09
+            if (i == 0 || str.codePointAt(0) == 0) {
+                return null;
             }
             final int cp = str.codePointAt(0);
             final int adj = (int) Double.parseDouble(str.substring(i + 1));
