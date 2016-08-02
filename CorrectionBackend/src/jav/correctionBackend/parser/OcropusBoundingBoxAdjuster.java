@@ -52,14 +52,14 @@ public class OcropusBoundingBoxAdjuster {
         if (n >= adjs.size()) {
             throw new Exception(String.format("Invalid llocs number: %d", n));
         }
-        Log.debug(this, "locDir: %s", locDir.getCanonicalPath());
-        Log.debug(this, "number of lines: %s", page.size());
-        Log.debug(this, "[%d] [%s]", n, adjs.get(n).file.getCanonicalPath());
         return adjust(adjs.get(n), line);
     }
 
     private Line adjust(AdjustmentLine adj, Line line) {
         assert (!line.isEmpty());
+
+        adjustHorizontal(line.getBoundingBox()); // do this before anything else !
+
         final int left = line.getBoundingBox().getLeft();
         final int right = line.getBoundingBox().getRight();
         final int top = line.getBoundingBox().getTop();
@@ -67,7 +67,6 @@ public class OcropusBoundingBoxAdjuster {
         final HocrChar firstChar = (HocrChar) line.get(0);
         final AbstractToken token = firstChar.getToken();
 
-        adjustHorizontal(line.getBoundingBox());
         adjustRight(adj, right);
         Line newLine = new Line();
 
