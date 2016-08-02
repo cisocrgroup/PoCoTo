@@ -61,13 +61,12 @@ public class OcropusBoundingBoxAdjuster {
         adjustHorizontal(line.getBoundingBox()); // do this before anything else !
 
         final int left = line.getBoundingBox().getLeft();
-        final int right = line.getBoundingBox().getRight();
         final int top = line.getBoundingBox().getTop();
         final int bottom = line.getBoundingBox().getBottom();
         final HocrChar firstChar = (HocrChar) line.get(0);
         final AbstractToken token = firstChar.getToken();
 
-        adjustRight(adj, right);
+        adjustAdjustments(adj);
         Line newLine = new Line();
 
         for (AdjustmentChar c : adj) {
@@ -90,13 +89,13 @@ public class OcropusBoundingBoxAdjuster {
         bb.setBottom(y1);
     }
 
-    private void adjustRight(AdjustmentLine line, int r) {
+    private void adjustAdjustments(AdjustmentLine line) {
         final int n = line.size();
         for (int i = 0; i < n; ++i) {
-            if ((i + 1) < n) {
-                line.get(i).rightadj = line.get(i + 1).leftadj;
+            if (i > 0) {
+                line.get(i).leftadj = line.get(i - 1).rightadj;
             } else {
-                line.get(i).rightadj = r;
+                line.get(i).leftadj = 0;
             }
         }
 
@@ -228,13 +227,12 @@ public class OcropusBoundingBoxAdjuster {
     private static class AdjustmentChar {
 
         private final int codepoint;
-        private int leftadj, rightadj, iadjust;
+        private int leftadj, rightadj;
 
         public AdjustmentChar(int codepoint, int adj) {
-            this.leftadj = adj;
+            this.leftadj = 0;
             this.codepoint = codepoint == 0 ? ' ' : codepoint;
-            this.rightadj = 0;
-            this.iadjust = 0;
+            this.rightadj = adj;
         }
 
         public static AdjustmentChar fromString(String str) throws Exception {
