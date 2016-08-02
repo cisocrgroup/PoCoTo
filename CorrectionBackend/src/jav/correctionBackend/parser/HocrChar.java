@@ -36,6 +36,11 @@ public class HocrChar extends AbstractBaseChar {
         this.token = token;
     }
 
+    public AbstractToken getToken() {
+        assert (token != null);
+        return token;
+    }
+
     @Override
     public BoundingBox getBoundingBox() {
         return bb;
