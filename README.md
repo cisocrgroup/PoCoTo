@@ -1,4 +1,4 @@
-# Post Correction Tool PoCoTo
+# The CIS OCR Post Correction Tool PoCoTo
 Source code for the Java-based PoCoTo client enabling fast interactive batch corrections of complete OCR error series in OCR'ed historical documents.
 For a detailed description see the [PoCoTo Manual][pocman].
 
@@ -11,7 +11,7 @@ The lastest compiled binary can be downloaded [here].
 ## References
 PoCoTo has originally been written by Thorsten Vobl as part of his master's thesis in computational linguistics at CIS during the IMPACT project. 
 
-It has been further developed as a CLARIN-D Kurationsprojekt by Florian Fink at CIS.
+It has been further developed as a CLARIN-D Kurationsprojekt by Florian Fink and Uwe Springmann at CIS.
 
 Its underlying technology is described in the following publication:
 
