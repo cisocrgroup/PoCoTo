@@ -91,6 +91,7 @@ public class OcropusBoundingBoxAdjuster {
 
     private void adjustAdjustments(AdjustmentLine line) {
         final int n = line.size();
+
         for (int i = 0; i < n; ++i) {
             if (i > 0) {
                 line.get(i).leftadj = line.get(i - 1).rightadj;
@@ -102,11 +103,11 @@ public class OcropusBoundingBoxAdjuster {
         for (int i = 0; i < n; ++i) {
             if (i > 0 && Character.isWhitespace(line.get(i - 1).codepoint)) {
                 final int width = line.get(i - 1).rightadj - line.get(i - 1).leftadj;
-                line.get(i).leftadj -= width / 2;
+                line.get(i).leftadj -= (width / 2);
             }
             if ((i + 1) < n && Character.isWhitespace(line.get(i + 1).codepoint)) {
                 final int width = line.get(i + 1).rightadj - line.get(i + 1).leftadj;
-                line.get(i).rightadj += width / 2;
+                line.get(i).rightadj += (width / 2);
             }
         }
     }
