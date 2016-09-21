@@ -1,6 +1,6 @@
 package jav.gui.actions;
 
-import jav.gui.cookies.CorrectionSystemReadyCookie;
+import jav.gui.cookies.DocumentLoadedCookie;
 import jav.gui.dialogs.CustomErrorDialog;
 import jav.gui.dialogs.UnsavedChangesDialog;
 import jav.gui.main.MainController;
@@ -50,7 +50,7 @@ import org.openide.util.Utilities;
  *
  * @author thorsten (thorsten.vobl@googlemail.com)
  */
-public class ImportFromDocXml extends ContextAction<CorrectionSystemReadyCookie> {
+public class ImportFromDocXml extends ContextAction<DocumentLoadedCookie> {
 
     public ImportFromDocXml() {
         this(Utilities.actionsGlobalContext());
@@ -62,12 +62,12 @@ public class ImportFromDocXml extends ContextAction<CorrectionSystemReadyCookie>
     }
 
     @Override
-    public Class<CorrectionSystemReadyCookie> contextClass() {
-        return CorrectionSystemReadyCookie.class;
+    public Class<DocumentLoadedCookie> contextClass() {
+        return DocumentLoadedCookie.class;
     }
 
     @Override
-    public void performAction(CorrectionSystemReadyCookie context) {
+    public void performAction(DocumentLoadedCookie context) {
         if (MainController.findInstance().hasUnsavedChanges()) {
             Object retval = new UnsavedChangesDialog().showDialog();
             if (retval.equals(java.util.ResourceBundle.getBundle("jav/gui/dialogs/Bundle").getString("save"))) {
@@ -161,7 +161,7 @@ public class ImportFromDocXml extends ContextAction<CorrectionSystemReadyCookie>
     }
 
     @Override
-    public boolean enable(CorrectionSystemReadyCookie context) {
+    public boolean enable(DocumentLoadedCookie context) {
         return true;
     }
 
