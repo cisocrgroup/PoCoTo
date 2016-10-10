@@ -7,6 +7,7 @@ package jav.correctionBackend.parser;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import jav.correctionBackend.util.FilePathUtils;
+import jav.logging.log4j.Log;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,6 +17,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Scanner;
 import javax.media.jai.JAI;
 
 /**
@@ -246,8 +248,20 @@ public class OcropusBoundingBoxAdjuster {
                 return null;
             }
             final int cp = str.codePointAt(0);
-            final int adj = (int) Double.parseDouble(str.substring(i + 1));
+            final int adj = getAdjustment(str.substring(i + 1));
             return new AdjustmentChar(cp, adj);
+        }
+
+        private static int getAdjustment(String s) {
+            try {
+                Scanner scanner = new Scanner(s);
+                if (scanner.hasNextDouble()) {
+                    return (int) scanner.nextDouble();
+                }
+            } catch (Exception e) {
+                Log.error(AdjustmentChar.class, e);
+            }
+            return 0;
         }
     }
 }
