@@ -2106,17 +2106,18 @@ class TokenIterator implements MyIterator<Token> {
     }
 
     protected TokenIterator(Connection c, Page p, String i) {
-        if (p.getStartIndex() == p.getEndIndex()) {
-            rs = null;
-        } else {
-            try {
+        try {
+            if (p.getStartIndex() == p.getEndIndex()) {
+                rs = null;
+                c.close(); // close the connection or leak memory on every empty page!
+            } else {
                 baseImagePath = i;
                 conn = c;
                 s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
                 rs = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >=" + p.getStartIndex() + " AND indexInDocument <=" + p.getEndIndex() + " ORDER BY indexInDocument ASC");
-            } catch (SQLException ex) {
-                Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
