@@ -67,7 +67,7 @@ public class CorrectionSystem {
 
     public int openDocument(String dbPath) {
         int retval = 0;
-
+        this.jcp = createConnectionPool(dbPath);
         this.document = new SpreadIndexDocument(jcp);
         document.loadNumberOfPagesFromDB();
         document.loadNumberOfTokensFromDB();
