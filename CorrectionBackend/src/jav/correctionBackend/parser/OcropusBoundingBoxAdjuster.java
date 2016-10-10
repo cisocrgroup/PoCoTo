@@ -17,7 +17,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Scanner;
 import javax.media.jai.JAI;
 
 /**
@@ -254,9 +253,11 @@ public class OcropusBoundingBoxAdjuster {
 
         private static int getAdjustment(String s) {
             try {
-                Scanner scanner = new Scanner(s);
-                if (scanner.hasNextDouble()) {
-                    return (int) scanner.nextDouble();
+                final int end = s.indexOf('\t');
+                if (end < 0) {
+                    return (int) Double.parseDouble(s);
+                } else {
+                    return (int) Double.parseDouble(s.substring(0, end));
                 }
             } catch (Exception e) {
                 Log.error(AdjustmentChar.class, e);
