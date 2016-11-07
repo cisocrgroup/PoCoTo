@@ -1716,7 +1716,7 @@ public abstract class Document {
 
     public MyIterator<Token> selectTokens(PreparedStatement stmnt)
             throws SQLException {
-        return TokenIterator.fromStmnt(jcp.getConnection(), stmnt);
+        return new TokenIterator(jcp.getConnection(), stmnt);
     }
 
     public PreparedStatement prepareStatement(String stmnt)
@@ -2062,423 +2062,301 @@ public abstract class Document {
         return this.propertiespath;
 
     }
-}
 
-class TokenIterator implements MyIterator<Token> {
+    private static class TokenIterator extends SQLIterator<Token> {
 
-    private String baseImagePath = "";
-    private Connection conn;
-    private Statement s;
-    private ResultSet rs = null;
+        private String baseImagePath;
+        private ArrayList<Token> tokens;
 
-    public static TokenIterator fromStmnt(Connection conn, PreparedStatement stmnt)
-            throws SQLException {
-        TokenIterator it = new TokenIterator();
-        it.conn = conn;
-        it.s = stmnt;
-        it.rs = stmnt.executeQuery();
-        return it;
-    }
+        private static ArrayList<Token> getIterator(ResultSet rs) throws SQLException {
+            ArrayList<Token> tokens = new ArrayList<>();
+            while (rs.next()) {
+                Token token = new Token(rs.getString(4));
+                token.setId(rs.getInt(1));
+                token.setIndexInDocument(rs.getInt(2));
+                token.setOrigID(rs.getInt(3));
+                token.setWCOR(rs.getString(5));
+                token.setIsSuspicious(rs.getBoolean(15));
+                token.setIsCorrected(rs.getBoolean(7));
+                token.setIsNormal(rs.getBoolean(6));
+                token.setNumberOfCandidates(rs.getInt(8));
+                token.setPageIndex(rs.getInt(16));
+                token.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                token.setTopSuggestion(rs.getString(17));
+                token.setTopCandDLev(rs.getInt(18));
 
-    private TokenIterator() {
-
-    }
-
-    protected TokenIterator(Connection c) {
-        try {
-            conn = c;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM TOKEN ORDER BY indexInDocument ASC");
-        } catch (SQLException ex) {
-            Log.error(this, "could not create token iterator: %s", ex.getMessage());
-        }
-    }
-
-    protected TokenIterator(Connection c, String i) {
-        try {
-            baseImagePath = i;
-            conn = c;
-            s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            rs = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >= 0 ORDER BY indexInDocument ASC");
-        } catch (SQLException ex) {
-            Log.error(this, "could not create token iterator: %s", ex.getMessage());
-        }
-    }
-
-    protected TokenIterator(Connection c, Page p, String i) {
-        try {
-            if (p.getStartIndex() == p.getEndIndex()) {
-                rs = null;
-                c.close(); // close the connection or leak memory on every empty page!
-            } else {
-                baseImagePath = i;
-                conn = c;
-                s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                rs = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >=" + p.getStartIndex() + " AND indexInDocument <=" + p.getEndIndex() + " ORDER BY indexInDocument ASC");
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
+                if (rs.getString(14).equals("")) {
+                    token.setTokenImageInfoBox(null);
                 } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
+                    TokenImageInfoBox tiib = new TokenImageInfoBox();
+                    //tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                    tiib.setImageFileName(rs.getString(14));
+                    tiib.setCoordinateBottom(rs.getInt(12));
+                    tiib.setCoordinateTop(rs.getInt(11));
+                    tiib.setCoordinateLeft(rs.getInt(9));
+                    tiib.setCoordinateRight(rs.getInt(10));
+                    token.setTokenImageInfoBox(tiib);
                 }
-            } catch (SQLException ex) {
-                Log.error(this, "iterator has next: %s", ex.getMessage());
-                return false;
+                tokens.add(token);
             }
-        }
-    }
-
-    @Override
-    public Token next() {
-        Token retval = null;
-        try {
-            retval = new Token(rs.getString(4));
-            retval.setId(rs.getInt(1));
-            retval.setIndexInDocument(rs.getInt(2));
-            retval.setOrigID(rs.getInt(3));
-            retval.setWCOR(rs.getString(5));
-            retval.setIsSuspicious(rs.getBoolean(15));
-            retval.setIsCorrected(rs.getBoolean(7));
-            retval.setIsNormal(rs.getBoolean(6));
-            retval.setNumberOfCandidates(rs.getInt(8));
-            retval.setPageIndex(rs.getInt(16));
-            retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-            retval.setTopSuggestion(rs.getString(17));
-            retval.setTopCandDLev(rs.getInt(18));
-
-            if (rs.getString(14).equals("")) {
-                retval.setTokenImageInfoBox(null);
-            } else {
-                TokenImageInfoBox tiib = new TokenImageInfoBox();
-                //tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                tiib.setImageFileName(rs.getString(14));
-                tiib.setCoordinateBottom(rs.getInt(12));
-                tiib.setCoordinateTop(rs.getInt(11));
-                tiib.setCoordinateLeft(rs.getInt(9));
-                tiib.setCoordinateRight(rs.getInt(10));
-                retval.setTokenImageInfoBox(tiib);
-            }
-        } catch (SQLException ex) {
-            Log.error(this, "iterator next: %s", ex.getMessage());
-            retval = null;
-        }
-        return retval;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-        try {
-            rs.beforeFirst();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public void cancel() {
-        try {
             rs.close();
-            s.close();
-            conn.close();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Log.error(this, "iterator cancel: %s", ex.getMessage());
+            return tokens;
         }
-    }
-}
 
-class CandidateIterator implements MyIterator<Candidate> {
-
-    private Statement s;
-    private Connection conn;
-    private ResultSet rs = null;
-
-    protected CandidateIterator(Connection c, int tokenID) {
-        try {
-            conn = c;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM candidate WHERE tokenID=" + tokenID + " ORDER BY rank ASC");
-        } catch (SQLException ex) {
-            Log.error(this, "candidate iterator cancel: %s", ex.getMessage());
-            ex.printStackTrace();
+        private static ArrayList<Token> getIterator(Connection c) {
+            try (
+                    Statement s = c.createStatement();
+                    ResultSet res = s.executeQuery("SELECT * FROM TOKEN ORDER BY indexInDocument ASC")) {
+                ArrayList<Token> tokens = getIterator(res);
+                c.close();
+                s.close();
+                res.close();
+                return tokens;
+            } catch (SQLException e) {
+                Log.error(TokenIterator.class, e);
+            }
+            return null;
         }
-    }
 
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
-                }
+        private static ArrayList<Token> getIterator(Connection c, String i) {
+            try (
+                    Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                    ResultSet res = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >= 0 ORDER BY indexInDocument ASC")) {
+                ArrayList<Token> tokens = getIterator(res);
+                c.close();
+                s.close();
+                res.close();
+                return tokens;
             } catch (SQLException ex) {
-                return false;
+                Log.error(TokenIterator.class, ex);
+            }
+            return null;
+        }
+
+        private static ArrayList<Token> getIterator(Connection c, Page p, String i) {
+            try (
+                    Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                    ResultSet res = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >=" + p.getStartIndex() + " AND indexInDocument <=" + p.getEndIndex() + " ORDER BY indexInDocument ASC")) {
+
+                if (p.getStartIndex() == p.getEndIndex()) {
+                    c.close();
+                    s.close();
+                    return null;
+                } else {
+                    ArrayList<Token> tokens = getIterator(res);
+                    c.close();
+                    s.close();
+                    return tokens;
+                }
+            } catch (SQLException e) {
+                Log.error(TokenIterator.class, e);
+            }
+            return null;
+        }
+
+        private static ArrayList<Token> getIterator(Connection c, PreparedStatement p) {
+            try (ResultSet res = p.executeQuery()) {
+                ArrayList<Token> tokens = getIterator(res);
+                c.close();
+                p.close();
+                res.close();
+                return tokens;
+            } catch (SQLException e) {
+                Log.error(TokenIterator.class, e);
+            }
+            return null;
+        }
+
+        protected TokenIterator(Connection c) {
+            this(getIterator(c), "");
+        }
+
+        protected TokenIterator(Connection c, String i) {
+            this(getIterator(c, i), i);
+        }
+
+        protected TokenIterator(Connection c, Page p, String i) {
+            this(getIterator(c, p, i), i);
+        }
+
+        protected TokenIterator(Connection c, PreparedStatement p) {
+            this(getIterator(c, p), "");
+        }
+
+        private TokenIterator(ArrayList tokens, String i) {
+            this.tokens = tokens;
+            baseImagePath = i;
+            if (tokens != null) {
+                setIterator(tokens.iterator());
             }
         }
-    }
 
-    @Override
-    public Candidate next() {
-        Candidate retval = null;
-        try {
-            retval = new Candidate(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4), rs.getDouble(5), rs.getInt(6));
-        } catch (SQLException ex) {
-            retval = null;
+        @Override
+        public void reset() {
+            setIterator(tokens.iterator());
         }
-        return retval;
     }
 
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    class SQLIterator<T> implements MyIterator<T> {
+
+        private Iterator<T> it;
+
+        protected SQLIterator() {
+            this(null); // SQLIterator handles it == null
+        }
+
+        protected SQLIterator(Iterator<T> it) {
+            this.it = it;
+        }
+
+        protected void setIterator(Iterator<T> it) {
+            this.it = it;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return it != null && it.hasNext();
+        }
+
+        @Override
+        public T next() {
+            assert (it != null);
+            return it.next();
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void reset() {
+        }
+
+        @Override
+        public void cancel() {
+        }
     }
 
-    @Override
-    public void reset() {
-//        try {
-//            rs.beforeFirst();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+    private static class CandidateIterator extends SQLIterator<Candidate> {
+
+        private static Iterator<Candidate> getIterator(Connection c, int id) {
+            try (ResultSet res = c.createStatement().executeQuery("SELECT * FROM candidate WHERE tokenID=" + id + " ORDER BY rank ASC")) {
+                ArrayList<Candidate> candidates = new ArrayList<>();
+                while (res.next()) {
+                    candidates.add(
+                            new Candidate(
+                                    res.getInt(1),
+                                    res.getInt(2),
+                                    res.getString(3),
+                                    res.getString(4),
+                                    res.getDouble(5),
+                                    res.getInt(6)
+                            )
+                    );
+                }
+                c.close();
+                return candidates.iterator();
+            } catch (SQLException e) {
+                Log.error(CandidateIterator.class, e);
+            }
+            return null;
+        }
+
+        protected CandidateIterator(Connection c, int tokenID) {
+            super(getIterator(c, tokenID));
+        }
     }
 
-    public void cancel() {
-    }
-}
+    private static class PageIterator extends SQLIterator<Page> {
 
-class PageIterator implements MyIterator<Page> {
+        private Document doc;
+        private String baseImgPath;
 
-    private Connection conn;
-    private Document doc;
-    private String baseImgPath;
-    private ResultSet rs = null;
-    private Statement s;
+        private static Iterator<Page> getIterator(Connection c, Document d) {
+            ArrayList<Page> pages = new ArrayList<>();
+            try (ResultSet res = c.createStatement().executeQuery("SELECT pageIndex, MIN(indexInDocument) as min, MAX(indexInDocument) as max from token WHERE indexInDocument <> -1 GROUP BY pageIndex ORDER BY pageIndex")) {
+                while (res.next()) {
+                    Page page = new Page(res.getInt(1));
+                    page.setStartIndex(res.getInt(2));
+                    page.setEndIndex(res.getInt(3));
+                    String path = d.getTokenByIndex(res.getInt(2)).getImageFilename();
+                    String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
+                    page.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
+                    page.setImageCanonical(path);
+                    pages.add(page);
+                }
+                c.close();
+                return pages.iterator();
+            } catch (SQLException ex) {
+                Log.error(PageIterator.class, ex);
+            }
+            return null;
+        }
 
-    protected PageIterator(Connection c, Document d, String path) {
-        try {
+        protected PageIterator(Connection c, Document d, String path) {
+            super(getIterator(c, d));
             doc = d;
-            conn = c;
             baseImgPath = path;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT pageIndex, MIN(indexInDocument) as min, MAX(indexInDocument) as max from token WHERE indexInDocument <> -1 GROUP BY pageIndex ORDER BY pageIndex");
-        } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
+    private static class PatternIterator extends SQLIterator<Pattern> {
+
+        private static Iterator<Pattern> getIterator(Connection c) {
+            try (ResultSet res = c.createStatement().executeQuery("SELECT * FROM PATTERN ORDER BY freq DESC")) {
+                ArrayList<Pattern> patterns = new ArrayList<>();
+                while (res.next()) {
+                    patterns.add(
+                            new Pattern(
+                                    res.getInt(1),
+                                    res.getString(2),
+                                    res.getString(3),
+                                    res.getInt(4),
+                                    res.getInt(5)
+                            )
+                    );
                 }
-            } catch (SQLException ex) {
-                Log.error(this, "sql error: %s", ex.getMessage());
-                return false;
+                c.close();
+                return patterns.iterator();
+            } catch (SQLException e) {
+                Log.error(PatternIterator.class, e);
             }
+            return null;
+        }
+
+        protected PatternIterator(Connection c) {
+            super(getIterator(c));
         }
     }
 
-    @Override
-    public Page next() {
-        Page retval = null;
-        try {
-            retval = new Page(rs.getInt(1));
-            retval.setStartIndex(rs.getInt(2));
-            retval.setEndIndex(rs.getInt(3));
-            String path = doc.getTokenByIndex(rs.getInt(2)).getImageFilename();
-            String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
-            retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
-            retval.setImageCanonical(path);
-        } catch (SQLException ex) {
-            Log.error(this, "sql error: %s", ex.getMessage());
-        }
-        return retval;
-    }
+    private static class PatternOccurrenceIterator extends SQLIterator<PatternOccurrence> {
 
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-//        try {
-//            rs.beforeFirst();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-    }
-
-    public void cancel() {
-    }
-}
-
-class PatternIterator implements MyIterator<Pattern> {
-
-    private ResultSet rs = null;
-    private Statement s;
-    private Connection conn;
-
-    protected PatternIterator(Connection c) {
-        try {
-            conn = c;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM PATTERN ORDER BY freq DESC");
-        } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
+        private static Iterator<PatternOccurrence> getIterator(Connection c, int patternID) {
+            try (ResultSet res = c.createStatement().executeQuery("SELECT * FROM PATTERNOCCURRENCE WHERE patternID=" + patternID + " ORDER BY freq ASC")) {
+                ArrayList<PatternOccurrence> occs = new ArrayList<>();
+                while (res.next()) {
+                    occs.add(
+                            new PatternOccurrence(
+                                    res.getInt(1),
+                                    res.getInt(2),
+                                    res.getString(3),
+                                    res.getString(4),
+                                    res.getInt(5),
+                                    res.getInt(6)
+                            )
+                    );
                 }
+                c.close();
+                return occs.iterator();
             } catch (SQLException ex) {
-                Log.error(this, "sql error: %s", ex.getMessage());
-                return false;
+                Log.error(PatternOccurrenceIterator.class, ex);
             }
+            return null;
         }
-    }
 
-    @Override
-    public Pattern next() {
-        Pattern retval = null;
-        try {
-            retval = new Pattern(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getInt(4), rs.getInt(5));
-        } catch (SQLException ex) {
-            Log.error(this, "sql error: %s", ex.getMessage());
-            retval = null;
+        protected PatternOccurrenceIterator(Connection c, int patternID) {
+            super(getIterator(c, patternID));
         }
-        return retval;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-//        try {
-//            rs.beforeFirst();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-    }
-
-    @Override
-    public void cancel() {
-    }
-}
-
-class PatternOccurrenceIterator implements MyIterator<PatternOccurrence> {
-
-    private ResultSet rs = null;
-    private Statement s;
-    private Connection conn;
-
-    protected PatternOccurrenceIterator(Connection c, int patternID) {
-        try {
-            conn = c;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM PATTERNOCCURRENCE WHERE patternID=" + patternID + " ORDER BY freq ASC");
-        } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
-                }
-            } catch (SQLException ex) {
-                Log.error(this, "sql error: %s", ex.getMessage());
-                return false;
-            }
-        }
-    }
-
-    @Override
-    public PatternOccurrence next() {
-        PatternOccurrence retval = null;
-        try {
-            retval = new PatternOccurrence(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4), rs.getInt(5), rs.getInt(6));
-        } catch (SQLException ex) {
-            Log.error(this, "sql error: %s", ex.getMessage());
-        }
-        return retval;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-//        try {
-//            rs.beforeFirst();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-    }
-
-    @Override
-    public void cancel() {
     }
 }
