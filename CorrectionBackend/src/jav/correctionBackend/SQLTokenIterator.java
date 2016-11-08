@@ -52,22 +52,23 @@ class SQLTokenIterator extends SQLIterator<Token> {
             }
             tokens.add(token);
         }
-        rs.close();
         return tokens;
     }
 
     private static ArrayList<Token> getIterator(Connection c) throws SQLException {
-        Statement s = c.createStatement();
-        ResultSet res = s.executeQuery("SELECT * FROM TOKEN ORDER BY indexInDocument ASC");
-        ArrayList<Token> tokens = getIterator(res);
-        return tokens;
+        try (Statement s = c.createStatement();
+                ResultSet res = s.executeQuery("SELECT * FROM TOKEN ORDER BY indexInDocument ASC")) {
+            ArrayList<Token> tokens = getIterator(res);
+            return tokens;
+        }
     }
 
     private static ArrayList<Token> getIterator(Connection c, String i) throws SQLException {
-        Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        ResultSet res = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >= 0 ORDER BY indexInDocument ASC");
-        ArrayList<Token> tokens = getIterator(res);
-        return tokens;
+        try (Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                ResultSet res = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >= 0 ORDER BY indexInDocument ASC")) {
+            ArrayList<Token> tokens = getIterator(res);
+            return tokens;
+        }
     }
 
     private static ArrayList<Token> getIterator(Connection c, Page p, String i) throws SQLException {
@@ -75,14 +76,15 @@ class SQLTokenIterator extends SQLIterator<Token> {
             return null;
         }
 
-        Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        ResultSet res = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >=" + p.getStartIndex() + " AND indexInDocument <=" + p.getEndIndex() + " ORDER BY indexInDocument ASC");
+        try (Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+                ResultSet res = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >=" + p.getStartIndex() + " AND indexInDocument <=" + p.getEndIndex() + " ORDER BY indexInDocument ASC")) {
 
-        if (p.getStartIndex() == p.getEndIndex()) {
-            return null;
-        } else {
-            ArrayList<Token> tokens = getIterator(res);
-            return tokens;
+            if (p.getStartIndex() == p.getEndIndex()) {
+                return null;
+            } else {
+                ArrayList<Token> tokens = getIterator(res);
+                return tokens;
+            }
         }
     }
 

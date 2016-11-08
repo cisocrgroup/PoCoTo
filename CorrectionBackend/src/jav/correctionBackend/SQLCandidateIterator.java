@@ -18,22 +18,22 @@ import java.util.Iterator;
 class SQLCandidateIterator extends SQLIterator<Candidate> {
 
     private static Iterator<Candidate> getIterator(Connection c, int id) throws SQLException {
-        ResultSet res = c.createStatement().executeQuery("SELECT * FROM candidate WHERE tokenID=" + id + " ORDER BY rank ASC");
-        ArrayList<Candidate> candidates = new ArrayList<>();
-        while (res.next()) {
-            candidates.add(
-                    new Candidate(
-                            res.getInt(1),
-                            res.getInt(2),
-                            res.getString(3),
-                            res.getString(4),
-                            res.getDouble(5),
-                            res.getInt(6)
-                    )
-            );
+        try (ResultSet res = c.createStatement().executeQuery("SELECT * FROM candidate WHERE tokenID=" + id + " ORDER BY rank ASC")) {
+            ArrayList<Candidate> candidates = new ArrayList<>();
+            while (res.next()) {
+                candidates.add(
+                        new Candidate(
+                                res.getInt(1),
+                                res.getInt(2),
+                                res.getString(3),
+                                res.getString(4),
+                                res.getDouble(5),
+                                res.getInt(6)
+                        )
+                );
+            }
+            return candidates.iterator();
         }
-        c.close();
-        return candidates.iterator();
     }
 
     public SQLCandidateIterator(Connection c, int tokenID) throws SQLException {
