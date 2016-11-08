@@ -121,8 +121,6 @@ public abstract class Document {
 
             prep.addBatch();
             prep.executeBatch();
-            prep.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not add candiate: %s", ex.getMessage());
         }
@@ -156,8 +154,6 @@ public abstract class Document {
 
             prep.addBatch();
             prep.executeBatch();
-            prep.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not add pattern occurence: %s", ex.getMessage());
         }
@@ -737,9 +733,6 @@ public abstract class Document {
 
                     t.execute(rs.getString(5));
                     System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.CORRECTED.toString())) {
@@ -764,9 +757,6 @@ public abstract class Document {
                         }
                     }
                     System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MULTISETCORRECTED.toString())) {
@@ -791,9 +781,6 @@ public abstract class Document {
 
                     }
                     System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MERGE.toString())) {
@@ -826,9 +813,6 @@ public abstract class Document {
                     retval = new MergeUndoRedoInformation(poi, affectedTokens);
 
                     System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MULTICORRECTED.toString())) {
@@ -875,9 +859,6 @@ public abstract class Document {
                         }
                     }
                     System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.SPLIT.toString())) {
@@ -905,9 +886,6 @@ public abstract class Document {
                     retval = new SplitUndoRedoInformation(poi, affectedTokens);
 
                     System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.DELETE.toString())) {
@@ -935,19 +913,12 @@ public abstract class Document {
                     retval = new DeleteUndoRedoInformation(poi, affectedTokens);
 
                     System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
                 } else {
-                    // TODO unknown edittype exception
-                    conn.close();
                     return null;
                 }
             } else {
-                // TODO empty resultset exception
-                conn.close();
                 return null;
             }
         } catch (SQLException ex) {
