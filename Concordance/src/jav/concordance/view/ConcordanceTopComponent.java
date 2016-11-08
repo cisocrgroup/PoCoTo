@@ -115,14 +115,16 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         tvRegistry = new TokenVisualizationMultiRegistry();
         concGRegistry = new ConcordanceGraphicsRegistry();
         tokens = new LinkedHashMap<>();
-        for (Token tok : t) {
-            ConcordanceEntry temp = new ConcordanceEntry(tok);
-            if (!tok.getTopSuggestion().equals("")) {
-                temp.setCandidateString(tok.getTopSuggestion());
-            } else {
-                temp.setCandidateString("");
+        if (t != null) {
+            for (Token tok : t) {
+                ConcordanceEntry temp = new ConcordanceEntry(tok);
+                if (!tok.getTopSuggestion().equals("")) {
+                    temp.setCandidateString(tok.getTopSuggestion());
+                } else {
+                    temp.setCandidateString("");
+                }
+                tokens.put(tok.getID(), temp);
             }
-            tokens.put(tok.getID(), temp);
         }
         instance = this;
         globalActions = new ConcordanceGlobalActions(this);
@@ -185,7 +187,6 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         numCorrectedLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         numDisabledLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         numToDoLabel.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -635,7 +636,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
                         } else {
                             jButton1.setEnabled(true);
                             jToggleButton1.setEnabled(true);
-                            jToggleButton2.setEnabled(true);                            
+                            jToggleButton2.setEnabled(true);
                         }
                         numToDoLabel.setText("Entries to process: " + toDo);
                         numCorrectedLabel.setText("Entries Corrected: " + corrected);
@@ -659,7 +660,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         } else if (tst == TokenStatusType.INSERT) {
             cp.update(e.getType(), e.getPOIID(), ((InsertEvent) e).getAffectedTokenIds());
 
-            // TODO throw unknown tokenstatusType exception    
+            // TODO throw unknown tokenstatusType exception
         } else {
         }
     }
