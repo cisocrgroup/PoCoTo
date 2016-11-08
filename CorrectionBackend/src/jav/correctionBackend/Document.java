@@ -110,7 +110,7 @@ public abstract class Document {
      * @see jav.correctionBackend.Candidate} to be added
      */
     protected void addCandidate(Candidate c) {
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 PreparedStatement prep = conn.prepareStatement("INSERT INTO candidate VALUES( ?,?,?,?,?,? )");) {
             prep.setInt(1, c.getTokenID());
             prep.setInt(2, c.getRank());
@@ -128,7 +128,7 @@ public abstract class Document {
 
     protected void addPattern(Pattern p) {
         //Log.debug(this, "adding pattern: %s", p);
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 PreparedStatement prep = conn.prepareStatement("INSERT INTO pattern VALUES( null, ?, ?, ?, ? )");) {
             prep.setString(1, p.getLeft());
             prep.setString(2, p.getRight());
@@ -143,7 +143,7 @@ public abstract class Document {
 
     protected void addPatternOccurrence(PatternOccurrence po) {
         //Log.debug(this, "adding pattern occoruence %s", po);
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 PreparedStatement prep = conn.prepareStatement("INSERT INTO patternoccurrence VALUES( ?, ?, ?, ?, ?, ? )");) {
             prep.setInt(1, po.getPatternID());
             prep.setInt(2, po.getPart());
@@ -160,7 +160,7 @@ public abstract class Document {
     }
 
     public void clearPatterns() {
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 Statement s = conn.createStatement();) {
             // reset the auto_increment counter to 0
             s.executeUpdate("ALTER TABLE pattern ALTER COLUMN patternID RESTART WITH 0");
@@ -172,7 +172,7 @@ public abstract class Document {
     }
 
     public void clearCandidates() {
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 Statement s = conn.createStatement();) {
             s.executeUpdate("TRUNCATE TABLE candidate");
         } catch (SQLException ex) {
@@ -189,7 +189,7 @@ public abstract class Document {
 
         try {
             Token t = this.getTokenByID(tokenID);
-            conn = jcp.getConnection();
+            conn = getConnection();
 
             conn.setAutoCommit(false);
 
@@ -273,7 +273,7 @@ public abstract class Document {
 
         try {
             Iterator<Integer> iter = art.keySet().iterator();
-            conn = jcp.getConnection();
+            conn = getConnection();
 
             conn.setAutoCommit(false);
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
@@ -363,7 +363,7 @@ public abstract class Document {
 
     public void cleanupDatabase() {
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement()) {
                 s.executeUpdate("DELETE FROM TOKEN WHERE indexInDocument=-1");
             }
@@ -375,7 +375,7 @@ public abstract class Document {
 
     public void undoAll() {
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement();
                     Statement t = conn.createStatement()) {
                 ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE type='undo'");
@@ -391,7 +391,7 @@ public abstract class Document {
 
     public void removeEdit(int editid) {
         try {
-            try (Connection conn = jcp.getConnection(); Statement s = conn.createStatement()) {
+            try (Connection conn = getConnection(); Statement s = conn.createStatement()) {
                 s.execute("DELETE FROM undoredo WHERE operation_id=" + editid);
             }
         } catch (SQLException ex) {
@@ -402,7 +402,7 @@ public abstract class Document {
 
     public void truncateUndoRedo() {
         try {
-            try (Connection conn = jcp.getConnection(); Statement s = conn.createStatement()) {
+            try (Connection conn = getConnection(); Statement s = conn.createStatement()) {
                 s.execute("TRUNCATE TABLE undoredo");
             }
             manager.discardAllEdits();
@@ -415,7 +415,7 @@ public abstract class Document {
 
     public void updatePattern(Pattern p) {
         try {
-            Connection conn = jcp.getConnection();
+            Connection conn = getConnection();
             PreparedStatement prep = conn.prepareStatement("UPDATE pattern SET corrected=? WHERE patternID=?");
             prep.setInt(1, p.getCorrected());
             prep.setInt(2, p.getPatternID());
@@ -434,7 +434,7 @@ public abstract class Document {
 
     public void updatePatternOccurrence(PatternOccurrence p) {
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     PreparedStatement prep = conn.prepareStatement("UPDATE patternocccurrence SET corrected=? WHERE patternID=? AND part=?")) {
                 prep.setInt(1, p.getCorrected());
                 prep.setInt(2, p.getPatternID());
@@ -455,7 +455,7 @@ public abstract class Document {
         long time = System.currentTimeMillis();
         Log.info(this, "starting undo %d", index);
         try {
-            Connection conn = jcp.getConnection();
+            Connection conn = getConnection();
             Statement s = conn.createStatement();
             Statement t = conn.createStatement();
             ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='undo' ORDER BY part");
@@ -716,7 +716,7 @@ public abstract class Document {
     public UndoRedoInformation redo(int index) {
         long time = System.currentTimeMillis();
         System.out.println("starting redo " + index);
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 Statement s = conn.createStatement();
                 Statement t = conn.createStatement();
                 ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='redo' ORDER BY part");) {
@@ -930,7 +930,7 @@ public abstract class Document {
 
     public Token getTokenByID(int tokenID) {
         Token retval = null;
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 Statement s = conn.createStatement();
                 ResultSet rs = s.executeQuery("SELECT * FROM token WHERE tokenid=" + tokenID)) {
 
@@ -971,7 +971,7 @@ public abstract class Document {
     public Token getNextToken(int tokenID) {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 Statement s = conn.createStatement();
                 ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " ORDER BY indexInDocument LIMIT 1");) {
             if (rs.next()) {
@@ -1010,7 +1010,7 @@ public abstract class Document {
     public Token getNextTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement();
                     ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " ORDER BY indexInDocument LIMIT 1")) {
                 if (rs.next()) {
@@ -1051,7 +1051,7 @@ public abstract class Document {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement();
                     ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument LIMIT 1")) {
                 if (rs.next()) {
@@ -1091,7 +1091,7 @@ public abstract class Document {
     public Token getNextNormalTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement();
                     ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument LIMIT 1")) {
                 if (rs.next()) {
@@ -1132,7 +1132,7 @@ public abstract class Document {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement();
                     ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1")) {
                 if (rs.next()) {
@@ -1172,7 +1172,7 @@ public abstract class Document {
     public Token getPreviousNormalTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement();
                     ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1")) {
                 if (rs.next()) {
@@ -1214,7 +1214,7 @@ public abstract class Document {
         Token retval = null;
         try {
             ResultSet rs;
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement()) {
                 rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " ORDER BY indexInDocument DESC LIMIT 1");
                 if (rs.next()) {
@@ -1256,7 +1256,7 @@ public abstract class Document {
         Token retval = null;
         try {
             ResultSet rs;
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement()) {
                 rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " ORDER BY indexInDocument DESC LIMIT 1");
                 if (rs.next()) {
@@ -1298,7 +1298,7 @@ public abstract class Document {
         Token token = null;
 
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement();
                     ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument)) {
                 while (rs.next()) {
@@ -1366,7 +1366,7 @@ public abstract class Document {
             name = name.substring(0, idx);
         }
         try {
-            try (Connection c = jcp.getConnection();
+            try (Connection c = getConnection();
                     Statement s = c.createStatement();
                     ResultSet rs = s.executeQuery(
                             "SELECT pageIndex FROM token WHERE imageFile like '%"
@@ -1385,7 +1385,7 @@ public abstract class Document {
     public Page getPage(int index) {
         Page page = null;
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement()) {
                 ResultSet rs = s.executeQuery(
                         "SELECT MIN(indexInDocument) as min, "
@@ -1434,7 +1434,7 @@ public abstract class Document {
 
     protected void loadNumberOfPagesFromDB() {
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement();
                     ResultSet rs = s.executeQuery("SELECT MAX(pageIndex) AS numpages FROM token")) {
                 while (rs.next()) {
@@ -1448,7 +1448,7 @@ public abstract class Document {
 
     public MyIterator<Pattern> patternIterator() {
         try {
-            return new SQLPatternIterator(jcp.getConnection());
+            return new SQLPatternIterator(getConnection());
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             return null;
@@ -1457,7 +1457,7 @@ public abstract class Document {
 
     public MyIterator<PatternOccurrence> patternOccurrenceIterator(int patternID) {
         try {
-            return new SQLPatternOccurrenceIterator(jcp.getConnection(), patternID);
+            return new SQLPatternOccurrenceIterator(getConnection(), patternID);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1467,7 +1467,7 @@ public abstract class Document {
 
     public MyIterator<Page> pageIterator() {
         try {
-            return new SQLPageIterator(jcp.getConnection(), this, this.baseImagePath);
+            return new SQLPageIterator(getConnection(), this, this.baseImagePath);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1477,7 +1477,7 @@ public abstract class Document {
 
     public MyIterator<Token> allTokenIterator() {
         try {
-            return new SQLTokenIterator(jcp.getConnection());
+            return new SQLTokenIterator(getConnection());
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1490,7 +1490,7 @@ public abstract class Document {
      */
     public MyIterator<Token> tokenIterator() {
         try {
-            return new SQLTokenIterator(jcp.getConnection(), baseImagePath);
+            return new SQLTokenIterator(getConnection(), baseImagePath);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1504,7 +1504,7 @@ public abstract class Document {
      */
     public MyIterator<Token> tokenIterator(Page page) {
         try {
-            return new SQLTokenIterator(jcp.getConnection(), page, baseImagePath);
+            return new SQLTokenIterator(getConnection(), page, baseImagePath);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1514,7 +1514,7 @@ public abstract class Document {
 
     public MyIterator<Candidate> candidateIterator(int tokenID) {
         try {
-            return new SQLCandidateIterator(jcp.getConnection(), tokenID);
+            return new SQLCandidateIterator(getConnection(), tokenID);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1671,12 +1671,12 @@ public abstract class Document {
 
     public MyIterator<Token> selectTokens(PreparedStatement stmnt)
             throws SQLException {
-        return new SQLTokenIterator(jcp.getConnection(), stmnt);
+        return new SQLTokenIterator(getConnection(), stmnt);
     }
 
     public PreparedStatement prepareStatement(String stmnt)
             throws SQLException {
-        return jcp.getConnection().prepareStatement(stmnt);
+        return getConnection().prepareStatement(stmnt);
     }
 
     public ArrayList<Integer> mergeRightward(int iD) throws SQLException {
@@ -1711,7 +1711,7 @@ public abstract class Document {
 
     public void setSuspicious(int tokenID, String val) {
         try {
-            try (Connection conn = this.jcp.getConnection();
+            try (Connection conn = this.getConnection();
                     PreparedStatement prep = conn.prepareStatement("UPDATE token SET isSuspicious=? WHERE tokenID=?")) {
                 prep.setString(1, val);
                 prep.setInt(2, tokenID);
@@ -1725,7 +1725,7 @@ public abstract class Document {
 
     public void setNormal(int tokenID, String val) {
         try {
-            try (Connection conn = this.jcp.getConnection();
+            try (Connection conn = this.getConnection();
                     PreparedStatement prep = conn.prepareStatement("UPDATE token SET isNormal=? WHERE tokenID=?")) {
                 prep.setString(1, val);
                 prep.setInt(2, tokenID);
@@ -1739,7 +1739,7 @@ public abstract class Document {
 
     public void setTopSuggestion(int tokenID, String val) {
         try {
-            try (Connection conn = this.jcp.getConnection();
+            try (Connection conn = this.getConnection();
                     PreparedStatement prep = conn.prepareStatement("UPDATE token SET topSuggestion=? WHERE tokenID=?")) {
                 prep.setString(1, val);
                 prep.setInt(2, tokenID);
@@ -1753,7 +1753,7 @@ public abstract class Document {
 
     public void setTopCandDLev(int tokenID, int val) {
         try {
-            try (Connection conn = this.jcp.getConnection();
+            try (Connection conn = this.getConnection();
                     PreparedStatement prep = conn.prepareStatement("UPDATE token SET topCandDLev=? WHERE tokenID=?")) {
                 prep.setInt(1, val);
                 prep.setInt(2, tokenID);
@@ -1767,7 +1767,7 @@ public abstract class Document {
 
     public void setNumCandidates(int tokenID, int num) {
         try {
-            try (Connection conn = this.jcp.getConnection();
+            try (Connection conn = this.getConnection();
                     PreparedStatement prep = conn.prepareStatement("UPDATE token SET numCands=? WHERE tokenID=?")) {
                 prep.setInt(1, num);
                 prep.setInt(2, tokenID);
@@ -1781,7 +1781,7 @@ public abstract class Document {
 
 //    public void addToUndoRedo(int id, int part, String type, String edit_type, String sql) {
 //        try {
-//            Connection conn = this.jcp.getConnection();
+//            Connection conn = this.getConnection();
 //            PreparedStatement prep = conn.prepareStatement(" INSERT INTO undoredo VALUES( ?,?,?,?,? )");
 //            prep.setInt(1, id);
 //            prep.setInt(2, part);
@@ -1804,7 +1804,7 @@ public abstract class Document {
         PreparedStatement undo_redo = null;
 
         try {
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
 
             setcor = conn.prepareStatement("UPDATE token SET isCorrected=? WHERE tokenID=?");
@@ -1875,7 +1875,7 @@ public abstract class Document {
         PreparedStatement undo_redo = null;
 
         try {
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
 
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
@@ -1952,7 +1952,7 @@ public abstract class Document {
     public void updateTokenWOCR(Token token) throws SQLException {
         assert (token != null);
         final String sqlcmd = "UPDATE token SET wOCR=? WHERE tokenID=?";
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 PreparedStatement stmnt = conn.prepareStatement(sqlcmd)) {
             stmnt.setString(1, token.getWOCR());
             stmnt.setInt(2, token.getID());
@@ -1982,7 +1982,7 @@ public abstract class Document {
     public boolean checkImageFiles() {
         boolean retval = true;
         try {
-            try (Connection conn = this.jcp.getConnection();
+            try (Connection conn = this.getConnection();
                     Statement s = conn.createStatement();
                     ResultSet rs = s.executeQuery("SELECT DISTINCT imageFile FROM token")) {
                 while (rs.next()) {
@@ -2013,5 +2013,9 @@ public abstract class Document {
     public String getProjectFilename() {
         return this.propertiespath;
 
+    }
+
+    private Connection getConnection() throws SQLException {
+        return jcp.getConnection();
     }
 }
