@@ -110,10 +110,8 @@ public abstract class Document {
      * @see jav.correctionBackend.Candidate} to be added
      */
     protected void addCandidate(Candidate c) {
-        Connection conn = null;
-        try {
-            conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO candidate VALUES( ?,?,?,?,?,? )");
+        try (Connection conn = jcp.getConnection();
+                PreparedStatement prep = conn.prepareStatement("INSERT INTO candidate VALUES( ?,?,?,?,?,? )");) {
             prep.setInt(1, c.getTokenID());
             prep.setInt(2, c.getRank());
             prep.setString(3, c.getSuggestion());
@@ -131,30 +129,24 @@ public abstract class Document {
     }
 
     protected void addPattern(Pattern p) {
-        Connection conn = null;
         //Log.debug(this, "adding pattern: %s", p);
-        try {
-            conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO pattern VALUES( null, ?, ?, ?, ? )");
+        try (Connection conn = jcp.getConnection();
+                PreparedStatement prep = conn.prepareStatement("INSERT INTO pattern VALUES( null, ?, ?, ?, ? )");) {
             prep.setString(1, p.getLeft());
             prep.setString(2, p.getRight());
             prep.setInt(3, p.getOccurencesN());
             prep.setInt(4, p.getCorrected());
             prep.addBatch();
             prep.executeBatch();
-            prep.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not add pattern: %s", ex.getMessage());
         }
     }
 
     protected void addPatternOccurrence(PatternOccurrence po) {
-        Connection conn = null;
         //Log.debug(this, "adding pattern occoruence %s", po);
-        try {
-            conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO patternoccurrence VALUES( ?, ?, ?, ?, ?, ? )");
+        try (Connection conn = jcp.getConnection();
+                PreparedStatement prep = conn.prepareStatement("INSERT INTO patternoccurrence VALUES( ?, ?, ?, ?, ?, ? )");) {
             prep.setInt(1, po.getPatternID());
             prep.setInt(2, po.getPart());
             prep.setString(3, po.getWOCR_LC());
@@ -172,29 +164,21 @@ public abstract class Document {
     }
 
     public void clearPatterns() {
-        Connection conn = null;
-        try {
-            conn = jcp.getConnection();
-            Statement s = conn.createStatement();
+        try (Connection conn = jcp.getConnection();
+                Statement s = conn.createStatement();) {
             // reset the auto_increment counter to 0
             s.executeUpdate("ALTER TABLE pattern ALTER COLUMN patternID RESTART WITH 0");
             s.executeUpdate("TRUNCATE TABLE pattern");
             s.executeUpdate("TRUNCATE TABLE patternoccurrence");
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not clear patterns: %s", ex.getMessage());
         }
     }
 
     public void clearCandidates() {
-        Connection conn = null;
-        try {
-            conn = jcp.getConnection();
-            Statement s = conn.createStatement();
+        try (Connection conn = jcp.getConnection();
+                Statement s = conn.createStatement();) {
             s.executeUpdate("TRUNCATE TABLE candidate");
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not clear candidates: %s", ex.getMessage());
         }
@@ -278,8 +262,10 @@ public abstract class Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -368,8 +354,10 @@ public abstract class Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -379,11 +367,10 @@ public abstract class Document {
 
     public void cleanupDatabase() {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            s.executeUpdate("DELETE FROM TOKEN WHERE indexInDocument=-1");
-            s.close();
-            conn.close();
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement()) {
+                s.executeUpdate("DELETE FROM TOKEN WHERE indexInDocument=-1");
+            }
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
@@ -392,16 +379,14 @@ public abstract class Document {
 
     public void undoAll() {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            Statement t = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE type='undo'");
-            while (rs.next()) {
-                t.execute(rs.getString(5));
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement();
+                    Statement t = conn.createStatement()) {
+                ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE type='undo'");
+                while (rs.next()) {
+                    t.execute(rs.getString(5));
+                }
             }
-            t.close();
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
@@ -410,11 +395,9 @@ public abstract class Document {
 
     public void removeEdit(int editid) {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            s.execute("DELETE FROM undoredo WHERE operation_id=" + editid);
-            s.close();
-            conn.close();
+            try (Connection conn = jcp.getConnection(); Statement s = conn.createStatement()) {
+                s.execute("DELETE FROM undoredo WHERE operation_id=" + editid);
+            }
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
@@ -423,11 +406,9 @@ public abstract class Document {
 
     public void truncateUndoRedo() {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            s.execute("TRUNCATE TABLE undoredo");
-            s.close();
-            conn.close();
+            try (Connection conn = jcp.getConnection(); Statement s = conn.createStatement()) {
+                s.execute("TRUNCATE TABLE undoredo");
+            }
             manager.discardAllEdits();
             undo_redo_id = 0;
         } catch (SQLException ex) {
@@ -457,16 +438,15 @@ public abstract class Document {
 
     public void updatePatternOccurrence(PatternOccurrence p) {
         try {
-            Connection conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE patternocccurrence SET corrected=? WHERE patternID=? AND part=?");
-            prep.setInt(1, p.getCorrected());
-            prep.setInt(2, p.getPatternID());
-            prep.setInt(3, p.getPart());
+            try (Connection conn = jcp.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE patternocccurrence SET corrected=? WHERE patternID=? AND part=?")) {
+                prep.setInt(1, p.getCorrected());
+                prep.setInt(2, p.getPatternID());
+                prep.setInt(3, p.getPart());
 
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
             Logger
@@ -740,12 +720,10 @@ public abstract class Document {
     public UndoRedoInformation redo(int index) {
         long time = System.currentTimeMillis();
         System.out.println("starting redo " + index);
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            Statement t = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='redo' ORDER BY part");
-
+        try (Connection conn = jcp.getConnection();
+                Statement s = conn.createStatement();
+                Statement t = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='redo' ORDER BY part");) {
             if (rs.next()) {
                 if (rs.getString(4).equals(MyEditType.SETCORRECTED.toString())) {
 
@@ -973,6 +951,7 @@ public abstract class Document {
                 return null;
             }
         } catch (SQLException ex) {
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
@@ -1012,9 +991,8 @@ public abstract class Document {
                     retval.setTokenImageInfoBox(tiib);
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
             ex.printStackTrace();
         }
         return retval;
@@ -1023,10 +1001,9 @@ public abstract class Document {
     public Token getNextToken(int tokenID) {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " ORDER BY indexInDocument LIMIT 1");
+        try (Connection conn = jcp.getConnection();
+                Statement s = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " ORDER BY indexInDocument LIMIT 1");) {
             if (rs.next()) {
                 retval = new Token(rs.getString(4));
                 retval.setId(rs.getInt(1));
@@ -1054,9 +1031,8 @@ public abstract class Document {
                     retval.setTokenImageInfoBox(tiib);
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1064,39 +1040,39 @@ public abstract class Document {
     public Token getNextTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " ORDER BY indexInDocument LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " ORDER BY indexInDocument LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1105,39 +1081,39 @@ public abstract class Document {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1145,39 +1121,39 @@ public abstract class Document {
     public Token getNextNormalTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1186,39 +1162,39 @@ public abstract class Document {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1226,39 +1202,39 @@ public abstract class Document {
     public Token getPreviousNormalTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1267,39 +1243,41 @@ public abstract class Document {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " ORDER BY indexInDocument DESC LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            ResultSet rs;
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement()) {
+                rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " ORDER BY indexInDocument DESC LIMIT 1");
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
+            rs.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1307,39 +1285,41 @@ public abstract class Document {
     public Token getPreviousTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " ORDER BY indexInDocument DESC LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            ResultSet rs;
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement()) {
+                rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " ORDER BY indexInDocument DESC LIMIT 1");
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
+            rs.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1349,8 +1329,8 @@ public abstract class Document {
 
         try {
             try (Connection conn = jcp.getConnection();
-                    Statement s = conn.createStatement()) {
-                ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument);
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument)) {
                 while (rs.next()) {
 
                     token = new Token(rs.getString(4));
@@ -1416,17 +1396,16 @@ public abstract class Document {
             name = name.substring(0, idx);
         }
         try {
-            Connection c = jcp.getConnection();
-            Statement s = c.createStatement();
-            ResultSet rs = s.executeQuery(
-                    "SELECT pageIndex FROM token WHERE imageFile like '%"
-                    + name + "%'"
-            );
-            if (rs.next()) {
-                page = getPage(rs.getInt(1));
+            try (Connection c = jcp.getConnection();
+                    Statement s = c.createStatement();
+                    ResultSet rs = s.executeQuery(
+                            "SELECT pageIndex FROM token WHERE imageFile like '%"
+                            + name + "%'"
+                    )) {
+                if (rs.next()) {
+                    page = getPage(rs.getInt(1));
+                }
             }
-            s.close();
-            c.close();
         } catch (SQLException e) {
             Log.error(this, "SQLError: %s", e.getMessage());
         }
@@ -1481,15 +1460,13 @@ public abstract class Document {
 
     protected void loadNumberOfPagesFromDB() {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT MAX(pageIndex) AS numpages FROM token");
-            while (rs.next()) {
-                this.numPages = rs.getInt(1) + 1;
+            try (Connection conn = jcp.getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT MAX(pageIndex) AS numpages FROM token")) {
+                while (rs.next()) {
+                    this.numPages = rs.getInt(1) + 1;
+                }
             }
-            rs.close();
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
         }
@@ -1624,8 +1601,10 @@ public abstract class Document {
                     new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
                 } finally {
                     try {
-                        writer.flush();
-                        writer.close();
+                        if (writer != null) {
+                            writer.flush();
+                            writer.close();
+                        }
                     } catch (Exception e) {
                         new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
                     }
@@ -1663,8 +1642,10 @@ public abstract class Document {
             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
         } finally {
             try {
-                writer.flush();
-                writer.close();
+                if (writer != null) {
+                    writer.flush();
+                    writer.close();
+                }
             } catch (Exception e) {
                 new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
             }
@@ -1756,14 +1737,13 @@ public abstract class Document {
 
     public void setSuspicious(int tokenID, String val) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET isSuspicious=? WHERE tokenID=?");
-            prep.setString(1, val);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.jcp.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET isSuspicious=? WHERE tokenID=?")) {
+                prep.setString(1, val);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set suspicious: %s", ex.getMessage());
         }
@@ -1771,14 +1751,13 @@ public abstract class Document {
 
     public void setNormal(int tokenID, String val) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET isNormal=? WHERE tokenID=?");
-            prep.setString(1, val);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.jcp.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET isNormal=? WHERE tokenID=?")) {
+                prep.setString(1, val);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set normal: %s", ex.getMessage());
         }
@@ -1786,14 +1765,13 @@ public abstract class Document {
 
     public void setTopSuggestion(int tokenID, String val) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET topSuggestion=? WHERE tokenID=?");
-            prep.setString(1, val);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.jcp.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET topSuggestion=? WHERE tokenID=?")) {
+                prep.setString(1, val);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set top suggestion: %s", ex.getMessage());
         }
@@ -1801,14 +1779,13 @@ public abstract class Document {
 
     public void setTopCandDLev(int tokenID, int val) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET topCandDLev=? WHERE tokenID=?");
-            prep.setInt(1, val);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.jcp.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET topCandDLev=? WHERE tokenID=?")) {
+                prep.setInt(1, val);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set top level candidate: %s", ex.getMessage());
         }
@@ -1816,14 +1793,13 @@ public abstract class Document {
 
     public void setNumCandidates(int tokenID, int num) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET numCands=? WHERE tokenID=?");
-            prep.setInt(1, num);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.jcp.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET numCands=? WHERE tokenID=?")) {
+                prep.setInt(1, num);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set number of candidates: %s", ex.getMessage());
         }
@@ -1912,8 +1888,10 @@ public abstract class Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -1990,8 +1968,10 @@ public abstract class Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -2028,20 +2008,18 @@ public abstract class Document {
     public boolean checkImageFiles() {
         boolean retval = true;
         try {
-            Connection conn = this.jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT DISTINCT imageFile FROM token");
-            while (rs.next()) {
-                File f = new File(this.baseImagePath + File.separator + rs.getString(1));
-                if (!f.exists()) {
-                    return false;
+            try (Connection conn = this.jcp.getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT DISTINCT imageFile FROM token")) {
+                while (rs.next()) {
+                    File f = new File(this.baseImagePath + File.separator + rs.getString(1));
+                    if (!f.exists()) {
+                        return false;
+                    }
                 }
             }
-            rs.close();
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Log.error(this, ex);
         }
         return retval;
     }
