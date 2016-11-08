@@ -116,7 +116,7 @@ public class SpreadIndexDocument extends Document {
     }
 
     protected int addToken(Token t, int index) {
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 PreparedStatement prep = conn.prepareStatement("INSERT INTO TOKEN VALUES( null,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? )")) {
             prep.setInt(1, index);
             prep.setInt(2, t.getOrigID());
@@ -163,7 +163,7 @@ public class SpreadIndexDocument extends Document {
 
     @Override
     public int addToken(Token t) {
-        try (Connection conn = jcp.getConnection()) {
+        try (Connection conn = getConnection()) {
             return this.addToken(t, conn);
         } catch (SQLException ex) {
             Log.error(this, "could not insert Token: %s", ex.getMessage());
@@ -173,7 +173,7 @@ public class SpreadIndexDocument extends Document {
 
     @Override
     protected void loadNumberOfTokensFromDB() {
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 Statement s = conn.createStatement();
                 ResultSet rs = s.executeQuery("SELECT COUNT(indexInDocument) as numTokens FROM TOKEN WHERE indexInDocument<>-1")) {
             if (rs.next()) {
@@ -189,7 +189,7 @@ public class SpreadIndexDocument extends Document {
     public ArrayList<Integer> deleteToken(int iDFrom, int iDTo)
             throws SQLException {
         //Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 PreparedStatement setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=-1 WHERE tokenID=?");
                 PreparedStatement undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )")) {
             ArrayList<Integer> retval = new ArrayList<>();
@@ -285,7 +285,7 @@ public class SpreadIndexDocument extends Document {
 
             int i = 0;
 
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
 
             setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=? WHERE tokenID=?");
@@ -432,7 +432,7 @@ public class SpreadIndexDocument extends Document {
             editString = editString.replaceAll("^ ", "");
             editString = editString.replaceAll(" $", "");
 
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
             setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=? WHERE tokenID=?");
@@ -590,7 +590,7 @@ public class SpreadIndexDocument extends Document {
                 PreparedStatement updateUndoRedo = null;
 
                 try {
-                    conn = jcp.getConnection();
+                    conn = getConnection();
 //                    Statement s = conn.createStatement();
 //                    ResultSet rs = s.executeQuery("SELECT * FROM undoredo");
 

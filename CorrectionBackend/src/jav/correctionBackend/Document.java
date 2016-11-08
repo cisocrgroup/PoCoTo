@@ -61,7 +61,7 @@ import org.openide.awt.UndoRedo;
 public abstract class Document {
 
     String baseImagePath = "";
-    JdbcConnectionPool jcp;
+    private final JdbcConnectionPool jcp;
     int numTokens = 0;
     int numPages = 0;
     boolean hasImages = false;
@@ -1974,7 +1974,7 @@ public abstract class Document {
 
     }
 
-    private Connection getConnection() throws SQLException {
+    protected Connection getConnection() throws SQLException {
         Log.debug(this, "active connections: %d", jcp.getActiveConnections());
         return jcp.getConnection();
     }
