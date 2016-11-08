@@ -1399,7 +1399,11 @@ public abstract class Document {
                     int endIndex = rs.getInt(2);
                     page.setStartIndex(startIndex);
                     page.setEndIndex(endIndex);
-                    String path = this.getTokenByIndex(startIndex).getImageFilename();
+                    Token tmp = this.getTokenByIndex(startIndex);
+                    if (tmp == null) {
+                        return null;
+                    }
+                    String path = tmp.getImageFilename();
                     String filename = getFileName(path);
                     page.setImageFilename(filename);
                     page.setImageCanonical(path);
