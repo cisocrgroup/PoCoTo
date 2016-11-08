@@ -447,7 +447,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
 //                            page.getIndex(),
 //                            page.getImageCanonical()
 //                    );
-                    if (page.hasImage()) {
+                    if (page != null && page.hasImage()) {
                         pv = new PageView(getDefault(), MainController.findInstance().getDocument().tokenIterator(page), page.getImageCanonical(), fontSize, imgScale);
                     } else {
                         pv = new PageView(getDefault(), MainController.findInstance().getDocument().tokenIterator(page), fontSize);
@@ -491,11 +491,8 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                     } else {
                         new CustomErrorDialog().showDialog("MainTopComponent::GotoPageSelect");
                     }
-                } catch (ExecutionException ex) {
+                } catch (ExecutionException | InterruptedException | CancellationException ex) {
                     Exceptions.printStackTrace(ex);
-                } catch (InterruptedException ex) {
-                    Exceptions.printStackTrace(ex);
-                } catch (CancellationException ex) {
                 }
             }
         };
