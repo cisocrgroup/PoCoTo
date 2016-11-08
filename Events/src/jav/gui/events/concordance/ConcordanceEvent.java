@@ -44,7 +44,11 @@ public class ConcordanceEvent extends Event {
 
     public ConcordanceEvent(Object s, ConcordanceType t, ArrayList<Token> a, String n) {
         super(s);
-        this.arrTok = a;
+        if (a != null) {
+            this.arrTok = a;
+        } else {
+            arrTok = new ArrayList<>();
+        }
         this.name = n;
         this.ct = t;
     }
