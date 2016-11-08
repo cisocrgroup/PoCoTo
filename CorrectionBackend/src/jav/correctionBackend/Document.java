@@ -959,10 +959,9 @@ public abstract class Document {
 
     public Token getTokenByID(int tokenID) {
         Token retval = null;
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE tokenid=" + tokenID);
+        try (Connection conn = jcp.getConnection();
+                Statement s = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT * FROM token WHERE tokenid=" + tokenID)) {
 
             while (rs.next()) {
                 retval = new Token(rs.getString(4));
