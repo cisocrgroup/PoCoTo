@@ -1444,7 +1444,7 @@ public abstract class Document {
 
     public MyIterator<Pattern> patternIterator() {
         try {
-            return new PatternIterator(jcp.getConnection());
+            return new SQLPatternIterator(jcp.getConnection());
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             return null;
@@ -1453,7 +1453,7 @@ public abstract class Document {
 
     public MyIterator<PatternOccurrence> patternOccurrenceIterator(int patternID) {
         try {
-            return new PatternOccurrenceIterator(jcp.getConnection(), patternID);
+            return new SQLPatternOccurrenceIterator(jcp.getConnection(), patternID);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1463,7 +1463,7 @@ public abstract class Document {
 
     public MyIterator<Page> pageIterator() {
         try {
-            return new PageIterator(jcp.getConnection(), this, this.baseImagePath);
+            return new SQLPageIterator(jcp.getConnection(), this, this.baseImagePath);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1473,7 +1473,7 @@ public abstract class Document {
 
     public MyIterator<Token> allTokenIterator() {
         try {
-            return new TokenIterator(jcp.getConnection());
+            return new SQLTokenIterator(jcp.getConnection());
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1486,7 +1486,7 @@ public abstract class Document {
      */
     public MyIterator<Token> tokenIterator() {
         try {
-            return new TokenIterator(jcp.getConnection(), baseImagePath);
+            return new SQLTokenIterator(jcp.getConnection(), baseImagePath);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1500,7 +1500,7 @@ public abstract class Document {
      */
     public MyIterator<Token> tokenIterator(Page page) {
         try {
-            return new TokenIterator(jcp.getConnection(), page, baseImagePath);
+            return new SQLTokenIterator(jcp.getConnection(), page, baseImagePath);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1510,7 +1510,7 @@ public abstract class Document {
 
     public MyIterator<Candidate> candidateIterator(int tokenID) {
         try {
-            return new CandidateIterator(jcp.getConnection(), tokenID);
+            return new SQLCandidateIterator(jcp.getConnection(), tokenID);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1591,7 +1591,7 @@ public abstract class Document {
             while (page_iter.hasNext()) {
                 Page seite = page_iter.next();
 
-                writer.write("#### Seite " + ((int) seite.getIndex() + 1) + " von " + this.numPages + " ###");
+                writer.write("#### Seite " + seite.getIndex() + 1 + " von " + this.numPages + " ###");
                 writer.newLine();
                 writer.newLine();
 
@@ -1667,7 +1667,7 @@ public abstract class Document {
 
     public MyIterator<Token> selectTokens(PreparedStatement stmnt)
             throws SQLException {
-        return new TokenIterator(jcp.getConnection(), stmnt);
+        return new SQLTokenIterator(jcp.getConnection(), stmnt);
     }
 
     public PreparedStatement prepareStatement(String stmnt)
@@ -2009,302 +2009,5 @@ public abstract class Document {
     public String getProjectFilename() {
         return this.propertiespath;
 
-    }
-
-    private static class TokenIterator extends SQLIterator<Token> {
-
-        private String baseImagePath;
-        private ArrayList<Token> tokens;
-
-        private static ArrayList<Token> getIterator(ResultSet rs) throws SQLException {
-            ArrayList<Token> tokens = new ArrayList<>();
-            while (rs.next()) {
-                Token token = new Token(rs.getString(4));
-                token.setId(rs.getInt(1));
-                token.setIndexInDocument(rs.getInt(2));
-                token.setOrigID(rs.getInt(3));
-                token.setWCOR(rs.getString(5));
-                token.setIsSuspicious(rs.getBoolean(15));
-                token.setIsCorrected(rs.getBoolean(7));
-                token.setIsNormal(rs.getBoolean(6));
-                token.setNumberOfCandidates(rs.getInt(8));
-                token.setPageIndex(rs.getInt(16));
-                token.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                token.setTopSuggestion(rs.getString(17));
-                token.setTopCandDLev(rs.getInt(18));
-
-                if (rs.getString(14).equals("")) {
-                    token.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    //tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setImageFileName(rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    token.setTokenImageInfoBox(tiib);
-                }
-                tokens.add(token);
-            }
-            rs.close();
-            return tokens;
-        }
-
-        private static ArrayList<Token> getIterator(Connection c) {
-            try (
-                    Statement s = c.createStatement();
-                    ResultSet res = s.executeQuery("SELECT * FROM TOKEN ORDER BY indexInDocument ASC")) {
-                ArrayList<Token> tokens = getIterator(res);
-                c.close();
-                s.close();
-                res.close();
-                return tokens;
-            } catch (SQLException e) {
-                Log.error(TokenIterator.class, e);
-            }
-            return null;
-        }
-
-        private static ArrayList<Token> getIterator(Connection c, String i) {
-            try (
-                    Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                    ResultSet res = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >= 0 ORDER BY indexInDocument ASC")) {
-                ArrayList<Token> tokens = getIterator(res);
-                c.close();
-                s.close();
-                res.close();
-                return tokens;
-            } catch (SQLException ex) {
-                Log.error(TokenIterator.class, ex);
-            }
-            return null;
-        }
-
-        private static ArrayList<Token> getIterator(Connection c, Page p, String i) {
-            try (
-                    Statement s = c.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                    ResultSet res = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >=" + p.getStartIndex() + " AND indexInDocument <=" + p.getEndIndex() + " ORDER BY indexInDocument ASC")) {
-
-                if (p.getStartIndex() == p.getEndIndex()) {
-                    c.close();
-                    s.close();
-                    return null;
-                } else {
-                    ArrayList<Token> tokens = getIterator(res);
-                    c.close();
-                    s.close();
-                    return tokens;
-                }
-            } catch (SQLException e) {
-                Log.error(TokenIterator.class, e);
-            }
-            return null;
-        }
-
-        private static ArrayList<Token> getIterator(Connection c, PreparedStatement p) {
-            try (ResultSet res = p.executeQuery()) {
-                ArrayList<Token> tokens = getIterator(res);
-                c.close();
-                p.close();
-                res.close();
-                return tokens;
-            } catch (SQLException e) {
-                Log.error(TokenIterator.class, e);
-            }
-            return null;
-        }
-
-        protected TokenIterator(Connection c) {
-            this(getIterator(c), "");
-        }
-
-        protected TokenIterator(Connection c, String i) {
-            this(getIterator(c, i), i);
-        }
-
-        protected TokenIterator(Connection c, Page p, String i) {
-            this(getIterator(c, p, i), i);
-        }
-
-        protected TokenIterator(Connection c, PreparedStatement p) {
-            this(getIterator(c, p), "");
-        }
-
-        private TokenIterator(ArrayList tokens, String i) {
-            this.tokens = tokens;
-            baseImagePath = i;
-            if (tokens != null) {
-                setIterator(tokens.iterator());
-            }
-        }
-
-        @Override
-        public void reset() {
-            setIterator(tokens.iterator());
-        }
-    }
-
-    class SQLIterator<T> implements MyIterator<T> {
-
-        private Iterator<T> it;
-
-        protected SQLIterator() {
-            this(null); // SQLIterator handles it == null
-        }
-
-        protected SQLIterator(Iterator<T> it) {
-            this.it = it;
-        }
-
-        protected void setIterator(Iterator<T> it) {
-            this.it = it;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return it != null && it.hasNext();
-        }
-
-        @Override
-        public T next() {
-            assert (it != null);
-            return it.next();
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public void reset() {
-        }
-
-        @Override
-        public void cancel() {
-        }
-    }
-
-    private static class CandidateIterator extends SQLIterator<Candidate> {
-
-        private static Iterator<Candidate> getIterator(Connection c, int id) {
-            try (ResultSet res = c.createStatement().executeQuery("SELECT * FROM candidate WHERE tokenID=" + id + " ORDER BY rank ASC")) {
-                ArrayList<Candidate> candidates = new ArrayList<>();
-                while (res.next()) {
-                    candidates.add(
-                            new Candidate(
-                                    res.getInt(1),
-                                    res.getInt(2),
-                                    res.getString(3),
-                                    res.getString(4),
-                                    res.getDouble(5),
-                                    res.getInt(6)
-                            )
-                    );
-                }
-                c.close();
-                return candidates.iterator();
-            } catch (SQLException e) {
-                Log.error(CandidateIterator.class, e);
-            }
-            return null;
-        }
-
-        protected CandidateIterator(Connection c, int tokenID) {
-            super(getIterator(c, tokenID));
-        }
-    }
-
-    private static class PageIterator extends SQLIterator<Page> {
-
-        private Document doc;
-        private String baseImgPath;
-
-        private static Iterator<Page> getIterator(Connection c, Document d) {
-            ArrayList<Page> pages = new ArrayList<>();
-            try (ResultSet res = c.createStatement().executeQuery("SELECT pageIndex, MIN(indexInDocument) as min, MAX(indexInDocument) as max from token WHERE indexInDocument <> -1 GROUP BY pageIndex ORDER BY pageIndex")) {
-                while (res.next()) {
-                    Page page = new Page(res.getInt(1));
-                    page.setStartIndex(res.getInt(2));
-                    page.setEndIndex(res.getInt(3));
-                    String path = d.getTokenByIndex(res.getInt(2)).getImageFilename();
-                    String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
-                    page.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
-                    page.setImageCanonical(path);
-                    pages.add(page);
-                }
-                c.close();
-                return pages.iterator();
-            } catch (SQLException ex) {
-                Log.error(PageIterator.class, ex);
-            }
-            return null;
-        }
-
-        protected PageIterator(Connection c, Document d, String path) {
-            super(getIterator(c, d));
-            doc = d;
-            baseImgPath = path;
-        }
-    }
-
-    private static class PatternIterator extends SQLIterator<Pattern> {
-
-        private static Iterator<Pattern> getIterator(Connection c) {
-            try (ResultSet res = c.createStatement().executeQuery("SELECT * FROM PATTERN ORDER BY freq DESC")) {
-                ArrayList<Pattern> patterns = new ArrayList<>();
-                while (res.next()) {
-                    patterns.add(
-                            new Pattern(
-                                    res.getInt(1),
-                                    res.getString(2),
-                                    res.getString(3),
-                                    res.getInt(4),
-                                    res.getInt(5)
-                            )
-                    );
-                }
-                c.close();
-                return patterns.iterator();
-            } catch (SQLException e) {
-                Log.error(PatternIterator.class, e);
-            }
-            return null;
-        }
-
-        protected PatternIterator(Connection c) {
-            super(getIterator(c));
-        }
-    }
-
-    private static class PatternOccurrenceIterator extends SQLIterator<PatternOccurrence> {
-
-        private static Iterator<PatternOccurrence> getIterator(Connection c, int patternID) {
-            try (ResultSet res = c.createStatement().executeQuery("SELECT * FROM PATTERNOCCURRENCE WHERE patternID=" + patternID + " ORDER BY freq ASC")) {
-                ArrayList<PatternOccurrence> occs = new ArrayList<>();
-                while (res.next()) {
-                    occs.add(
-                            new PatternOccurrence(
-                                    res.getInt(1),
-                                    res.getInt(2),
-                                    res.getString(3),
-                                    res.getString(4),
-                                    res.getInt(5),
-                                    res.getInt(6)
-                            )
-                    );
-                }
-                c.close();
-                return occs.iterator();
-            } catch (SQLException ex) {
-                Log.error(PatternOccurrenceIterator.class, ex);
-            }
-            return null;
-        }
-
-        protected PatternOccurrenceIterator(Connection c, int patternID) {
-            super(getIterator(c, patternID));
-        }
     }
 }
