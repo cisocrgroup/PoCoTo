@@ -323,7 +323,9 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
     public void dispatchEvent(TokenDeselectionEvent e) {
         if (worker != null && worker.getState().equals(StateValue.STARTED)) {
             worker.cancel(true);
-            tokenit.cancel();
+            if (tokenit != null) {
+                tokenit.cancel();
+            }
         }
         this.currentTokenID = -1;
         jXBusyLabel1.setBusy(false);
@@ -354,7 +356,9 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
     public void dispatchEvent(CancelEvent e) {
         if (worker != null && worker.getState().equals(StateValue.STARTED)) {
             worker.cancel(true);
-            tokenit.cancel();
+            if (tokenit != null) {
+                tokenit.cancel();
+            }
             try {
                 Thread.sleep(1L);
             } catch (InterruptedException ex) {
