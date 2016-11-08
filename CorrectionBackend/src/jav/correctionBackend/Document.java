@@ -415,20 +415,16 @@ public abstract class Document {
 
     public void updatePattern(Pattern p) {
         try {
-            Connection conn = getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE pattern SET corrected=? WHERE patternID=?");
-            prep.setInt(1, p.getCorrected());
-            prep.setInt(2, p.getPatternID());
+            try (Connection conn = getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE pattern SET corrected=? WHERE patternID=?")) {
+                prep.setInt(1, p.getCorrected());
+                prep.setInt(2, p.getPatternID());
 
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());
-            Logger
-                    .getLogger(DefaultDocument.class
-                            .getName()).log(Level.SEVERE, null, ex);
+            Log.error(this, ex);
         }
     }
 
@@ -454,88 +450,80 @@ public abstract class Document {
     public UndoRedoInformation undo(int index) {
         long time = System.currentTimeMillis();
         Log.info(this, "starting undo %d", index);
-        try {
-            Connection conn = getConnection();
-            Statement s = conn.createStatement();
-            Statement t = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='undo' ORDER BY part");
+        try (Connection c = getConnection();
+                Statement s = c.createStatement();
+                Statement t = c.createStatement();
+                ResultSet r = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='undo' ORDER BY part")) {
 
-            if (rs.next()) {
-                if (rs.getString(4).equals(MyEditType.SETCORRECTED.toString())) {
+            if (r.next()) {
+                if (r.getString(4).equals(MyEditType.SETCORRECTED.toString())) {
 
                     SetCorrectedUndoRedoInformation retval = null;
 
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
-                    Matcher m = indexp.matcher(rs.getString(5));
+                    Matcher m = indexp.matcher(r.getString(5));
                     if (m.matches()) {
                         retval = new SetCorrectedUndoRedoInformation(Integer.parseInt(m.group(2)), Boolean.parseBoolean(m.group(1)));
                     }
 
-                    t.execute(rs.getString(5));
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    t.execute(r.getString(5));
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.CORRECTED.toString())) {
+                } else if (r.getString(4).equals(MyEditType.CORRECTED.toString())) {
 
                     CorrectedUndoRedoInformation retval = null;
                     java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr='(.*?)' WHERE tokenID=([0-9]+)");
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    Matcher m = indexp.matcher(rs.getString(5));
+                    Matcher m = indexp.matcher(r.getString(5));
                     if (m.matches()) {
-                        rs.next();
-                        t.execute(rs.getString(5));
-                        Matcher n = corrstring.matcher(rs.getString(5));
+                        r.next();
+                        t.execute(r.getString(5));
+                        Matcher n = corrstring.matcher(r.getString(5));
                         if (n.matches()) {
                             retval = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), Boolean.parseBoolean(m.group(1)), n.group(1));
                         }
                     } else {
-                        Matcher n = corrstring.matcher(rs.getString(5));
+                        Matcher n = corrstring.matcher(r.getString(5));
                         if (n.matches()) {
                             retval = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), true, n.group(1));
                         }
                     }
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.MULTISETCORRECTED.toString())) {
+                } else if (r.getString(4).equals(MyEditType.MULTISETCORRECTED.toString())) {
 
                     MultiSetCorrectedUndoRedoInformation retval = null;
                     SetCorrectedUndoRedoInformation temp;
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
-                    Matcher m = indexp.matcher(rs.getString(5));
+                    Matcher m = indexp.matcher(r.getString(5));
                     if (m.matches()) {
                         temp = new SetCorrectedUndoRedoInformation(Integer.parseInt(m.group(2)), Boolean.parseBoolean(m.group(1)));
                         retval = new MultiSetCorrectedUndoRedoInformation(temp);
                     }
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    while (rs.next()) {
-                        m = indexp.matcher(rs.getString(5));
+                    while (r.next()) {
+                        m = indexp.matcher(r.getString(5));
                         if (m.matches()) {
                             temp = new SetCorrectedUndoRedoInformation(Integer.parseInt(m.group(2)), Boolean.parseBoolean(m.group(1)));
-                            retval.addSetCorrectedUndoRedoInformation(temp);
+                            if (retval != null) {
+                                retval.addSetCorrectedUndoRedoInformation(temp);
+                            }
                         }
-                        t.execute(rs.getString(5));
+                        t.execute(r.getString(5));
                     }
                     Log.info(
                             this,
                             "undo finished. Time taken = %d",
                             (System.currentTimeMillis() - time)
                     );
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.MERGE.toString())) {
+                } else if (r.getString(4).equals(MyEditType.MERGE.toString())) {
 
                     MergeUndoRedoInformation retval = null;
                     ArrayList<Integer> affectedTokens = new ArrayList<>();
@@ -546,15 +534,15 @@ public abstract class Document {
 
                     Matcher m;
 
-                    m = poip.matcher(rs.getString(5));
+                    m = poip.matcher(r.getString(5));
                     if (m.matches()) {
                         poi = Integer.parseInt(m.group(1));
                     }
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    while (rs.next()) {
-                        t.execute(rs.getString(5));
-                        m = tokp.matcher(rs.getString(5));
+                    while (r.next()) {
+                        t.execute(r.getString(5));
+                        m = tokp.matcher(r.getString(5));
                         if (m.matches()) {
                             tokenID = Integer.parseInt(m.group(1));
                             affectedTokens.add(tokenID);
@@ -564,63 +552,57 @@ public abstract class Document {
                     this.numTokens += affectedTokens.size() - 1;
                     retval = new MergeUndoRedoInformation(poi, affectedTokens);
 
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.MULTICORRECTED.toString())) {
+                } else if (r.getString(4).equals(MyEditType.MULTICORRECTED.toString())) {
 
                     MultiCorrectedUndoRedoInformation retval = null;
                     CorrectedUndoRedoInformation temp;
                     java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr='(.*?)' WHERE tokenID=([0-9]+)");
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    Matcher m = indexp.matcher(rs.getString(5));
+                    Matcher m = indexp.matcher(r.getString(5));
                     if (m.matches()) {
-                        rs.next();
-                        t.execute(rs.getString(5));
-                        Matcher n = corrstring.matcher(rs.getString(5));
+                        r.next();
+                        t.execute(r.getString(5));
+                        Matcher n = corrstring.matcher(r.getString(5));
                         if (n.matches()) {
                             temp = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), Boolean.parseBoolean(m.group(1)), n.group(1));
                             retval = new MultiCorrectedUndoRedoInformation(temp);
                         }
                     } else {
-                        Matcher n = corrstring.matcher(rs.getString(5));
+                        Matcher n = corrstring.matcher(r.getString(5));
                         if (n.matches()) {
                             temp = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), true, n.group(1));
                             retval = new MultiCorrectedUndoRedoInformation(temp);
                         }
                     }
 
-                    while (rs.next()) {
-                        m = indexp.matcher(rs.getString(5));
-                        t.execute(rs.getString(5));
+                    while (r.next()) {
+                        m = indexp.matcher(r.getString(5));
+                        t.execute(r.getString(5));
                         if (m.matches()) {
-                            rs.next();
-                            t.execute(rs.getString(5));
-                            Matcher n = corrstring.matcher(rs.getString(5));
+                            r.next();
+                            t.execute(r.getString(5));
+                            Matcher n = corrstring.matcher(r.getString(5));
                             if (n.matches()) {
                                 temp = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), Boolean.parseBoolean(m.group(1)), n.group(1));
                                 retval.addCorrectedUndoRedoInformation(temp);
                             }
                         } else {
-                            Matcher n = corrstring.matcher(rs.getString(5));
+                            Matcher n = corrstring.matcher(r.getString(5));
                             if (n.matches()) {
                                 temp = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), true, n.group(1));
                                 retval.addCorrectedUndoRedoInformation(temp);
                             }
                         }
                     }
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.SPLIT.toString())) {
+                } else if (r.getString(4).equals(MyEditType.SPLIT.toString())) {
 
                     SplitUndoRedoInformation retval = null;
                     ArrayList<Integer> affectedTokens = new ArrayList<>();
@@ -628,17 +610,17 @@ public abstract class Document {
                     int poi = -1;
                     java.util.regex.Pattern tokp = java.util.regex.Pattern.compile("UPDATE token SET indexInDocument=[0-9\\-]+ WHERE tokenID=([0-9]+)");
 
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    Matcher m = tokp.matcher(rs.getString(5));
+                    Matcher m = tokp.matcher(r.getString(5));
                     if (m.matches()) {
                         tokenID = Integer.parseInt(m.group(1));
                         affectedTokens.add(tokenID);
                     }
 
-                    while (rs.next()) {
-                        t.execute(rs.getString(5));
-                        m = tokp.matcher(rs.getString(5));
+                    while (r.next()) {
+                        t.execute(r.getString(5));
+                        m = tokp.matcher(r.getString(5));
                         if (m.matches()) {
                             if (poi == -1) {
                                 poi = Integer.parseInt(m.group(1));
@@ -651,30 +633,26 @@ public abstract class Document {
 
                     this.numTokens -= affectedTokens.size() - 1;
                     retval = new SplitUndoRedoInformation(poi, affectedTokens);
-
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.DELETE.toString())) {
+                } else if (r.getString(4).equals(MyEditType.DELETE.toString())) {
 
                     DeleteUndoRedoInformation retval = null;
                     ArrayList<Integer> affectedTokens = new ArrayList<>();
                     int tokenID = -1;
                     java.util.regex.Pattern tokp = java.util.regex.Pattern.compile("UPDATE token SET indexInDocument=[0-9]+ WHERE tokenID=([0-9]+)");
-                    t.execute(rs.getString(5));
-                    Matcher m = tokp.matcher(rs.getString(5));
+                    t.execute(r.getString(5));
+                    Matcher m = tokp.matcher(r.getString(5));
                     if (m.matches()) {
                         tokenID = Integer.parseInt(m.group(1));
                         affectedTokens.add(tokenID);
                     }
 
-                    while (rs.next()) {
-                        t.execute(rs.getString(5));
+                    while (r.next()) {
+                        t.execute(r.getString(5));
 
-                        m = tokp.matcher(rs.getString(5));
+                        m = tokp.matcher(r.getString(5));
                         if (m.matches()) {
                             tokenID = Integer.parseInt(m.group(1));
                             affectedTokens.add(tokenID);
@@ -690,20 +668,15 @@ public abstract class Document {
                         retval = new DeleteUndoRedoInformation(prev.getID(), affectedTokens);
                     }
 
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else {
                     // TODO unknown edittype exception
-                    conn.close();
                     return null;
                 }
             } else {
                 // TODO empty resultset exception
-                conn.close();
                 return null;
             }
         } catch (SQLException ex) {
@@ -732,7 +705,7 @@ public abstract class Document {
                     }
 
                     t.execute(rs.getString(5));
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.CORRECTED.toString())) {
@@ -756,7 +729,7 @@ public abstract class Document {
                             retval = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), true, n.group(1));
                         }
                     }
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MULTISETCORRECTED.toString())) {
@@ -780,7 +753,7 @@ public abstract class Document {
                         t.execute(rs.getString(5));
 
                     }
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MERGE.toString())) {
@@ -812,7 +785,7 @@ public abstract class Document {
                     this.numTokens -= affectedTokens.size() - 1;
                     retval = new MergeUndoRedoInformation(poi, affectedTokens);
 
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MULTICORRECTED.toString())) {
@@ -858,7 +831,7 @@ public abstract class Document {
                             }
                         }
                     }
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.SPLIT.toString())) {
@@ -885,7 +858,7 @@ public abstract class Document {
                     this.numTokens += affectedTokens.size() - 1;
                     retval = new SplitUndoRedoInformation(poi, affectedTokens);
 
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.DELETE.toString())) {
@@ -912,7 +885,7 @@ public abstract class Document {
                     this.numTokens -= affectedTokens.size();
                     retval = new DeleteUndoRedoInformation(poi, affectedTokens);
 
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else {
@@ -1365,16 +1338,14 @@ public abstract class Document {
         if (idx != -1) {
             name = name.substring(0, idx);
         }
-        try {
-            try (Connection c = getConnection();
-                    Statement s = c.createStatement();
-                    ResultSet rs = s.executeQuery(
-                            "SELECT pageIndex FROM token WHERE imageFile like '%"
-                            + name + "%'"
-                    )) {
-                if (rs.next()) {
-                    page = getPage(rs.getInt(1));
-                }
+        try (Connection c = getConnection();
+                Statement s = c.createStatement();
+                ResultSet rs = s.executeQuery(
+                        "SELECT pageIndex FROM token WHERE imageFile like '%"
+                        + name + "%'"
+                )) {
+            if (rs.next()) {
+                page = getPage(rs.getInt(1));
             }
         } catch (SQLException e) {
             Log.error(this, "SQLError: %s", e.getMessage());
@@ -1433,53 +1404,51 @@ public abstract class Document {
     }
 
     protected void loadNumberOfPagesFromDB() {
-        try {
-            try (Connection conn = getConnection();
-                    Statement s = conn.createStatement();
-                    ResultSet rs = s.executeQuery("SELECT MAX(pageIndex) AS numpages FROM token")) {
-                while (rs.next()) {
-                    this.numPages = rs.getInt(1) + 1;
-                }
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT MAX(pageIndex) AS numpages FROM token")) {
+            while (rs.next()) {
+                this.numPages = rs.getInt(1) + 1;
             }
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
         }
     }
 
     public MyIterator<Pattern> patternIterator() {
-        try {
-            return new SQLPatternIterator(getConnection());
+        try (Connection c = getConnection()) {
+            return new SQLPatternIterator(c);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             return null;
         }
     }
 
     public MyIterator<PatternOccurrence> patternOccurrenceIterator(int patternID) {
-        try {
-            return new SQLPatternOccurrenceIterator(getConnection(), patternID);
+        try (Connection c = getConnection()) {
+            return new SQLPatternOccurrenceIterator(c, patternID);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
     }
 
     public MyIterator<Page> pageIterator() {
-        try {
-            return new SQLPageIterator(getConnection(), this, this.baseImagePath);
+        try (Connection c = getConnection()) {
+            return new SQLPageIterator(c, this, this.baseImagePath);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
     }
 
     public MyIterator<Token> allTokenIterator() {
-        try {
-            return new SQLTokenIterator(getConnection());
+        try (Connection c = getConnection()) {
+            return new SQLTokenIterator(c);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
@@ -1489,10 +1458,10 @@ public abstract class Document {
      * @return TokenIterator positioned at the first token of the document
      */
     public MyIterator<Token> tokenIterator() {
-        try {
-            return new SQLTokenIterator(getConnection(), baseImagePath);
+        try (Connection c = getConnection()) {
+            return new SQLTokenIterator(c, baseImagePath);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
@@ -1503,8 +1472,8 @@ public abstract class Document {
      * @return TokenIterator for all token of the page, positioned at the first
      */
     public MyIterator<Token> tokenIterator(Page page) {
-        try {
-            return new SQLTokenIterator(getConnection(), page, baseImagePath);
+        try (Connection c = getConnection()) {
+            return new SQLTokenIterator(c, page, baseImagePath);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1513,10 +1482,10 @@ public abstract class Document {
     }
 
     public MyIterator<Candidate> candidateIterator(int tokenID) {
-        try {
-            return new SQLCandidateIterator(getConnection(), tokenID);
+        try (Connection c = getConnection()) {
+            return new SQLCandidateIterator(c, tokenID);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
@@ -1667,16 +1636,6 @@ public abstract class Document {
             }
 
         }
-    }
-
-    public MyIterator<Token> selectTokens(PreparedStatement stmnt)
-            throws SQLException {
-        return new SQLTokenIterator(getConnection(), stmnt);
-    }
-
-    public PreparedStatement prepareStatement(String stmnt)
-            throws SQLException {
-        return getConnection().prepareStatement(stmnt);
     }
 
     public ArrayList<Integer> mergeRightward(int iD) throws SQLException {
@@ -2016,6 +1975,7 @@ public abstract class Document {
     }
 
     private Connection getConnection() throws SQLException {
+        Log.debug(this, "active connections: %d", jcp.getActiveConnections());
         return jcp.getConnection();
     }
 }
