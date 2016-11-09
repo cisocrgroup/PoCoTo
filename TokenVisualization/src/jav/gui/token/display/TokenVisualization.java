@@ -18,7 +18,12 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -183,12 +188,14 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
     public void setSelected(boolean b) {
         this.isSelected = b;
         this.grabFocus();
-        tvm.setTokenVisualizationStyle(this);
+        if (tvm != null) {
+            tvm.setTokenVisualizationStyle(this);
+        }
     }
 
     public void setMultiSelected(boolean b) {
         this.isMultiSelected = b;
-        if (!this.isSpace()) {
+        if (!this.isSpace() && tvm != null) {
             tvm.setTokenVisualizationStyle(this);
         }
     }
@@ -211,7 +218,9 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
 
     public void update(String newtext) {
         tokenTextLabel.setText(newtext);
-        tvm.setTokenVisualizationStyle(instance);
+        if (tvm != null) {
+            tvm.setTokenVisualizationStyle(instance);
+        }
         this.calculateSizeNormMode();
         this.revalidate();
     }
@@ -224,7 +233,9 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
     }
 
     public void setCorrected(boolean b) {
-        tvm.setCorrected(instance, b);
+        if (tvm != null) {
+            tvm.setCorrected(instance, b);
+        }
     }
 
     public void startTokenEditing() {
@@ -248,7 +259,7 @@ public abstract class TokenVisualization extends AbstractTokenVisualization {
         cands.add(new ComboBoxEntry(delete, ComboBoxEntryType.DELETE));
         cands.add(new ComboBoxEntry(merger, ComboBoxEntryType.MERGE));
 
-        if (tvm.getClass().getSimpleName().equals("TokenVisualizationConcordanceMode")) {
+        if (tvm != null && tvm.getClass().getSimpleName().equals("TokenVisualizationConcordanceMode")) {
             cands.add(new ComboBoxEntry(focusInMain, ComboBoxEntryType.FOCUS_IN_MAIN));
         }
 

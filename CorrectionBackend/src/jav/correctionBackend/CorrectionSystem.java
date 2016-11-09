@@ -65,6 +65,11 @@ public class CorrectionSystem {
     public CorrectionSystem() {
     }
 
+    private Connection getConnection() throws SQLException {
+        // Log.debug(this, "active connections: %d", jcp.getActiveConnections());
+        return jcp.getConnection();
+    }
+
     public int openDocument(String dbPath) {
         int retval = 0;
         this.jcp = createConnectionPool(dbPath);
@@ -81,7 +86,7 @@ public class CorrectionSystem {
             Statement s;
             this.jcp = createConnectionPool(dbPath);
 
-            try (Connection conn = jcp.getConnection()) {
+            try (Connection conn = getConnection()) {
                 s = conn.createStatement();
                 s.execute("DROP TABLE token IF EXISTS");
 //                s.execute("DROP TABLE page IF EXISTS");
@@ -159,17 +164,13 @@ public class CorrectionSystem {
     }
 
     public void closeDocument() {
-        try {
-            try (Connection conn = jcp.getConnection()) {
-                try (Statement stat = conn.createStatement()) {
-                    stat.execute("SHUTDOWN COMPACT");
-                } catch (SQLException ex) {
-                    Log.error(this, ex);
-                }
-            }
-            jcp.dispose();
+        try (Connection c = getConnection();
+                Statement s = c.createStatement()) {
+            s.execute("SHUTDOWN COMPACT");
         } catch (SQLException ex) {
             Log.error(this, ex);
+        } finally {
+            jcp.dispose();
         }
     }
 

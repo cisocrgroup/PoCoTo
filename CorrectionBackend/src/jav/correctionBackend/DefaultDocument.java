@@ -51,7 +51,7 @@ public class DefaultDocument extends Document {
     @Override
     public int addToken(Token t) {
         try {
-            Connection conn = jcp.getConnection();
+            Connection conn = getConnection();
             return this.addToken(t, conn);
         } catch (SQLException ex) {
             return 0;
@@ -119,7 +119,7 @@ public class DefaultDocument extends Document {
     @Override
     protected void loadNumberOfTokensFromDB() {
         try {
-            Connection conn = jcp.getConnection();
+            Connection conn = getConnection();
             Statement s = conn.createStatement();
             ResultSet rs = s.executeQuery("SELECT MAX(indexInDocument) FROM TOKEN");
             if (rs.next()) {
@@ -164,7 +164,7 @@ public class DefaultDocument extends Document {
 //                throw new OCRCException("JAV.DOCUMENT.DELETETOKEN: cannot erase across page borders");
             }
 
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
 
             //reserve undo_redo_parts for the starting token
@@ -258,7 +258,7 @@ public class DefaultDocument extends Document {
 
             ArrayList<Integer> retval = new ArrayList<>();
 
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
             moveIndex = conn.prepareStatement("UPDATE token SET indexInDocument=indexInDocument+? WHERE indexInDocument>?");
@@ -437,7 +437,7 @@ public class DefaultDocument extends Document {
 
             int i = 0;
 
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
 
             setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=? WHERE tokenID=?");

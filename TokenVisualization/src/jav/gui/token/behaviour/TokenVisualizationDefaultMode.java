@@ -273,7 +273,9 @@ public class TokenVisualizationDefaultMode implements TokenVisualizationMode {
 
         tv.getTokenTextLabel().clearStyleRanges();
         Token token = MainController.findInstance().getDocument().getTokenByID(tv.getTokenID());
-        if (token.isCorrected() && token.isNormal()) {
+        if (token == null) {
+            // do nothing
+        } else if (token.isCorrected() && token.isNormal()) {
             Color tagColor = definedTagColors.get("correctedTrue");
             tv.getTokenTextLabel().addStyleRange(new StyleRange(0, -1, Font.PLAIN, fontColor, StyleRange.STYLE_WAVED, tagColor));
         } else if (token.isSuspicious() && token.isNormal()) {

@@ -61,7 +61,7 @@ import org.openide.awt.UndoRedo;
 public abstract class Document {
 
     String baseImagePath = "";
-    JdbcConnectionPool jcp;
+    private final JdbcConnectionPool jcp;
     int numTokens = 0;
     int numPages = 0;
     boolean hasImages = false;
@@ -110,10 +110,8 @@ public abstract class Document {
      * @see jav.correctionBackend.Candidate} to be added
      */
     protected void addCandidate(Candidate c) {
-        Connection conn = null;
-        try {
-            conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO candidate VALUES( ?,?,?,?,?,? )");
+        try (Connection conn = getConnection();
+                PreparedStatement prep = conn.prepareStatement("INSERT INTO candidate VALUES( ?,?,?,?,?,? )");) {
             prep.setInt(1, c.getTokenID());
             prep.setInt(2, c.getRank());
             prep.setString(3, c.getSuggestion());
@@ -123,38 +121,30 @@ public abstract class Document {
 
             prep.addBatch();
             prep.executeBatch();
-            prep.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not add candiate: %s", ex.getMessage());
         }
     }
 
     protected void addPattern(Pattern p) {
-        Connection conn = null;
         //Log.debug(this, "adding pattern: %s", p);
-        try {
-            conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO pattern VALUES( null, ?, ?, ?, ? )");
+        try (Connection conn = getConnection();
+                PreparedStatement prep = conn.prepareStatement("INSERT INTO pattern VALUES( null, ?, ?, ?, ? )");) {
             prep.setString(1, p.getLeft());
             prep.setString(2, p.getRight());
             prep.setInt(3, p.getOccurencesN());
             prep.setInt(4, p.getCorrected());
             prep.addBatch();
             prep.executeBatch();
-            prep.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not add pattern: %s", ex.getMessage());
         }
     }
 
     protected void addPatternOccurrence(PatternOccurrence po) {
-        Connection conn = null;
         //Log.debug(this, "adding pattern occoruence %s", po);
-        try {
-            conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO patternoccurrence VALUES( ?, ?, ?, ?, ?, ? )");
+        try (Connection conn = getConnection();
+                PreparedStatement prep = conn.prepareStatement("INSERT INTO patternoccurrence VALUES( ?, ?, ?, ?, ?, ? )");) {
             prep.setInt(1, po.getPatternID());
             prep.setInt(2, po.getPart());
             prep.setString(3, po.getWOCR_LC());
@@ -164,37 +154,27 @@ public abstract class Document {
 
             prep.addBatch();
             prep.executeBatch();
-            prep.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not add pattern occurence: %s", ex.getMessage());
         }
     }
 
     public void clearPatterns() {
-        Connection conn = null;
-        try {
-            conn = jcp.getConnection();
-            Statement s = conn.createStatement();
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();) {
             // reset the auto_increment counter to 0
             s.executeUpdate("ALTER TABLE pattern ALTER COLUMN patternID RESTART WITH 0");
             s.executeUpdate("TRUNCATE TABLE pattern");
             s.executeUpdate("TRUNCATE TABLE patternoccurrence");
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not clear patterns: %s", ex.getMessage());
         }
     }
 
     public void clearCandidates() {
-        Connection conn = null;
-        try {
-            conn = jcp.getConnection();
-            Statement s = conn.createStatement();
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();) {
             s.executeUpdate("TRUNCATE TABLE candidate");
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not clear candidates: %s", ex.getMessage());
         }
@@ -209,7 +189,7 @@ public abstract class Document {
 
         try {
             Token t = this.getTokenByID(tokenID);
-            conn = jcp.getConnection();
+            conn = getConnection();
 
             conn.setAutoCommit(false);
 
@@ -278,8 +258,10 @@ public abstract class Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -291,7 +273,7 @@ public abstract class Document {
 
         try {
             Iterator<Integer> iter = art.keySet().iterator();
-            conn = jcp.getConnection();
+            conn = getConnection();
 
             conn.setAutoCommit(false);
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
@@ -368,8 +350,10 @@ public abstract class Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -379,11 +363,10 @@ public abstract class Document {
 
     public void cleanupDatabase() {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            s.executeUpdate("DELETE FROM TOKEN WHERE indexInDocument=-1");
-            s.close();
-            conn.close();
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement()) {
+                s.executeUpdate("DELETE FROM TOKEN WHERE indexInDocument=-1");
+            }
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
@@ -392,16 +375,14 @@ public abstract class Document {
 
     public void undoAll() {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            Statement t = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE type='undo'");
-            while (rs.next()) {
-                t.execute(rs.getString(5));
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement();
+                    Statement t = conn.createStatement()) {
+                ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE type='undo'");
+                while (rs.next()) {
+                    t.execute(rs.getString(5));
+                }
             }
-            t.close();
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
@@ -410,11 +391,9 @@ public abstract class Document {
 
     public void removeEdit(int editid) {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            s.execute("DELETE FROM undoredo WHERE operation_id=" + editid);
-            s.close();
-            conn.close();
+            try (Connection conn = getConnection(); Statement s = conn.createStatement()) {
+                s.execute("DELETE FROM undoredo WHERE operation_id=" + editid);
+            }
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
             ex.printStackTrace();
@@ -423,11 +402,9 @@ public abstract class Document {
 
     public void truncateUndoRedo() {
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            s.execute("TRUNCATE TABLE undoredo");
-            s.close();
-            conn.close();
+            try (Connection conn = getConnection(); Statement s = conn.createStatement()) {
+                s.execute("TRUNCATE TABLE undoredo");
+            }
             manager.discardAllEdits();
             undo_redo_id = 0;
         } catch (SQLException ex) {
@@ -438,35 +415,30 @@ public abstract class Document {
 
     public void updatePattern(Pattern p) {
         try {
-            Connection conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE pattern SET corrected=? WHERE patternID=?");
-            prep.setInt(1, p.getCorrected());
-            prep.setInt(2, p.getPatternID());
+            try (Connection conn = getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE pattern SET corrected=? WHERE patternID=?")) {
+                prep.setInt(1, p.getCorrected());
+                prep.setInt(2, p.getPatternID());
 
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
-            Log.error(this, "SQLException: %s", ex.getMessage());
-            Logger
-                    .getLogger(DefaultDocument.class
-                            .getName()).log(Level.SEVERE, null, ex);
+            Log.error(this, ex);
         }
     }
 
     public void updatePatternOccurrence(PatternOccurrence p) {
         try {
-            Connection conn = jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE patternocccurrence SET corrected=? WHERE patternID=? AND part=?");
-            prep.setInt(1, p.getCorrected());
-            prep.setInt(2, p.getPatternID());
-            prep.setInt(3, p.getPart());
+            try (Connection conn = getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE patternocccurrence SET corrected=? WHERE patternID=? AND part=?")) {
+                prep.setInt(1, p.getCorrected());
+                prep.setInt(2, p.getPatternID());
+                prep.setInt(3, p.getPart());
 
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "SQLException: %s", ex.getMessage());
             Logger
@@ -478,88 +450,80 @@ public abstract class Document {
     public UndoRedoInformation undo(int index) {
         long time = System.currentTimeMillis();
         Log.info(this, "starting undo %d", index);
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            Statement t = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='undo' ORDER BY part");
+        try (Connection c = getConnection();
+                Statement s = c.createStatement();
+                Statement t = c.createStatement();
+                ResultSet r = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='undo' ORDER BY part")) {
 
-            if (rs.next()) {
-                if (rs.getString(4).equals(MyEditType.SETCORRECTED.toString())) {
+            if (r.next()) {
+                if (r.getString(4).equals(MyEditType.SETCORRECTED.toString())) {
 
                     SetCorrectedUndoRedoInformation retval = null;
 
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
-                    Matcher m = indexp.matcher(rs.getString(5));
+                    Matcher m = indexp.matcher(r.getString(5));
                     if (m.matches()) {
                         retval = new SetCorrectedUndoRedoInformation(Integer.parseInt(m.group(2)), Boolean.parseBoolean(m.group(1)));
                     }
 
-                    t.execute(rs.getString(5));
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    t.execute(r.getString(5));
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.CORRECTED.toString())) {
+                } else if (r.getString(4).equals(MyEditType.CORRECTED.toString())) {
 
                     CorrectedUndoRedoInformation retval = null;
                     java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr='(.*?)' WHERE tokenID=([0-9]+)");
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    Matcher m = indexp.matcher(rs.getString(5));
+                    Matcher m = indexp.matcher(r.getString(5));
                     if (m.matches()) {
-                        rs.next();
-                        t.execute(rs.getString(5));
-                        Matcher n = corrstring.matcher(rs.getString(5));
+                        r.next();
+                        t.execute(r.getString(5));
+                        Matcher n = corrstring.matcher(r.getString(5));
                         if (n.matches()) {
                             retval = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), Boolean.parseBoolean(m.group(1)), n.group(1));
                         }
                     } else {
-                        Matcher n = corrstring.matcher(rs.getString(5));
+                        Matcher n = corrstring.matcher(r.getString(5));
                         if (n.matches()) {
                             retval = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), true, n.group(1));
                         }
                     }
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.MULTISETCORRECTED.toString())) {
+                } else if (r.getString(4).equals(MyEditType.MULTISETCORRECTED.toString())) {
 
                     MultiSetCorrectedUndoRedoInformation retval = null;
                     SetCorrectedUndoRedoInformation temp;
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
-                    Matcher m = indexp.matcher(rs.getString(5));
+                    Matcher m = indexp.matcher(r.getString(5));
                     if (m.matches()) {
                         temp = new SetCorrectedUndoRedoInformation(Integer.parseInt(m.group(2)), Boolean.parseBoolean(m.group(1)));
                         retval = new MultiSetCorrectedUndoRedoInformation(temp);
                     }
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    while (rs.next()) {
-                        m = indexp.matcher(rs.getString(5));
+                    while (r.next()) {
+                        m = indexp.matcher(r.getString(5));
                         if (m.matches()) {
                             temp = new SetCorrectedUndoRedoInformation(Integer.parseInt(m.group(2)), Boolean.parseBoolean(m.group(1)));
-                            retval.addSetCorrectedUndoRedoInformation(temp);
+                            if (retval != null) {
+                                retval.addSetCorrectedUndoRedoInformation(temp);
+                            }
                         }
-                        t.execute(rs.getString(5));
+                        t.execute(r.getString(5));
                     }
                     Log.info(
                             this,
                             "undo finished. Time taken = %d",
                             (System.currentTimeMillis() - time)
                     );
-                    s.close();
-                    t.close();
-                    conn.close();
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.MERGE.toString())) {
+                } else if (r.getString(4).equals(MyEditType.MERGE.toString())) {
 
                     MergeUndoRedoInformation retval = null;
                     ArrayList<Integer> affectedTokens = new ArrayList<>();
@@ -570,15 +534,15 @@ public abstract class Document {
 
                     Matcher m;
 
-                    m = poip.matcher(rs.getString(5));
+                    m = poip.matcher(r.getString(5));
                     if (m.matches()) {
                         poi = Integer.parseInt(m.group(1));
                     }
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    while (rs.next()) {
-                        t.execute(rs.getString(5));
-                        m = tokp.matcher(rs.getString(5));
+                    while (r.next()) {
+                        t.execute(r.getString(5));
+                        m = tokp.matcher(r.getString(5));
                         if (m.matches()) {
                             tokenID = Integer.parseInt(m.group(1));
                             affectedTokens.add(tokenID);
@@ -588,63 +552,57 @@ public abstract class Document {
                     this.numTokens += affectedTokens.size() - 1;
                     retval = new MergeUndoRedoInformation(poi, affectedTokens);
 
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.MULTICORRECTED.toString())) {
+                } else if (r.getString(4).equals(MyEditType.MULTICORRECTED.toString())) {
 
                     MultiCorrectedUndoRedoInformation retval = null;
                     CorrectedUndoRedoInformation temp;
                     java.util.regex.Pattern corrstring = java.util.regex.Pattern.compile("UPDATE token SET wCorr='(.*?)' WHERE tokenID=([0-9]+)");
                     java.util.regex.Pattern indexp = java.util.regex.Pattern.compile("UPDATE token SET isCorrected=(.*?) WHERE tokenID=([0-9]+)");
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    Matcher m = indexp.matcher(rs.getString(5));
+                    Matcher m = indexp.matcher(r.getString(5));
                     if (m.matches()) {
-                        rs.next();
-                        t.execute(rs.getString(5));
-                        Matcher n = corrstring.matcher(rs.getString(5));
+                        r.next();
+                        t.execute(r.getString(5));
+                        Matcher n = corrstring.matcher(r.getString(5));
                         if (n.matches()) {
                             temp = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), Boolean.parseBoolean(m.group(1)), n.group(1));
                             retval = new MultiCorrectedUndoRedoInformation(temp);
                         }
                     } else {
-                        Matcher n = corrstring.matcher(rs.getString(5));
+                        Matcher n = corrstring.matcher(r.getString(5));
                         if (n.matches()) {
                             temp = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), true, n.group(1));
                             retval = new MultiCorrectedUndoRedoInformation(temp);
                         }
                     }
 
-                    while (rs.next()) {
-                        m = indexp.matcher(rs.getString(5));
-                        t.execute(rs.getString(5));
+                    while (r.next()) {
+                        m = indexp.matcher(r.getString(5));
+                        t.execute(r.getString(5));
                         if (m.matches()) {
-                            rs.next();
-                            t.execute(rs.getString(5));
-                            Matcher n = corrstring.matcher(rs.getString(5));
+                            r.next();
+                            t.execute(r.getString(5));
+                            Matcher n = corrstring.matcher(r.getString(5));
                             if (n.matches()) {
                                 temp = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), Boolean.parseBoolean(m.group(1)), n.group(1));
                                 retval.addCorrectedUndoRedoInformation(temp);
                             }
                         } else {
-                            Matcher n = corrstring.matcher(rs.getString(5));
+                            Matcher n = corrstring.matcher(r.getString(5));
                             if (n.matches()) {
                                 temp = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), true, n.group(1));
                                 retval.addCorrectedUndoRedoInformation(temp);
                             }
                         }
                     }
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.SPLIT.toString())) {
+                } else if (r.getString(4).equals(MyEditType.SPLIT.toString())) {
 
                     SplitUndoRedoInformation retval = null;
                     ArrayList<Integer> affectedTokens = new ArrayList<>();
@@ -652,17 +610,17 @@ public abstract class Document {
                     int poi = -1;
                     java.util.regex.Pattern tokp = java.util.regex.Pattern.compile("UPDATE token SET indexInDocument=[0-9\\-]+ WHERE tokenID=([0-9]+)");
 
-                    t.execute(rs.getString(5));
+                    t.execute(r.getString(5));
 
-                    Matcher m = tokp.matcher(rs.getString(5));
+                    Matcher m = tokp.matcher(r.getString(5));
                     if (m.matches()) {
                         tokenID = Integer.parseInt(m.group(1));
                         affectedTokens.add(tokenID);
                     }
 
-                    while (rs.next()) {
-                        t.execute(rs.getString(5));
-                        m = tokp.matcher(rs.getString(5));
+                    while (r.next()) {
+                        t.execute(r.getString(5));
+                        m = tokp.matcher(r.getString(5));
                         if (m.matches()) {
                             if (poi == -1) {
                                 poi = Integer.parseInt(m.group(1));
@@ -675,30 +633,26 @@ public abstract class Document {
 
                     this.numTokens -= affectedTokens.size() - 1;
                     retval = new SplitUndoRedoInformation(poi, affectedTokens);
-
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
-                } else if (rs.getString(4).equals(MyEditType.DELETE.toString())) {
+                } else if (r.getString(4).equals(MyEditType.DELETE.toString())) {
 
                     DeleteUndoRedoInformation retval = null;
                     ArrayList<Integer> affectedTokens = new ArrayList<>();
                     int tokenID = -1;
                     java.util.regex.Pattern tokp = java.util.regex.Pattern.compile("UPDATE token SET indexInDocument=[0-9]+ WHERE tokenID=([0-9]+)");
-                    t.execute(rs.getString(5));
-                    Matcher m = tokp.matcher(rs.getString(5));
+                    t.execute(r.getString(5));
+                    Matcher m = tokp.matcher(r.getString(5));
                     if (m.matches()) {
                         tokenID = Integer.parseInt(m.group(1));
                         affectedTokens.add(tokenID);
                     }
 
-                    while (rs.next()) {
-                        t.execute(rs.getString(5));
+                    while (r.next()) {
+                        t.execute(r.getString(5));
 
-                        m = tokp.matcher(rs.getString(5));
+                        m = tokp.matcher(r.getString(5));
                         if (m.matches()) {
                             tokenID = Integer.parseInt(m.group(1));
                             affectedTokens.add(tokenID);
@@ -714,20 +668,15 @@ public abstract class Document {
                         retval = new DeleteUndoRedoInformation(prev.getID(), affectedTokens);
                     }
 
-                    System.out.println("undo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "undo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else {
                     // TODO unknown edittype exception
-                    conn.close();
                     return null;
                 }
             } else {
                 // TODO empty resultset exception
-                conn.close();
                 return null;
             }
         } catch (SQLException ex) {
@@ -740,12 +689,10 @@ public abstract class Document {
     public UndoRedoInformation redo(int index) {
         long time = System.currentTimeMillis();
         System.out.println("starting redo " + index);
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            Statement t = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='redo' ORDER BY part");
-
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();
+                Statement t = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT * FROM undoredo WHERE operation_id=" + index + " AND type='redo' ORDER BY part");) {
             if (rs.next()) {
                 if (rs.getString(4).equals(MyEditType.SETCORRECTED.toString())) {
 
@@ -758,10 +705,7 @@ public abstract class Document {
                     }
 
                     t.execute(rs.getString(5));
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.CORRECTED.toString())) {
@@ -785,10 +729,7 @@ public abstract class Document {
                             retval = new CorrectedUndoRedoInformation(Integer.parseInt(n.group(2)), true, n.group(1));
                         }
                     }
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MULTISETCORRECTED.toString())) {
@@ -812,10 +753,7 @@ public abstract class Document {
                         t.execute(rs.getString(5));
 
                     }
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MERGE.toString())) {
@@ -847,10 +785,7 @@ public abstract class Document {
                     this.numTokens -= affectedTokens.size() - 1;
                     retval = new MergeUndoRedoInformation(poi, affectedTokens);
 
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.MULTICORRECTED.toString())) {
@@ -896,10 +831,7 @@ public abstract class Document {
                             }
                         }
                     }
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.SPLIT.toString())) {
@@ -926,10 +858,7 @@ public abstract class Document {
                     this.numTokens += affectedTokens.size() - 1;
                     retval = new SplitUndoRedoInformation(poi, affectedTokens);
 
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else if (rs.getString(4).equals(MyEditType.DELETE.toString())) {
@@ -956,23 +885,17 @@ public abstract class Document {
                     this.numTokens -= affectedTokens.size();
                     retval = new DeleteUndoRedoInformation(poi, affectedTokens);
 
-                    System.out.println("redo finished. Time taken =" + (System.currentTimeMillis() - time));
-                    s.close();
-                    t.close();
-                    conn.close();
+                    Log.info(this, "redo finished. Time taken = %d", (System.currentTimeMillis() - time));
                     return retval;
 
                 } else {
-                    // TODO unknown edittype exception
-                    conn.close();
                     return null;
                 }
             } else {
-                // TODO empty resultset exception
-                conn.close();
                 return null;
             }
         } catch (SQLException ex) {
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
@@ -980,10 +903,9 @@ public abstract class Document {
 
     public Token getTokenByID(int tokenID) {
         Token retval = null;
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE tokenid=" + tokenID);
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT * FROM token WHERE tokenid=" + tokenID)) {
 
             while (rs.next()) {
                 retval = new Token(rs.getString(4));
@@ -1012,9 +934,8 @@ public abstract class Document {
                     retval.setTokenImageInfoBox(tiib);
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
             ex.printStackTrace();
         }
         return retval;
@@ -1023,10 +944,9 @@ public abstract class Document {
     public Token getNextToken(int tokenID) {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " ORDER BY indexInDocument LIMIT 1");
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " ORDER BY indexInDocument LIMIT 1");) {
             if (rs.next()) {
                 retval = new Token(rs.getString(4));
                 retval.setId(rs.getInt(1));
@@ -1054,9 +974,8 @@ public abstract class Document {
                     retval.setTokenImageInfoBox(tiib);
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1064,39 +983,39 @@ public abstract class Document {
     public Token getNextTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " ORDER BY indexInDocument LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " ORDER BY indexInDocument LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1105,39 +1024,39 @@ public abstract class Document {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1145,39 +1064,39 @@ public abstract class Document {
     public Token getNextNormalTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument>" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1186,39 +1105,39 @@ public abstract class Document {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1226,39 +1145,39 @@ public abstract class Document {
     public Token getPreviousNormalTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " AND isNormal=true ORDER BY indexInDocument DESC LIMIT 1")) {
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1267,39 +1186,41 @@ public abstract class Document {
         Token thisT = this.getTokenByID(tokenID);
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " ORDER BY indexInDocument DESC LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            ResultSet rs;
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement()) {
+                rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + thisT.getIndexInDocument() + " ORDER BY indexInDocument DESC LIMIT 1");
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
+            rs.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1307,39 +1228,41 @@ public abstract class Document {
     public Token getPreviousTokenByIndex(int indexInDocument) {
         Token retval = null;
         try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " ORDER BY indexInDocument DESC LIMIT 1");
-            if (rs.next()) {
-                retval = new Token(rs.getString(4));
-                retval.setId(rs.getInt(1));
-                retval.setIndexInDocument(rs.getInt(2));
-                retval.setOrigID(rs.getInt(3));
-                retval.setWCOR(rs.getString(5));
-                retval.setIsSuspicious(rs.getBoolean(15));
-                retval.setIsCorrected(rs.getBoolean(7));
-                retval.setIsNormal(rs.getBoolean(6));
-                retval.setNumberOfCandidates(rs.getInt(8));
-                retval.setPageIndex(rs.getInt(16));
-                retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-                retval.setTopSuggestion(rs.getString(17));
-                retval.setTopCandDLev(rs.getInt(18));
+            ResultSet rs;
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement()) {
+                rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument<" + indexInDocument + " ORDER BY indexInDocument DESC LIMIT 1");
+                if (rs.next()) {
+                    retval = new Token(rs.getString(4));
+                    retval.setId(rs.getInt(1));
+                    retval.setIndexInDocument(rs.getInt(2));
+                    retval.setOrigID(rs.getInt(3));
+                    retval.setWCOR(rs.getString(5));
+                    retval.setIsSuspicious(rs.getBoolean(15));
+                    retval.setIsCorrected(rs.getBoolean(7));
+                    retval.setIsNormal(rs.getBoolean(6));
+                    retval.setNumberOfCandidates(rs.getInt(8));
+                    retval.setPageIndex(rs.getInt(16));
+                    retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
+                    retval.setTopSuggestion(rs.getString(17));
+                    retval.setTopCandDLev(rs.getInt(18));
 
-                if (rs.getString(14).equals("")) {
-                    retval.setTokenImageInfoBox(null);
-                } else {
-                    TokenImageInfoBox tiib = new TokenImageInfoBox();
-                    tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                    tiib.setCoordinateBottom(rs.getInt(12));
-                    tiib.setCoordinateTop(rs.getInt(11));
-                    tiib.setCoordinateLeft(rs.getInt(9));
-                    tiib.setCoordinateRight(rs.getInt(10));
-                    retval.setTokenImageInfoBox(tiib);
+                    if (rs.getString(14).equals("")) {
+                        retval.setTokenImageInfoBox(null);
+                    } else {
+                        TokenImageInfoBox tiib = new TokenImageInfoBox();
+                        tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
+                        tiib.setCoordinateBottom(rs.getInt(12));
+                        tiib.setCoordinateTop(rs.getInt(11));
+                        tiib.setCoordinateLeft(rs.getInt(9));
+                        tiib.setCoordinateRight(rs.getInt(10));
+                        retval.setTokenImageInfoBox(tiib);
+                    }
                 }
             }
-            s.close();
-            conn.close();
+            rs.close();
         } catch (SQLException ex) {
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -1348,9 +1271,9 @@ public abstract class Document {
         Token token = null;
 
         try {
-            try (Connection conn = jcp.getConnection();
-                    Statement s = conn.createStatement()) {
-                ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument);
+            try (Connection conn = getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT * FROM token WHERE indexInDocument=" + indexInDocument)) {
                 while (rs.next()) {
 
                     token = new Token(rs.getString(4));
@@ -1415,18 +1338,15 @@ public abstract class Document {
         if (idx != -1) {
             name = name.substring(0, idx);
         }
-        try {
-            Connection c = jcp.getConnection();
-            Statement s = c.createStatement();
-            ResultSet rs = s.executeQuery(
-                    "SELECT pageIndex FROM token WHERE imageFile like '%"
-                    + name + "%'"
-            );
+        try (Connection c = getConnection();
+                Statement s = c.createStatement();
+                ResultSet rs = s.executeQuery(
+                        "SELECT pageIndex FROM token WHERE imageFile like '%"
+                        + name + "%'"
+                )) {
             if (rs.next()) {
                 page = getPage(rs.getInt(1));
             }
-            s.close();
-            c.close();
         } catch (SQLException e) {
             Log.error(this, "SQLError: %s", e.getMessage());
         }
@@ -1436,7 +1356,7 @@ public abstract class Document {
     public Page getPage(int index) {
         Page page = null;
         try {
-            try (Connection conn = jcp.getConnection();
+            try (Connection conn = getConnection();
                     Statement s = conn.createStatement()) {
                 ResultSet rs = s.executeQuery(
                         "SELECT MIN(indexInDocument) as min, "
@@ -1450,7 +1370,11 @@ public abstract class Document {
                     int endIndex = rs.getInt(2);
                     page.setStartIndex(startIndex);
                     page.setEndIndex(endIndex);
-                    String path = this.getTokenByIndex(startIndex).getImageFilename();
+                    Token tmp = this.getTokenByIndex(startIndex);
+                    if (tmp == null) {
+                        return null;
+                    }
+                    String path = tmp.getImageFilename();
                     String filename = getFileName(path);
                     page.setImageFilename(filename);
                     page.setImageCanonical(path);
@@ -1480,55 +1404,51 @@ public abstract class Document {
     }
 
     protected void loadNumberOfPagesFromDB() {
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT MAX(pageIndex) AS numpages FROM token");
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT MAX(pageIndex) AS numpages FROM token")) {
             while (rs.next()) {
                 this.numPages = rs.getInt(1) + 1;
             }
-            rs.close();
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
         }
     }
 
     public MyIterator<Pattern> patternIterator() {
-        try {
-            return new PatternIterator(jcp.getConnection());
+        try (Connection c = getConnection()) {
+            return new SQLPatternIterator(c);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             return null;
         }
     }
 
     public MyIterator<PatternOccurrence> patternOccurrenceIterator(int patternID) {
-        try {
-            return new PatternOccurrenceIterator(jcp.getConnection(), patternID);
+        try (Connection c = getConnection()) {
+            return new SQLPatternOccurrenceIterator(c, patternID);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
     }
 
     public MyIterator<Page> pageIterator() {
-        try {
-            return new PageIterator(jcp.getConnection(), this, this.baseImagePath);
+        try (Connection c = getConnection()) {
+            return new SQLPageIterator(c, this, this.baseImagePath);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
     }
 
     public MyIterator<Token> allTokenIterator() {
-        try {
-            return new TokenIterator(jcp.getConnection());
+        try (Connection c = getConnection()) {
+            return new SQLTokenIterator(c);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
@@ -1538,10 +1458,10 @@ public abstract class Document {
      * @return TokenIterator positioned at the first token of the document
      */
     public MyIterator<Token> tokenIterator() {
-        try {
-            return new TokenIterator(jcp.getConnection(), baseImagePath);
+        try (Connection c = getConnection()) {
+            return new SQLTokenIterator(c, baseImagePath);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
@@ -1552,8 +1472,8 @@ public abstract class Document {
      * @return TokenIterator for all token of the page, positioned at the first
      */
     public MyIterator<Token> tokenIterator(Page page) {
-        try {
-            return new TokenIterator(jcp.getConnection(), page, baseImagePath);
+        try (Connection c = getConnection()) {
+            return new SQLTokenIterator(c, page, baseImagePath);
         } catch (SQLException ex) {
             Log.error(this, "SQLError: %s", ex.getMessage());
             ex.printStackTrace();
@@ -1562,10 +1482,10 @@ public abstract class Document {
     }
 
     public MyIterator<Candidate> candidateIterator(int tokenID) {
-        try {
-            return new CandidateIterator(jcp.getConnection(), tokenID);
+        try (Connection c = getConnection()) {
+            return new SQLCandidateIterator(c, tokenID);
         } catch (SQLException ex) {
-            Log.error(this, "SQLError: %s", ex.getMessage());
+            Log.error(this, ex);
             ex.printStackTrace();
             return null;
         }
@@ -1624,8 +1544,10 @@ public abstract class Document {
                     new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
                 } finally {
                     try {
-                        writer.flush();
-                        writer.close();
+                        if (writer != null) {
+                            writer.flush();
+                            writer.close();
+                        }
                     } catch (Exception e) {
                         new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
                     }
@@ -1642,7 +1564,7 @@ public abstract class Document {
             while (page_iter.hasNext()) {
                 Page seite = page_iter.next();
 
-                writer.write("#### Seite " + ((int) seite.getIndex() + 1) + " von " + this.numPages + " ###");
+                writer.write("#### Seite " + seite.getIndex() + 1 + " von " + this.numPages + " ###");
                 writer.newLine();
                 writer.newLine();
 
@@ -1663,8 +1585,10 @@ public abstract class Document {
             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
         } finally {
             try {
-                writer.flush();
-                writer.close();
+                if (writer != null) {
+                    writer.flush();
+                    writer.close();
+                }
             } catch (Exception e) {
                 new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
             }
@@ -1714,16 +1638,6 @@ public abstract class Document {
         }
     }
 
-    public MyIterator<Token> selectTokens(PreparedStatement stmnt)
-            throws SQLException {
-        return TokenIterator.fromStmnt(jcp.getConnection(), stmnt);
-    }
-
-    public PreparedStatement prepareStatement(String stmnt)
-            throws SQLException {
-        return jcp.getConnection().prepareStatement(stmnt);
-    }
-
     public ArrayList<Integer> mergeRightward(int iD) throws SQLException {
 
         Token next = this.getNextToken(iD);
@@ -1756,14 +1670,13 @@ public abstract class Document {
 
     public void setSuspicious(int tokenID, String val) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET isSuspicious=? WHERE tokenID=?");
-            prep.setString(1, val);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET isSuspicious=? WHERE tokenID=?")) {
+                prep.setString(1, val);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set suspicious: %s", ex.getMessage());
         }
@@ -1771,14 +1684,13 @@ public abstract class Document {
 
     public void setNormal(int tokenID, String val) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET isNormal=? WHERE tokenID=?");
-            prep.setString(1, val);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET isNormal=? WHERE tokenID=?")) {
+                prep.setString(1, val);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set normal: %s", ex.getMessage());
         }
@@ -1786,14 +1698,13 @@ public abstract class Document {
 
     public void setTopSuggestion(int tokenID, String val) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET topSuggestion=? WHERE tokenID=?");
-            prep.setString(1, val);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET topSuggestion=? WHERE tokenID=?")) {
+                prep.setString(1, val);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set top suggestion: %s", ex.getMessage());
         }
@@ -1801,14 +1712,13 @@ public abstract class Document {
 
     public void setTopCandDLev(int tokenID, int val) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET topCandDLev=? WHERE tokenID=?");
-            prep.setInt(1, val);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET topCandDLev=? WHERE tokenID=?")) {
+                prep.setInt(1, val);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set top level candidate: %s", ex.getMessage());
         }
@@ -1816,14 +1726,13 @@ public abstract class Document {
 
     public void setNumCandidates(int tokenID, int num) {
         try {
-            Connection conn = this.jcp.getConnection();
-            PreparedStatement prep = conn.prepareStatement("UPDATE token SET numCands=? WHERE tokenID=?");
-            prep.setInt(1, num);
-            prep.setInt(2, tokenID);
-            prep.addBatch();
-            prep.executeBatch();
-            prep.close();
-            conn.close();
+            try (Connection conn = this.getConnection();
+                    PreparedStatement prep = conn.prepareStatement("UPDATE token SET numCands=? WHERE tokenID=?")) {
+                prep.setInt(1, num);
+                prep.setInt(2, tokenID);
+                prep.addBatch();
+                prep.executeBatch();
+            }
         } catch (SQLException ex) {
             Log.error(this, "Could not set number of candidates: %s", ex.getMessage());
         }
@@ -1831,7 +1740,7 @@ public abstract class Document {
 
 //    public void addToUndoRedo(int id, int part, String type, String edit_type, String sql) {
 //        try {
-//            Connection conn = this.jcp.getConnection();
+//            Connection conn = this.getConnection();
 //            PreparedStatement prep = conn.prepareStatement(" INSERT INTO undoredo VALUES( ?,?,?,?,? )");
 //            prep.setInt(1, id);
 //            prep.setInt(2, part);
@@ -1854,7 +1763,7 @@ public abstract class Document {
         PreparedStatement undo_redo = null;
 
         try {
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
 
             setcor = conn.prepareStatement("UPDATE token SET isCorrected=? WHERE tokenID=?");
@@ -1912,8 +1821,10 @@ public abstract class Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -1923,7 +1834,7 @@ public abstract class Document {
         PreparedStatement undo_redo = null;
 
         try {
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
 
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
@@ -1990,15 +1901,17 @@ public abstract class Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
     public void updateTokenWOCR(Token token) throws SQLException {
         assert (token != null);
         final String sqlcmd = "UPDATE token SET wOCR=? WHERE tokenID=?";
-        try (Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection();
                 PreparedStatement stmnt = conn.prepareStatement(sqlcmd)) {
             stmnt.setString(1, token.getWOCR());
             stmnt.setInt(2, token.getID());
@@ -2028,20 +1941,18 @@ public abstract class Document {
     public boolean checkImageFiles() {
         boolean retval = true;
         try {
-            Connection conn = this.jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT DISTINCT imageFile FROM token");
-            while (rs.next()) {
-                File f = new File(this.baseImagePath + File.separator + rs.getString(1));
-                if (!f.exists()) {
-                    return false;
+            try (Connection conn = this.getConnection();
+                    Statement s = conn.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT DISTINCT imageFile FROM token")) {
+                while (rs.next()) {
+                    File f = new File(this.baseImagePath + File.separator + rs.getString(1));
+                    if (!f.exists()) {
+                        return false;
+                    }
                 }
             }
-            rs.close();
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            Log.error(this, ex);
         }
         return retval;
     }
@@ -2062,423 +1973,9 @@ public abstract class Document {
         return this.propertiespath;
 
     }
-}
 
-class TokenIterator implements MyIterator<Token> {
-
-    private String baseImagePath = "";
-    private Connection conn;
-    private Statement s;
-    private ResultSet rs = null;
-
-    public static TokenIterator fromStmnt(Connection conn, PreparedStatement stmnt)
-            throws SQLException {
-        TokenIterator it = new TokenIterator();
-        it.conn = conn;
-        it.s = stmnt;
-        it.rs = stmnt.executeQuery();
-        return it;
-    }
-
-    private TokenIterator() {
-
-    }
-
-    protected TokenIterator(Connection c) {
-        try {
-            conn = c;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM TOKEN ORDER BY indexInDocument ASC");
-        } catch (SQLException ex) {
-            Log.error(this, "could not create token iterator: %s", ex.getMessage());
-        }
-    }
-
-    protected TokenIterator(Connection c, String i) {
-        try {
-            baseImagePath = i;
-            conn = c;
-            s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            rs = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >= 0 ORDER BY indexInDocument ASC");
-        } catch (SQLException ex) {
-            Log.error(this, "could not create token iterator: %s", ex.getMessage());
-        }
-    }
-
-    protected TokenIterator(Connection c, Page p, String i) {
-        try {
-            if (p.getStartIndex() == p.getEndIndex()) {
-                rs = null;
-                c.close(); // close the connection or leak memory on every empty page!
-            } else {
-                baseImagePath = i;
-                conn = c;
-                s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-                rs = s.executeQuery("SELECT * FROM TOKEN WHERE indexInDocument >=" + p.getStartIndex() + " AND indexInDocument <=" + p.getEndIndex() + " ORDER BY indexInDocument ASC");
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
-                }
-            } catch (SQLException ex) {
-                Log.error(this, "iterator has next: %s", ex.getMessage());
-                return false;
-            }
-        }
-    }
-
-    @Override
-    public Token next() {
-        Token retval = null;
-        try {
-            retval = new Token(rs.getString(4));
-            retval.setId(rs.getInt(1));
-            retval.setIndexInDocument(rs.getInt(2));
-            retval.setOrigID(rs.getInt(3));
-            retval.setWCOR(rs.getString(5));
-            retval.setIsSuspicious(rs.getBoolean(15));
-            retval.setIsCorrected(rs.getBoolean(7));
-            retval.setIsNormal(rs.getBoolean(6));
-            retval.setNumberOfCandidates(rs.getInt(8));
-            retval.setPageIndex(rs.getInt(16));
-            retval.setSpecialSeq(SpecialSequenceType.valueOf(rs.getString(13)));
-            retval.setTopSuggestion(rs.getString(17));
-            retval.setTopCandDLev(rs.getInt(18));
-
-            if (rs.getString(14).equals("")) {
-                retval.setTokenImageInfoBox(null);
-            } else {
-                TokenImageInfoBox tiib = new TokenImageInfoBox();
-                //tiib.setImageFileName(this.baseImagePath + File.separator + rs.getString(14));
-                tiib.setImageFileName(rs.getString(14));
-                tiib.setCoordinateBottom(rs.getInt(12));
-                tiib.setCoordinateTop(rs.getInt(11));
-                tiib.setCoordinateLeft(rs.getInt(9));
-                tiib.setCoordinateRight(rs.getInt(10));
-                retval.setTokenImageInfoBox(tiib);
-            }
-        } catch (SQLException ex) {
-            Log.error(this, "iterator next: %s", ex.getMessage());
-            retval = null;
-        }
-        return retval;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-        try {
-            rs.beforeFirst();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public void cancel() {
-        try {
-            rs.close();
-            s.close();
-            conn.close();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            Log.error(this, "iterator cancel: %s", ex.getMessage());
-        }
-    }
-}
-
-class CandidateIterator implements MyIterator<Candidate> {
-
-    private Statement s;
-    private Connection conn;
-    private ResultSet rs = null;
-
-    protected CandidateIterator(Connection c, int tokenID) {
-        try {
-            conn = c;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM candidate WHERE tokenID=" + tokenID + " ORDER BY rank ASC");
-        } catch (SQLException ex) {
-            Log.error(this, "candidate iterator cancel: %s", ex.getMessage());
-            ex.printStackTrace();
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
-                }
-            } catch (SQLException ex) {
-                return false;
-            }
-        }
-    }
-
-    @Override
-    public Candidate next() {
-        Candidate retval = null;
-        try {
-            retval = new Candidate(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4), rs.getDouble(5), rs.getInt(6));
-        } catch (SQLException ex) {
-            retval = null;
-        }
-        return retval;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-//        try {
-//            rs.beforeFirst();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-    }
-
-    public void cancel() {
-    }
-}
-
-class PageIterator implements MyIterator<Page> {
-
-    private Connection conn;
-    private Document doc;
-    private String baseImgPath;
-    private ResultSet rs = null;
-    private Statement s;
-
-    protected PageIterator(Connection c, Document d, String path) {
-        try {
-            doc = d;
-            conn = c;
-            baseImgPath = path;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT pageIndex, MIN(indexInDocument) as min, MAX(indexInDocument) as max from token WHERE indexInDocument <> -1 GROUP BY pageIndex ORDER BY pageIndex");
-        } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
-                }
-            } catch (SQLException ex) {
-                Log.error(this, "sql error: %s", ex.getMessage());
-                return false;
-            }
-        }
-    }
-
-    @Override
-    public Page next() {
-        Page retval = null;
-        try {
-            retval = new Page(rs.getInt(1));
-            retval.setStartIndex(rs.getInt(2));
-            retval.setEndIndex(rs.getInt(3));
-            String path = doc.getTokenByIndex(rs.getInt(2)).getImageFilename();
-            String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
-            retval.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
-            retval.setImageCanonical(path);
-        } catch (SQLException ex) {
-            Log.error(this, "sql error: %s", ex.getMessage());
-        }
-        return retval;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-//        try {
-//            rs.beforeFirst();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-    }
-
-    public void cancel() {
-    }
-}
-
-class PatternIterator implements MyIterator<Pattern> {
-
-    private ResultSet rs = null;
-    private Statement s;
-    private Connection conn;
-
-    protected PatternIterator(Connection c) {
-        try {
-            conn = c;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM PATTERN ORDER BY freq DESC");
-        } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
-                }
-            } catch (SQLException ex) {
-                Log.error(this, "sql error: %s", ex.getMessage());
-                return false;
-            }
-        }
-    }
-
-    @Override
-    public Pattern next() {
-        Pattern retval = null;
-        try {
-            retval = new Pattern(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getInt(4), rs.getInt(5));
-        } catch (SQLException ex) {
-            Log.error(this, "sql error: %s", ex.getMessage());
-            retval = null;
-        }
-        return retval;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-//        try {
-//            rs.beforeFirst();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-    }
-
-    @Override
-    public void cancel() {
-    }
-}
-
-class PatternOccurrenceIterator implements MyIterator<PatternOccurrence> {
-
-    private ResultSet rs = null;
-    private Statement s;
-    private Connection conn;
-
-    protected PatternOccurrenceIterator(Connection c, int patternID) {
-        try {
-            conn = c;
-            s = conn.createStatement();
-            rs = s.executeQuery("SELECT * FROM PATTERNOCCURRENCE WHERE patternID=" + patternID + " ORDER BY freq ASC");
-        } catch (SQLException ex) {
-            Logger.getLogger(TokenIterator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        if (rs == null) {
-            return false;
-        } else {
-            try {
-                if (rs.next()) {
-                    return true;
-                } else {
-                    rs.close();
-                    s.close();
-                    conn.close();
-                    return false;
-                }
-            } catch (SQLException ex) {
-                Log.error(this, "sql error: %s", ex.getMessage());
-                return false;
-            }
-        }
-    }
-
-    @Override
-    public PatternOccurrence next() {
-        PatternOccurrence retval = null;
-        try {
-            retval = new PatternOccurrence(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4), rs.getInt(5), rs.getInt(6));
-        } catch (SQLException ex) {
-            Log.error(this, "sql error: %s", ex.getMessage());
-        }
-        return retval;
-    }
-
-    @Override
-    public void remove() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void reset() {
-//        try {
-//            rs.beforeFirst();
-//        } catch (SQLException ex) {
-//            Logger.getLogger(CandidateIterator.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-    }
-
-    @Override
-    public void cancel() {
+    protected Connection getConnection() throws SQLException {
+        // Log.debug(this, "active connections: %d", jcp.getActiveConnections());
+        return jcp.getConnection();
     }
 }

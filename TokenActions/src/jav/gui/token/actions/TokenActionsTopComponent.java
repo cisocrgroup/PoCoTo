@@ -19,6 +19,7 @@ import jav.gui.events.tokenSelection.TokenSelectionEvent;
 import jav.gui.events.tokenSelection.TokenSelectionEventSlot;
 import jav.gui.filter.DoppelgangerFilter;
 import jav.gui.main.MainController;
+import jav.logging.log4j.Log;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -307,10 +308,13 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
                     } else {
                     }
                 } catch (ExecutionException ex) {
+                    Log.error(this, ex);
                     Exceptions.printStackTrace(ex);
                 } catch (InterruptedException ex) {
+                    Log.error(this, ex);
                     Exceptions.printStackTrace(ex);
                 } catch (CancellationException ex) {
+                    Log.error(this, ex);
                 }
             }
         };
@@ -323,7 +327,9 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
     public void dispatchEvent(TokenDeselectionEvent e) {
         if (worker != null && worker.getState().equals(StateValue.STARTED)) {
             worker.cancel(true);
-            tokenit.cancel();
+            if (tokenit != null) {
+                tokenit.cancel();
+            }
         }
         this.currentTokenID = -1;
         jXBusyLabel1.setBusy(false);
@@ -354,7 +360,9 @@ public final class TokenActionsTopComponent extends TopComponent implements Canc
     public void dispatchEvent(CancelEvent e) {
         if (worker != null && worker.getState().equals(StateValue.STARTED)) {
             worker.cancel(true);
-            tokenit.cancel();
+            if (tokenit != null) {
+                tokenit.cancel();
+            }
             try {
                 Thread.sleep(1L);
             } catch (InterruptedException ex) {

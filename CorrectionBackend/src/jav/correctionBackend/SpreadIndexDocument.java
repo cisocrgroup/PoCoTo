@@ -116,61 +116,54 @@ public class SpreadIndexDocument extends Document {
     }
 
     protected int addToken(Token t, int index) {
-        try {
-            int identity;
-            try (Connection conn = jcp.getConnection()) {
-                try (PreparedStatement prep = conn.prepareStatement("INSERT INTO TOKEN VALUES( null,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? )")) {
-                    prep.setInt(1, index);
-                    prep.setInt(2, t.getOrigID());
-                    prep.setString(3, t.getWOCR());
-                    prep.setString(4, t.getWCOR());
-                    prep.setBoolean(5, t.isNormal());
-                    prep.setBoolean(6, t.isCorrected());
-                    prep.setInt(7, t.getNumberOfCandidates());
+        try (Connection conn = getConnection();
+                PreparedStatement prep = conn.prepareStatement("INSERT INTO TOKEN VALUES( null,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? )")) {
+            prep.setInt(1, index);
+            prep.setInt(2, t.getOrigID());
+            prep.setString(3, t.getWOCR());
+            prep.setString(4, t.getWCOR());
+            prep.setBoolean(5, t.isNormal());
+            prep.setBoolean(6, t.isCorrected());
+            prep.setInt(7, t.getNumberOfCandidates());
 
-                    TokenImageInfoBox tiib = t.getTokenImageInfoBox();
+            TokenImageInfoBox tiib = t.getTokenImageInfoBox();
 
-                    if (tiib != null) {
-                        prep.setInt(8, tiib.getCoordinateLeft());
-                        prep.setInt(9, tiib.getCoordinateRight());
-                        prep.setInt(10, tiib.getCoordinateTop());
-                        prep.setInt(11, tiib.getCoordinateBottom());
-                        prep.setString(13, tiib.getImageFileName());
-                    } else {
-                        prep.setInt(8, -1);
-                        prep.setInt(9, -1);
-                        prep.setInt(10, -1);
-                        prep.setInt(11, -1);
-                        prep.setString(13, "");
-                    }
-
-                    prep.setString(12, t.getSpecialSeq().toString());
-                    prep.setBoolean(14, t.isSuspicious());
-                    prep.setInt(15, t.getPageIndex());
-                    prep.setString(16, t.getTopSuggestion());
-                    prep.setInt(17, t.getTopCandDLev());
-
-                    prep.addBatch();
-                    prep.executeBatch();
-                }
-                Statement psIdentity = conn.createStatement();
-                ResultSet result = psIdentity.executeQuery("CALL SCOPE_IDENTITY()");
-                result.next();
-                identity = result.getInt(1);
-                result.close();
-                psIdentity.close();
+            if (tiib != null) {
+                prep.setInt(8, tiib.getCoordinateLeft());
+                prep.setInt(9, tiib.getCoordinateRight());
+                prep.setInt(10, tiib.getCoordinateTop());
+                prep.setInt(11, tiib.getCoordinateBottom());
+                prep.setString(13, tiib.getImageFileName());
+            } else {
+                prep.setInt(8, -1);
+                prep.setInt(9, -1);
+                prep.setInt(10, -1);
+                prep.setInt(11, -1);
+                prep.setString(13, "");
             }
-            return identity;
-        } catch (SQLException ex) {
-            return 0;
-        }
 
+            prep.setString(12, t.getSpecialSeq().toString());
+            prep.setBoolean(14, t.isSuspicious());
+            prep.setInt(15, t.getPageIndex());
+            prep.setString(16, t.getTopSuggestion());
+            prep.setInt(17, t.getTopCandDLev());
+
+            prep.addBatch();
+            prep.executeBatch();
+            try (Statement psIdentity = conn.createStatement();
+                    ResultSet result = psIdentity.executeQuery("CALL SCOPE_IDENTITY()")) {
+                result.next();
+                return result.getInt(1);
+            }
+        } catch (SQLException ex) {
+            Log.error(this, ex);
+        }
+        return 0;
     }
 
     @Override
     public int addToken(Token t) {
-        try {
-            Connection conn = jcp.getConnection();
+        try (Connection conn = getConnection()) {
             return this.addToken(t, conn);
         } catch (SQLException ex) {
             Log.error(this, "could not insert Token: %s", ex.getMessage());
@@ -180,16 +173,12 @@ public class SpreadIndexDocument extends Document {
 
     @Override
     protected void loadNumberOfTokensFromDB() {
-        try {
-            Connection conn = jcp.getConnection();
-            Statement s = conn.createStatement();
-            ResultSet rs = s.executeQuery("SELECT COUNT(indexInDocument) as numTokens FROM TOKEN WHERE indexInDocument<>-1");
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();
+                ResultSet rs = s.executeQuery("SELECT COUNT(indexInDocument) as numTokens FROM TOKEN WHERE indexInDocument<>-1")) {
             if (rs.next()) {
                 this.numTokens = rs.getInt(1);
             }
-            rs.close();
-            s.close();
-            conn.close();
         } catch (SQLException ex) {
             Log.error(this, "could not load number of tokens from db %s", ex.getMessage());
             this.numTokens = 0;
@@ -200,18 +189,19 @@ public class SpreadIndexDocument extends Document {
     public ArrayList<Integer> deleteToken(int iDFrom, int iDTo)
             throws SQLException {
         //Log.info(this, "deleteToken(%d, %d)", iDFrom, iDTo);
-        Connection conn = jcp.getConnection();
-        ArrayList<Integer> retval = new ArrayList<>();
-        PreparedStatement setIndex = null;
-        PreparedStatement undo_redo = null;
+        try (Connection conn = getConnection();
+                PreparedStatement setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=-1 WHERE tokenID=?");
+                PreparedStatement undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )")) {
+            ArrayList<Integer> retval = new ArrayList<>();
 
-        Token from = this.getTokenByID(iDFrom);
-        Token to = this.getTokenByID(iDTo);
+            Token from = this.getTokenByID(iDFrom);
+            Token to = this.getTokenByID(iDTo);
+            if (from == null || to == null) {
+                return retval;
+            }
 
-        int indexFrom = from.getIndexInDocument();
-        int indexTo = to.getIndexInDocument();
-
-        try {
+            int indexFrom = from.getIndexInDocument();
+            int indexTo = to.getIndexInDocument();
 
             if (indexTo < indexFrom) {
                 Log.error(this, "cannot delete token indexTo < indexFrom");
@@ -228,59 +218,51 @@ public class SpreadIndexDocument extends Document {
 
             conn.setAutoCommit(false);
 
-            //reserve undo_redo_parts for the starting token
-            setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=-1 WHERE tokenID=?");
-            undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
+            try {
+                //reserve undo_redo_parts for the starting token
+                Token temp = from;
+                assert (temp != null); // at this point temp cannot be null
+                while (temp != null && temp.getIndexInDocument() <= indexTo) {
+                    retval.add(temp.getID());
 
-            Token temp = from;
-            while (temp.getIndexInDocument() <= indexTo) {
-                retval.add(temp.getID());
+                    setIndex.setInt(1, temp.getID());
+                    setIndex.addBatch();
 
-                setIndex.setInt(1, temp.getID());
-                setIndex.addBatch();
+                    undo_redo.setInt(1, undo_redo_id);
+                    undo_redo.setInt(2, undo_redo_part);
+                    undo_redo.setString(3, "undo");
+                    undo_redo.setString(4, MyEditType.DELETE.toString());
+                    undo_redo.setString(5, "UPDATE token SET indexInDocument=" + temp.getIndexInDocument() + " WHERE tokenID=" + temp.getID());
+                    undo_redo.addBatch();
 
-                undo_redo.setInt(1, undo_redo_id);
-                undo_redo.setInt(2, undo_redo_part);
-                undo_redo.setString(3, "undo");
-                undo_redo.setString(4, MyEditType.DELETE.toString());
-                undo_redo.setString(5, "UPDATE token SET indexInDocument=" + temp.getIndexInDocument() + " WHERE tokenID=" + temp.getID());
-                undo_redo.addBatch();
+                    undo_redo.setInt(1, undo_redo_id);
+                    undo_redo.setInt(2, undo_redo_part);
+                    undo_redo.setString(3, "redo");
+                    undo_redo.setString(4, MyEditType.DELETE.toString());
+                    undo_redo.setString(5, "UPDATE token SET indexInDocument=-1 WHERE tokenID=" + temp.getID());
+                    undo_redo.addBatch();
+                    undo_redo_part++;
 
-                undo_redo.setInt(1, undo_redo_id);
-                undo_redo.setInt(2, undo_redo_part);
-                undo_redo.setString(3, "redo");
-                undo_redo.setString(4, MyEditType.DELETE.toString());
-                undo_redo.setString(5, "UPDATE token SET indexInDocument=-1 WHERE tokenID=" + temp.getID());
-                undo_redo.addBatch();
-                undo_redo_part++;
+                    temp = this.getNextTokenByIndex(temp.getIndexInDocument());
+                }
 
-                temp = this.getNextTokenByIndex(temp.getIndexInDocument());
+                undo_redo_part = 0;
+                undo_redo_id++;
+                this.numTokens -= retval.size();
+
+                setIndex.executeBatch();
+                undo_redo.executeBatch();
+                conn.commit();
+            } catch (SQLException ex) {
+                Log.error(this, ex);
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } finally {
+                conn.setAutoCommit(true);
             }
-
-            undo_redo_part = 0;
-            undo_redo_id++;
-            this.numTokens -= retval.size();
-
-            setIndex.executeBatch();
-            undo_redo.executeBatch();
-            conn.commit();
             return retval;
-        } catch (SQLException ex) {
-            if (conn != null) {
-                conn.rollback();
-            }
-            return null;
-        } finally {
-            if (setIndex != null) {
-                setIndex.close();
-            }
-            if (undo_redo != null) {
-                undo_redo.close();
-            }
-            conn.setAutoCommit(true);
-            conn.close();
         }
-
     }
 
     @Override
@@ -292,10 +274,9 @@ public class SpreadIndexDocument extends Document {
         PreparedStatement setIndex = null;
         PreparedStatement undo_redo = null;
         PreparedStatement moveIndex = null;
+        ArrayList<Integer> retval = new ArrayList<>();
 
         try {
-            ArrayList<Integer> retval = new ArrayList<>();
-
             Token atIndex = getTokenByID(tokenID);
             Token newToken = new Token("");
             newToken.setWCOR(atIndex.getWDisplay());
@@ -304,7 +285,7 @@ public class SpreadIndexDocument extends Document {
 
             int i = 0;
 
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
 
             setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=? WHERE tokenID=?");
@@ -416,11 +397,12 @@ public class SpreadIndexDocument extends Document {
             //System.out.println("Database transaction finished. Time taken: " + (then - now));
             return retval;
         } catch (SQLException ex) {
+            Log.error(this, ex);
             ex.printStackTrace();
             if (conn != null) {
                 conn.rollback();
             }
-            return null;
+            return retval;
         } finally {
             if (setIndex != null) {
                 setIndex.close();
@@ -431,8 +413,10 @@ public class SpreadIndexDocument extends Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -441,15 +425,14 @@ public class SpreadIndexDocument extends Document {
         Connection conn = null;
         PreparedStatement setIndex = null;
         PreparedStatement undo_redo = null;
+        ArrayList<Integer> retval = new ArrayList<>();
 
         try {
             editString = editString.replaceAll("\\s{2,}", " ");
             editString = editString.replaceAll("^ ", "");
             editString = editString.replaceAll(" $", "");
 
-            ArrayList<Integer> retval = new ArrayList<>();
-
-            conn = jcp.getConnection();
+            conn = getConnection();
             conn.setAutoCommit(false);
             undo_redo = conn.prepareStatement("INSERT INTO undoredo VALUES( ?,?,?,?,? )");
             setIndex = conn.prepareStatement("UPDATE token SET indexInDocument=? WHERE tokenID=?");
@@ -581,7 +564,7 @@ public class SpreadIndexDocument extends Document {
             if (conn != null) {
                 conn.rollback();
             }
-            return null;
+            return retval;
         } finally {
             if (setIndex != null) {
                 setIndex.close();
@@ -589,8 +572,10 @@ public class SpreadIndexDocument extends Document {
             if (undo_redo != null) {
                 undo_redo.close();
             }
-            conn.setAutoCommit(true);
-            conn.close();
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -605,7 +590,7 @@ public class SpreadIndexDocument extends Document {
                 PreparedStatement updateUndoRedo = null;
 
                 try {
-                    conn = jcp.getConnection();
+                    conn = getConnection();
 //                    Statement s = conn.createStatement();
 //                    ResultSet rs = s.executeQuery("SELECT * FROM undoredo");
 
@@ -663,6 +648,7 @@ public class SpreadIndexDocument extends Document {
                         try {
                             conn.rollback();
                         } catch (SQLException ex1) {
+                            Log.error(this, ex1);
                         }
                     }
                     return false;
@@ -672,17 +658,22 @@ public class SpreadIndexDocument extends Document {
                             try {
                                 setIndex.close();
                             } catch (SQLException ex) {
+                                Log.error(this, ex);
                             }
                         }
                         if (updateUndoRedo != null) {
                             try {
                                 updateUndoRedo.close();
                             } catch (SQLException ex) {
+                                Log.error(this, ex);
                             }
                         }
-                        conn.setAutoCommit(true);
-                        conn.close();
+                        if (conn != null) {
+                            conn.setAutoCommit(true);
+                            conn.close();
+                        }
                     } catch (SQLException ex) {
+                        Log.error(this, ex);
                     }
                 }
             }
