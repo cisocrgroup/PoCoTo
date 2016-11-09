@@ -66,7 +66,7 @@ public class CorrectionSystem {
     }
 
     private Connection getConnection() throws SQLException {
-        Log.debug(this, "active connections: %d", jcp.getActiveConnections());
+        // Log.debug(this, "active connections: %d", jcp.getActiveConnections());
         return jcp.getConnection();
     }
 
