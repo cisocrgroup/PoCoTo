@@ -14,7 +14,8 @@ public class OcrToImageFileMapping implements Iterable<OcrToImageFileMapping.Map
     private final FilenameFilter filter;
     private final ArrayList<Mapping> mappings;
     private static final String[] IMAGE_FILE_EXTENSION = {
-        ".tif", ".jpg", ".jpeg", ".png"
+        ".tif", ".tiff", ".jpg", ".jpeg", ".png",
+        ".bin.tif", ".bin.tiff", ".bin.jpg", ".bin.jpeg", ".bin.png"
     };
 
     public OcrToImageFileMapping(
@@ -63,6 +64,7 @@ public class OcrToImageFileMapping implements Iterable<OcrToImageFileMapping.Map
         String baseName = getBaseName(ocrfile);
         for (String ext : IMAGE_FILE_EXTENSION) {
             File imagefile = new File(imagedir, baseName + ext);
+            // Log.info(this, "searching for image %s", imagefile.getName());
             if (imagefile.exists()) {
                 return new Mapping(imagefile, ocrfile);
             }
@@ -76,7 +78,7 @@ public class OcrToImageFileMapping implements Iterable<OcrToImageFileMapping.Map
 
     private static String getBaseName(File file) {
         String filename = file.getName();
-        return filename.substring(0, filename.indexOf('.'));
+        return filename.substring(0, filename.lastIndexOf("."));
     }
 
     private void sortMappings() {
