@@ -114,7 +114,7 @@ public class ImportFromDocXml extends ContextAction<DocumentLoadedCookie> {
     private File getDocFile(File file) {
         return selectFile(
                 file,
-                new FileNameExtensionFilter("ocrcxml", "ocrcxml")
+                new FileNameExtensionFilter("xml", "xml")
         );
     }
 
