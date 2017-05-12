@@ -892,6 +892,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public void importProfile(String docpath, String profilepath) {
         try {
+            Log.info(this, "importing Profile: docpath=%s, profilepath=%s", docpath, profilepath);
             globalDocument.clearCandidates();
             OcrXmlImporter.importCandidates(globalDocument, docpath);
             globalDocument.clearPatterns();

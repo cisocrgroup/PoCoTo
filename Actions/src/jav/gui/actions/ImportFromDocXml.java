@@ -104,6 +104,7 @@ public class ImportFromDocXml extends ContextAction<DocumentLoadedCookie> {
             if (retval == 0) {
                 new CustomErrorDialog().showDialog("Error while importing the document!\n");
             }
+            MainController.findInstance().reloadDocument();
         } catch (IOException ex) {
             ex.printStackTrace();
             new CustomErrorDialog().showDialog("Error while importing the document!\n" + ex.getLocalizedMessage());
@@ -113,7 +114,7 @@ public class ImportFromDocXml extends ContextAction<DocumentLoadedCookie> {
     private File getDocFile(File file) {
         return selectFile(
                 file,
-                new FileNameExtensionFilter("ocrcxml", "ocrcxml")
+                new FileNameExtensionFilter("xml", "xml")
         );
     }
 
