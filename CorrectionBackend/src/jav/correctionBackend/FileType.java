@@ -75,7 +75,9 @@ public enum FileType {
                 return new FilenameFilter() {
                     @Override
                     public boolean accept(File f, String name) {
-                        return name.endsWith(".html") || name.endsWith(".hocr");
+                        return name.endsWith(".html")
+                                || name.endsWith(".hocr")
+                                || name.endsWith(".xml");
                     }
                 };
             case ABBYY_XML_DIR: // fall through
