@@ -1563,9 +1563,7 @@ public abstract class Document {
             MyIterator<Page> page_iter = this.pageIterator();
             while (page_iter.hasNext()) {
                 Page seite = page_iter.next();
-
-                writer.write("#### Seite " + seite.getIndex() + 1 + " von " + this.numPages + " ###");
-                writer.newLine();
+                writer.write("# " + (seite.getIndex() + 1) + "/" + this.numPages);
                 writer.newLine();
 
                 MyIterator<Token> token_it = this.tokenIterator(seite);
@@ -1577,9 +1575,6 @@ public abstract class Document {
                         writer.write(t.getWDisplay());
                     }
                 }
-
-                writer.newLine();
-                writer.newLine();
             }
         } catch (IOException ex) {
             new CustomErrorDialog().showDialog(java.util.ResourceBundle.getBundle("jav/correctionBackend/Bundle").getString("IOError"));
