@@ -87,4 +87,25 @@ public class Page {
     public boolean hasTokens() {
         return this.getEndIndex() > this.getStartIndex();
     }
+
+    public static Page fromTokenIndexRange(Document d, int pageIdx, int minIdx, int maxIdx) {
+        Page page = new Page(pageIdx);
+        page.tokenIndexFrom = minIdx;
+        page.tokenIndexTo = maxIdx;
+        page.imageFilename = "";
+        page.imageCanonical = "";
+        // find token in range that has a valid image path
+        for (int i = minIdx; i <= maxIdx; i++) {
+            Token token = d.getTokenByIndex(i);
+            if (token != null) {
+                String path = token.getImageFilename();
+                if (path != null && path.length() > 0) {
+                    page.setImageCanonical(path);
+                    page.setImageFilename(path);
+                    break;
+                }
+            }
+        }
+        return page;
+    }
 }

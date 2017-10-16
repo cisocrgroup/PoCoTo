@@ -1365,19 +1365,10 @@ public abstract class Document {
                         + "AND indexInDocument <> -1"
                 );
                 if (rs.next()) {
-                    page = new Page(index);
-                    int startIndex = rs.getInt(1);
-                    int endIndex = rs.getInt(2);
-                    page.setStartIndex(startIndex);
-                    page.setEndIndex(endIndex);
-                    Token tmp = this.getTokenByIndex(startIndex);
-                    if (tmp == null) {
-                        return null;
-                    }
-                    String path = tmp.getImageFilename();
+                    page = Page.fromTokenIndexRange(this, index, rs.getInt(1), rs.getInt(2));
+                    String path = page.getImageCanonical();
                     String filename = getFileName(path);
                     page.setImageFilename(filename);
-                    page.setImageCanonical(path);
                 }
             }
         } catch (SQLException ex) {
