@@ -28,14 +28,35 @@ class SQLPageIterator extends SQLIterator<Page> {
                 Page page = new Page(res.getInt(1));
                 page.setStartIndex(res.getInt(2));
                 page.setEndIndex(res.getInt(3));
-                String path = d.getTokenByIndex(res.getInt(2)).getImageFilename();
-                String filename = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf("."));
+                String path = getPath(d, res.getInt(2), res.getInt(3));
+                if (path == null || path.length() <= 0) { // skip garbled tokens with no image file
+                    continue;
+                }
+                int f = path.lastIndexOf(File.separator) + 1; // allways >=0
+                int t = path.lastIndexOf(".");
+                if (t < f) {
+                    t = path.length();
+                }
+                String filename = path.substring(f, t);
                 page.setImageFilename(filename); // this.getTokenByIndex(rs.getInt(1)).getImageFilename());
                 page.setImageCanonical(path);
                 pages.add(page);
             }
             return pages.iterator();
         }
+    }
+
+    private static String getPath(Document d, int minIdx, int maxIdx) {
+        for (int i = minIdx; i <= maxIdx; i++) {
+            Token token = d.getTokenByIndex(i);
+            if (token != null) {
+                String path = token.getImageFilename();
+                if (path != null && path.length() > 0) {
+                    return path;
+                }
+            }
+        }
+        return "";
     }
 
     public SQLPageIterator(Connection c, Document d, String path) throws SQLException {
