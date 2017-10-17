@@ -53,10 +53,10 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
                     append(c);
                 }
                 insertCurrentToken();
-                addToDocument(TokenBuilder.newNewlineToken());
+                addToDocument(TokenBuilder.newNewlineToken(getEOLBoundingBox(l)));
             }
             insertCurrentToken();
-            addToDocument(TokenBuilder.newNewlineToken());
+            addToDocument(TokenBuilder.newNewlineToken(getEOLBoundingBox(currentLine)));
         }
     }
 
@@ -81,7 +81,7 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
                 tokenBuilder.appendSuspicious(c.isSuspicious());
             } else if (isWhitespace(currentCodepoint)) { // A_
                 insertCurrentToken();
-                addToDocument(TokenBuilder.newWhitespaceToken());
+                addToDocument(TokenBuilder.newWhitespaceToken(c.getBoundingBox()));
             } else { // A.
                 insertCurrentToken();
                 tokenBuilder.appendCodepoint(currentCodepoint);
@@ -95,7 +95,7 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
             tokenBuilder.appendSuspicious(c.isSuspicious());
         } else if (isWhitespace(currentCodepoint)) { // ._
             insertCurrentToken();
-            addToDocument(TokenBuilder.newWhitespaceToken());
+            addToDocument(TokenBuilder.newWhitespaceToken(c.getBoundingBox()));
         } else { // ..
             tokenBuilder.appendCodepoint(currentCodepoint);
             tokenBuilder.appendBoundingBox(c.getBoundingBox());
@@ -114,34 +114,40 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
 
     private void addToDocument(Token t) {
         if (t != null) {
-            t = adjust(t);
-            // Log.debug(this, "adding `%s` [%s]", t, ocrfile.getName());
-            document.addToken(t);
+            document.addToken(adjust(t));
         }
     }
 
-    private void adjust(TokenImageInfoBox tiib) {
-        if (tiib != null) {
+    private void adjustTokenImageInfoBox(TokenImageInfoBox tiib) {
+        if (tiib != null && currentLine != null && currentLine.getBoundingBox() != null) {
             tiib.setImageFileName(imagefile.getName());
-            if (currentLine != null) {
-                BoundingBox bb = currentLine.getBoundingBox();
-                if (bb != null) {
-                    tiib.setCoordinateTop(
-                            Math.min(bb.getTop(), tiib.getCoordinateTop())
-                    );
-                    tiib.setCoordinateBottom(
-                            Math.max(bb.getBottom(), tiib.getCoordinateBottom())
-                    );
-                }
-            }
+            BoundingBox bb = currentLine.getBoundingBox();
+            tiib.setCoordinateTop(
+                    Math.min(bb.getTop(), tiib.getCoordinateTop())
+            );
+            tiib.setCoordinateBottom(
+                    Math.max(bb.getBottom(), tiib.getCoordinateBottom())
+            );
         }
+    }
+
+    private static BoundingBox getEOLBoundingBox(Line l) {
+        if (l != null && l.getBoundingBox() != null) {
+            return new BoundingBox(
+                    l.getBoundingBox().getRight(),
+                    l.getBoundingBox().getTop(),
+                    l.getBoundingBox().getRight(),
+                    l.getBoundingBox().getBottom()
+            );
+        }
+        return new BoundingBox();
     }
 
     private Token adjust(Token token) {
         if (token != null) {
+            adjustTokenImageInfoBox(token.getTokenImageInfoBox());
             token.setIndexInDocument(++tokenIndex);
             token.setPageIndex(pageIndex);
-            adjust(token.getTokenImageInfoBox());
         }
         return token;
     }
@@ -153,5 +159,4 @@ public class SpreadIndexDocumentBuilder implements DocumentBuilder {
     private static boolean isWhitespace(int codepoint) {
         return Tokenization.isWhitespaceCharacter(codepoint);
     }
-
 }

@@ -66,26 +66,26 @@ public class TokenBuilder {
         return t;
     }
 
-    public static Token newNewlineToken() {
-        return newSpecialSequenceToken(SpecialSequenceType.NEWLINE);
+    public static Token newNewlineToken(BoundingBox bb) {
+        return newSpecialSequenceToken(SpecialSequenceType.NEWLINE, bb);
     }
 
-    public static Token newWhitespaceToken() {
-        return newSpecialSequenceToken(SpecialSequenceType.SPACE);
+    public static Token newWhitespaceToken(BoundingBox bb) {
+        return newSpecialSequenceToken(SpecialSequenceType.SPACE, bb);
     }
 
-    private static Token newSpecialSequenceToken(SpecialSequenceType type) {
+    private static Token newSpecialSequenceToken(SpecialSequenceType type, BoundingBox bb) {
         Token t = null;
         switch (type) {
             case NEWLINE:
                 t = newToken("\n");
                 t.setSpecialSeq(type);
-                t.setTokenImageInfoBox(new TokenImageInfoBox(-1, -1, -1, -1));
+                t.setTokenImageInfoBox(bb.toTokenImageInfoBox());
                 break;
             case SPACE:
                 t = newToken(" ");
                 t.setSpecialSeq(type);
-                t.setTokenImageInfoBox(new TokenImageInfoBox(-1, -1, -1, -1));
+                t.setTokenImageInfoBox(bb.toTokenImageInfoBox());
                 break;
             default:
                 assert (false);
