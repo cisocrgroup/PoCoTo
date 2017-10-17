@@ -80,6 +80,10 @@ public class BoundingBox {
         return String.format("bbox %d %d %d %d", l, t, r, b);
     }
 
+    public TokenImageInfoBox toTokenImageInfoBox() {
+        return new TokenImageInfoBox(l, t, r, b);
+    }
+
     /**
      * Combines this bounding box with another one. The bounding box growths
      * accordingly.
