@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.filechooser.FileFilter;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
-import org.netbeans.api.progress.ProgressUtils;
+import org.netbeans.api.progress.BaseProgressUtils;
 import org.openide.cookies.SaveCookie;
 import org.openide.filesystems.FileObject;
 import org.openide.windows.WindowManager;
@@ -239,7 +239,7 @@ public class Saver implements SaveCookie {
 //                }
             }
         };
-        ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("saving"), false);
+        BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("saving"), false);
         JFrame f = (JFrame) WindowManager.getDefault().getMainWindow();
         f.setTitle(filetoSave.getCanonicalPath());
     }

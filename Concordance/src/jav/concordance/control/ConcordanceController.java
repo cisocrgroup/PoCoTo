@@ -15,7 +15,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import javax.swing.SwingWorker;
 import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
 
 /**
  *Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und Sprachverarbeitung, University of Munich.
@@ -62,7 +61,7 @@ public class ConcordanceController implements ConcordanceEventSlot {
         MainController.findInstance().addToLog("KonkordanzKontroller # Konkordanz erzeugt # "+e.getConcordanceType()+" # "+e.getName());
         if (e.getConcordanceType() == ConcordanceType.CLONE) {
 
-            final ProgressHandle p = ProgressHandleFactory.createHandle("initConcordance");
+            final ProgressHandle p = ProgressHandle.createHandle("initConcordance");
 
             SwingWorker<Boolean, Object> worker = new SwingWorker<Boolean, Object>() {
 
@@ -100,7 +99,7 @@ public class ConcordanceController implements ConcordanceEventSlot {
             worker.execute();
         } else if (e.getConcordanceType() == ConcordanceType.DIVERSE) {
 
-            final ProgressHandle p = ProgressHandleFactory.createHandle("initConcordance");
+            final ProgressHandle p = ProgressHandle.createHandle("initConcordance");
 
             SwingWorker<ArrayList<Token>, Object> worker = new SwingWorker<ArrayList<Token>, Object>() {
 

@@ -42,7 +42,7 @@ import javax.swing.JToolBar;
 import javax.swing.SwingWorker;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
-import org.netbeans.api.progress.ProgressUtils;
+import org.netbeans.api.progress.BaseProgressUtils;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.util.NbPreferences;
@@ -161,8 +161,8 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
             }
         });
 
-        ProgressRunnable bu = new Builder();
-        ProgressUtils.showProgressDialogAndRun(bu, "Building", true);
+        ProgressRunnable<Object> bu = new Builder();
+        BaseProgressUtils.showProgressDialogAndRun(bu, "Building", true);
         this.actualPage = 0;
         int display = actualPage + 1;
         setName(name + " " + display + "/" + getMaxPages());
@@ -583,8 +583,8 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
     }
 
     private void correct() {
-        ProgressRunnable cr = new Corrector();
-        ProgressUtils.showProgressDialogAndRun(cr, "Correcting", true);
+        ProgressRunnable<Object> cr = new Corrector();
+        BaseProgressUtils.showProgressDialogAndRun(cr, "Correcting", true);
         this.requestFocusInWindow(true);
     }
 
@@ -665,7 +665,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         }
     }
 
-    private class Builder implements ProgressRunnable {
+    private class Builder implements ProgressRunnable<Object> {
 
         @Override
         public Object run(ProgressHandle ph) {
@@ -692,7 +692,7 @@ public class ConcordanceTopComponent extends AbstractEditorViewTopComponent {
         }
     }
 
-    private class Corrector implements ProgressRunnable {
+    private class Corrector implements ProgressRunnable<Object> {
 
         @Override
         public Object run(ProgressHandle ph) {

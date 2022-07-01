@@ -96,7 +96,7 @@ import org.apache.axis2.AxisFault;
 import org.apache.axis2.Constants;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
-import org.netbeans.api.progress.ProgressUtils;
+import org.netbeans.api.progress.BaseProgressUtils;
 import org.openide.awt.UndoRedo;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
@@ -270,7 +270,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public void createDocumentNoAnalysis(final String inputDirPath, final FileType t, String encoding, String propertiespath, String projectpath, String projectname) {
         ProgressRunnable<Document> r = new DocumentCreator(inputDirPath, t, encoding, propertiespath, projectpath, projectname);
-        Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
+        Document d = BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
         globalDocument = d;
         globalDocument.setUndoRedoManager(manager);
         if (d != null) {
@@ -286,7 +286,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public void createDocumentNoAnalysis(final String inputDirPath, final String imgDirPath, final FileType t, String encoding, String propertiespath, String projectpath, String projectname) {
         ProgressRunnable<Document> r = new DocumentCreator(inputDirPath, imgDirPath, t, encoding, propertiespath, projectpath, projectname);
-        Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
+        Document d = BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
 
@@ -305,7 +305,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public void createDocumentAnalysis(String xmlDirName, String imgDirName, FileType inputType, String encoding, String propertiespath, String projectpath, String projectname, String configuration) {
         ProgressRunnable<Document> r = new DocumentCreator(xmlDirName, imgDirName, inputType, encoding, propertiespath, projectpath, projectname);
-        Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
+        Document d = BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
 
@@ -325,7 +325,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public void createDocumentAnalysis(String xmlDirName, FileType inputType, String encoding, String propertiespath, String projectpath, String projectname, String configuration) {
         ProgressRunnable<Document> r = new DocumentCreator(xmlDirName, inputType, encoding, propertiespath, projectpath, projectname);
-        Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
+        Document d = BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
 
         if (d != null) {
             globalDocument = d;
@@ -343,7 +343,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
 
     public void loadDocument(final String doc) {
         ProgressRunnable<Document> r = new DocumentLoader(doc);
-        Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
+        Document d = BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
 
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
@@ -368,7 +368,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     @Deprecated
     public void importOCRCXMLasNewProject(String ocrcxmlp, String imgdirp, String propp, String projp, String projname, String profilename) {
         ProgressRunnable<Document> r = new OCRCXMLasNewProjectImporter(ocrcxmlp, imgdirp, propp, projp, projname, profilename);
-        Document d = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
+        Document d = BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("opening"), true);
 
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
@@ -390,7 +390,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     public void simpleProfileDocument(String configuration) {
         try {
             ProgressRunnable<Integer> r = new DocumentSimpleProfiler(configuration);
-            Integer retval = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"), true);
+            Integer retval = BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"), true);
             if (retval != null) {
                 if (retval == 0) {
                     MainController.findInstance().getSaver().save();
@@ -409,7 +409,7 @@ public class MainController implements Lookup.Provider, TokenStatusEventSlot, Sa
     public void profileDocument(String configuration) {
         try {
             ProgressRunnable<Integer> r = new DocumentProfiler(configuration);
-            Integer retval = ProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"), true);
+            Integer retval = BaseProgressUtils.showProgressDialogAndRun(r, java.util.ResourceBundle.getBundle("jav/gui/main/Bundle").getString("profiling"), true);
             if (retval != null) {
                 if (retval == 0) {
 //                    MainController.findInstance().getSaver().save();
