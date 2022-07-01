@@ -52,8 +52,7 @@ import javax.swing.SwingWorker;
 import org.jdesktop.jxlayer.JXLayer;
 import org.jdesktop.jxlayer.plaf.ext.LockableUI;
 import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
-import org.netbeans.api.progress.ProgressUtils;
+import org.netbeans.api.progress.BaseProgressUtils;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.NotifyDescriptor;
 import org.openide.util.Exceptions;
@@ -299,7 +298,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
 
         JFrame f = (JFrame) WindowManager.getDefault().getMainWindow();
         f.setTitle(MainController.findInstance().getCorrectionSystem().getDocument().getProjectFilename());
-        final ProgressHandle p = ProgressHandleFactory.createHandle(java.util.ResourceBundle.getBundle("jav/gui/mainWindow/Bundle").getString("displaying"));
+        final ProgressHandle p = ProgressHandle.createHandle(java.util.ResourceBundle.getBundle("jav/gui/mainWindow/Bundle").getString("displaying"));
         this.vertical = 0;
         final Document doc = e.getDocument();
 
@@ -342,7 +341,7 @@ public final class MainTopComponent extends AbstractEditorViewTopComponent imple
                 content.remove(this);
             }
 
-            ProgressUtils.showProgressDialogAndRun(r, p, false);
+            BaseProgressUtils.showProgressDialogAndRun(r, p, false);
             setName(java.util.ResourceBundle.getBundle("jav/gui/mainWindow/Bundle").getString("page") + " " + (currentPageIndex + 1) + java.util.ResourceBundle.getBundle("jav/gui/mainWindow/Bundle").getString("of") + " " + doc.getNumberOfPages());
             if (!this.isActive) {
                 this.requestActive();

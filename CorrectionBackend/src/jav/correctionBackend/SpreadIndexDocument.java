@@ -14,7 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressRunnable;
-import org.netbeans.api.progress.ProgressUtils;
+import org.netbeans.api.progress.BaseProgressUtils;
 
 /**
  * Copyright (c) 2012, IMPACT working group at the Centrum für Informations- und
@@ -678,6 +678,6 @@ public class SpreadIndexDocument extends Document {
                 }
             }
         };
-        return ProgressUtils.showProgressDialogAndRun(r, "recalculating index", true);
+        return BaseProgressUtils.showProgressDialogAndRun(r, "recalculating index", true);
     }
 }
